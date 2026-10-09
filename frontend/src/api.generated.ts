@@ -1230,10 +1230,10 @@ export interface components {
         WorkspaceStatus: {
             /**
              * Stage
-             * @default foundation
+             * @default local_workflow
              * @constant
              */
-            stage: "foundation";
+            stage: "local_workflow";
             /**
              * Database
              * @default connected

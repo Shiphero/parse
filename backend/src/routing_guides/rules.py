@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
 
 
 class Expression(StrictModel):
@@ -30,6 +30,8 @@ class Expression(StrictModel):
             aggregate = self.op in {'count', 'sum', 'unique_count'}
             if aggregate != (self.comparator is not None):
                 raise ValueError('Aggregates require a comparator; other expressions do not.')
+            if self.op in {'count', 'unique_count'} and self.unit is not None:
+                raise ValueError('Counts have no measurement unit.')
             if self.op == 'in' and not isinstance(self.value, list):
                 raise ValueError('in requires a list of allowed values.')
             if self.op != 'exists' and self.value is None:

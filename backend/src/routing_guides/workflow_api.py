@@ -252,9 +252,15 @@ async def start_analysis(guide_id: UUID, body: StartAnalysis):
         coverage=[PageCoverage(page=i, outcome='needs_review', note='Manual review required.') for i in range(1,count+1)] if manual else [],
         warnings=['Manual review: no AI analysis was performed. Review every page for coverage.'] if manual else []).model_dump(mode='json')
     async with await psycopg.AsyncConnection.connect(dsn) as conn:
-        await conn.execute('INSERT INTO analysis_runs(id,guide_id,status,version,config,payload) VALUES (%s,%s,%s,1,%s::jsonb,%s::jsonb) ON CONFLICT(id) DO NOTHING',
+        cursor = await conn.execute('INSERT INTO analysis_runs(id,guide_id,status,version,config,payload) VALUES (%s,%s,%s,1,%s::jsonb,%s::jsonb) ON CONFLICT(id) DO NOTHING RETURNING id',
             (body.request_id, guide_id, 'complete' if manual else 'queued', json.dumps(config), json.dumps(payload)))
-        if not manual:
+        inserted = await cursor.fetchone()
+        if not inserted:
+            cursor = await conn.execute('SELECT guide_id, config FROM analysis_runs WHERE id=%s', (body.request_id,))
+            saved_guide, saved_config = await cursor.fetchone()
+            if saved_guide != guide_id or saved_config != config:
+                raise HTTPException(409, 'Request ID was already used for different analysis settings.')
+        if inserted and not manual:
             await analyze_guide.configure(connection=conn, lock=f'analysis:{body.request_id}', queueing_lock=f'analysis:{body.request_id}').defer_async(run_id=str(body.request_id))
     async with sessions() as session:
         return RunView.model_validate(await required(session, AnalysisRun, body.request_id))
@@ -366,7 +372,7 @@ def assemble_release(run, base, body):
             raise HTTPException(422, 'Invalid change decision.')
     for rid, r in approved.items():
         if rid not in used:
-            result.append(dict(stable_id=str(uuid4()), spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
+            result.append(dict(stable_id=rid, spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
     return result
 
 
@@ -397,7 +403,7 @@ async def publish(run_id: UUID, body: PublishAction):
         head = await required(session, ReleaseHead, guide.retailer_id, True)
         if head.release_id != body.base_release_id:
             raise HTTPException(409, 'The active release changed. Compare against the current release before publishing.')
-        if not body.coverage_confirmed or not body.impact_confirmed or not body.note.strip():
+        if not body.coverage_confirmed or not body.impact_confirmed or not body.note.strip() or not body.scope.strip() or not body.name.strip() or not body.actor.strip():
             raise HTTPException(422, 'Confirm source coverage and scenario impact, and record publication notes.')
         if len(run.payload['coverage']) != guide.page_count or {p['page'] for p in run.payload['coverage']} != set(range(1,guide.page_count+1)):
             raise HTTPException(409, 'Full guide coverage has not been established.')

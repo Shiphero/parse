@@ -9,7 +9,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from routing_guides.config import get_settings
-from routing_guides.contracts import RuleCandidate, ScenarioSnapshot
+from routing_guides.rules import RuleSpec, Expression
 from routing_guides.db import engine, sessions
 from routing_guides.models import Retailer, ServiceHeartbeat
 from routing_guides.providers import ProviderStatus, provider_statuses
@@ -40,7 +40,7 @@ class RetailerSummary(BaseModel):
 
 
 class WorkspaceStatus(BaseModel):
-    stage: Literal["foundation"] = "foundation"
+    stage: Literal["local_workflow"] = "local_workflow"
     database: Literal["connected"] = "connected"
     worker: Literal["online", "waiting"]
     worker_last_seen: datetime | None
@@ -85,7 +85,8 @@ async def workspace() -> WorkspaceStatus:
 @app.get("/api/contracts")
 async def contracts() -> dict:
     return {
-        "status": "draft", "version": "0.1",
-        "rule_candidate": RuleCandidate.model_json_schema(),
-        "scenario_snapshot": ScenarioSnapshot.model_json_schema(),
+        "status": "local_workflow", "version": "1.0",
+        "rule_spec": RuleSpec.model_json_schema(),
+        "expression": Expression.model_json_schema(),
+        "scenario_input": {"schema_version": "1.0", "shipment": {}, "cartons": [], "pallets": [], "items": []},
     }
