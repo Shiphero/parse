@@ -28,7 +28,7 @@ The homepage is a guide library, not a development dashboard. Users filter by re
 
 PDF uploads preserve immutable originals. Same-retailer duplicate content opens the existing record. The database record and preparation job commit together. The worker creates a page coverage ledger before processing, renders each page with Poppler, extracts available text, and saves progress after each page. Original and rendered files use application-generated paths. Downloads return the original file; page previews display rendered images rather than active PDF content.
 
-Pages without text are flagged for inspection, not assumed empty. OCR and AI rule analysis remain unavailable. Retry resumes failed page work without replacing successful artifacts. A periodic recovery task requeues work left by stalled workers. The local upload-size setting is an explicit configurable resource limit, not a document/page truncation policy.
+Pages without embedded text are informational, not preparation failures and not assumed empty. Their images remain available for visual analysis. Preparation attention is reserved for failed extraction or rendering. A completed guide explains the next step: AI rule proposals with source evidence, followed by user review and approval. OCR and AI rule analysis remain unavailable. Retry resumes failed page work without replacing successful artifacts. A periodic recovery task requeues work left by stalled workers. The local upload-size setting is an explicit configurable resource limit, not a document/page truncation policy.
 
 ## Foundation retained
 

@@ -40,7 +40,7 @@ AI adapters, executable rules, review/publishing, OCR and ShipHero loading are *
 
 ## Working with guides
 
-Choose a retailer and upload its original PDF. The worker counts all PDF pages, creates a coverage record for each, then renders page images and extracts available text. Open the guide to inspect completed pages while remaining pages are processed. Blank/image-only pages are flagged because lack of extracted text does not establish lack of requirements. Automatic OCR is not yet available.
+Choose a retailer and upload its original PDF. The worker counts all PDF pages, creates a coverage record for each, then renders page images and extracts available text. Open the guide to inspect completed pages while remaining pages are processed. Pages without embedded text are informational, not preparation failures. Their images are retained for future visual analysis; lack of text never establishes lack of requirements. Only failed text extraction or page rendering triggers preparation attention. Automatic OCR is not yet available.
 
 Originals are immutable. Uploading identical bytes for the same retailer returns the existing guide without changing its metadata. Different files remain separate uploads; semantic version comparison is not yet available. Effective dates are entered explicitly and are not inferred from upload dates.
 

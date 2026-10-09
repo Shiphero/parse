@@ -93,9 +93,9 @@ async def prepare_document(guide_id: UUID) -> None:
                 for key, value in values.items():
                     setattr(page, key, value)
                 issues = []
-                if page.text_status == "no_text":
-                    issues.append("No text was extracted. This page may be scanned, image-only or blank; inspect the original.")
-                elif page.text_status == "failed":
+                # Missing embedded text is not a preparation failure. Keep the
+                # rendered page for visual analysis; never assume it has no rules.
+                if page.text_status == "failed":
                     issues.append("Text extraction failed. Retry preparation or inspect the original PDF.")
                 if page.image_status == "failed":
                     issues.append("The page preview could not be generated.")
