@@ -7,7 +7,7 @@ export type PageDetail = components['schemas']['GuidePageDetail'];
 export type UploadResult = components['schemas']['UploadResult'];
 
 export async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { ...options, headers: { 'X-Requested-With': 'routing-guide-parser', ...options?.headers } });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const detail = body?.detail;
@@ -55,3 +55,14 @@ export function formatDate(value: string | null, fallback = 'Not specified') {
 export function fileSize(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export type Workflow = components['schemas']['WorkflowView'];
+export type Run = components['schemas']['RunView'];
+export type Candidate = components['schemas']['Candidate'];
+export type RuleSpec = components['schemas']['RuleSpec-Output'];
+export type Release = components['schemas']['ReleaseView'];
+export type Scenario = components['schemas']['ScenarioView'];
+export type Evaluation = components['schemas']['EvaluationView'];
+export type Connection = components['schemas']['ConnectionView'];
+export type PublishAction = components['schemas']['PublishAction'];
+export function jsonRequest<T>(url: string, body: unknown, method = 'POST') { return request<T>(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }

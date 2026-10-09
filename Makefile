@@ -17,3 +17,9 @@ status:
 
 restart-worker:
 	docker compose restart worker
+
+.PHONY: check
+check:
+	docker compose exec -T web npm run build
+	docker compose exec -T api python -m unittest discover -s /app/tests -v
+	git diff --check

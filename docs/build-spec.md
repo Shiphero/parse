@@ -1,6 +1,11 @@
 # Routing Guides implementation spec
 
-Status: local guide library and document preparation, October 9, 2026. This document separates delivered behavior from the remaining build.
+Status: local end-to-end workflow implemented, October 9, 2026. See [workflow.md](workflow.md) for delivered behavior and explicit verification limits. The sections below retain the design rationale and original acceptance targets; original “next” milestones are not claims that live provider quality has been verified.
+
+## Delivered local milestone
+
+Analysis adapters, durable batch coverage/retry/cancel, manual review, rule revisions and decisions, side-by-side source evidence, explicit update decisions, immutable releases, JSON/Markdown export, release restoration, saved-scenario impact, pasted/ShipHero snapshots and deterministic evaluations are implemented. Native SDKs isolate model/provider changes. No credentials were present when implementation began; live extraction quality and live order access require separate acceptance with configured credentials. Shared deployment and model-quality benchmarking remain backlog.
+
 
 ## Objective
 
@@ -28,13 +33,13 @@ The homepage is a guide library, not a development dashboard. Users filter by re
 
 PDF uploads preserve immutable originals. Same-retailer duplicate content opens the existing record. The database record and preparation job commit together. The worker creates a page coverage ledger before processing, renders each page with Poppler, extracts available text, and saves progress after each page. Original and rendered files use application-generated paths. Downloads return the original file; page previews display rendered images rather than active PDF content.
 
-Pages without embedded text are informational, not preparation failures and not assumed empty. Their images remain available for visual analysis. Preparation attention is reserved for failed extraction or rendering. A completed guide explains the next step: AI rule proposals with source evidence, followed by user review and approval. OCR and AI rule analysis remain unavailable. Retry resumes failed page work without replacing successful artifacts. A periodic recovery task requeues work left by stalled workers. The local upload-size setting is an explicit configurable resource limit, not a document/page truncation policy.
+Pages without embedded text are informational, not preparation failures and not assumed empty. Their images remain available for visual analysis. Preparation attention is reserved for failed extraction or rendering. A completed guide opens analysis, review, release and scenario tabs. Dedicated OCR remains unavailable; native vision analysis uses every prepared page image. Retry resumes failed page work without replacing successful artifacts. A periodic recovery task requeues work left by stalled workers. The local upload-size setting is an explicit configurable resource limit, not a document/page truncation policy.
 
 ## Foundation retained
 
 - A live retailer catalog and persistent guide library.
 - PostgreSQL connection/readiness, persistent retailer records and worker heartbeat.
-- A running queue consumer with PDF preparation and maintenance tasks; AI analysis is not yet implemented.
+- A running queue consumer with PDF preparation and maintenance tasks; AI analysis runs use durable page-batch checkpoints.
 - Initial domain contracts at `/api/contracts` and API documentation at `/docs` on the API service.
 - Safe local `.env` creation and placeholders for provider credentials/model choices.
 
@@ -76,7 +81,7 @@ Implement native Anthropic and OpenAI adapters behind this protocol. File upload
 
 Pipeline stages: ingest immutable original → extract text/layout and render pages → record coverage → analyze coherent sections → reconcile cross-references and exceptions → normalize/validate candidates → review evidence and completeness. Jobs need idempotency, bounded retries, stage checkpoints and cancellation. Whole-guide coverage must be preserved within provider limits; document size limits must reflect actual resources and provider constraints rather than silently truncating input.
 
-An AI rerun creates a fresh draft. It never rewrites published rules. A configured key is not proof of authorization, access, model capability or adapter readiness. Live provider calls are outside this setup increment.
+An AI rerun creates a fresh draft. It never rewrites published rules. A configured key is not proof of authorization, access, model capability or adapter readiness. Live provider calls require configured credentials; tests use mocked responses and do not establish extraction quality.
 
 ## Review and publication
 
@@ -100,7 +105,7 @@ Current read-only endpoints:
 | `GET /api/guides/{id}/pages/{index}` | Extracted text and page preparation issues |
 | `GET /api/guides/{id}/pages/{index}/image` | Rendered page preview |
 
-Current mutations: `POST /api/guides` accepts the original PDF and metadata; `POST /api/guides/{id}/retry` resumes preparation. No rule or release mutation exists yet.
+Current mutations: `POST /api/guides` accepts the original PDF and metadata; `POST /api/guides/{id}/retry` resumes preparation. Rule, review, release, connection, audit and scenario endpoints are exposed in OpenAPI; see workflow.md.
 
 Next endpoint families: guide versions/assets, analysis runs/progress, rule drafts/revisions, comparison/review decisions, release publication/history, scenario snapshots/overrides/evaluations, and ShipHero read-only import. Mutations need transaction boundaries and repeat-request behavior; publishing requires a revision guard and authenticated actor before multiuser use.
 

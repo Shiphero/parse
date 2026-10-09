@@ -12,7 +12,7 @@ make up
 
 Open [the workspace](http://localhost:5180) or [API documentation](http://localhost:8180/docs).
 
-The setup script creates `.env` with a random local database password and preserves existing configuration. No AI credentials are needed to start the foundation. Ports bind to `127.0.0.1`; PostgreSQL has no host port. This local setup has no user authentication and must not be exposed to a network.
+The setup script creates `.env` with a random local database password and preserves existing configuration. No AI credentials are needed to start the app or use manual review and scenarios. Ports bind to `127.0.0.1`; PostgreSQL has no host port. This local setup has no user authentication and must not be exposed to a network.
 
 ```sh
 make status         # Container status
@@ -26,21 +26,20 @@ Frontend and API source changes reload during development. Dependency, migration
 
 ## What exists
 
-- User-facing guide library with retailer filters, search and preparation status.
-- Original PDF uploads with title, version and optional effective date; duplicate files open the existing guide.
-- Background page rendering and text extraction, page-by-page viewing, source download and retry controls.
-- PostgreSQL migrations and four retailer records: Nordstrom, Walmart, Ulta and Michaels.
-- A separate durable-queue worker with heartbeat reporting and stalled-job recovery.
-- Draft Pydantic contracts for rule candidates, evidence, scenario snapshots and provider requests/results.
-- Versioned API and schema endpoints; generated TypeScript API types.
-- Server-side environment configuration. Only key presence is exposed, never key values.
-- Dependency lockfiles and development containers.
+- PDF upload, persistent retailer library, full-page rendering/text extraction and source viewer.
+- Configurable Claude and OpenAI adapters with durable page batches, retries, cancellation, coverage and model/usage records.
+- Local Connections screen for server-side credentials, with presence-only responses.
+- Manual and AI draft review with evidence images, edits, exact-revision approval and audit history.
+- Explicit retain/replace/retire update decisions, comparison, scenario impact and immutable releases.
+- JSON rule exports, Markdown instructions, release history and active-release restoration.
+- Pasted JSON and read-only ShipHero wholesale snapshots, explicit overrides and deterministic evaluations pinned to releases.
+- Bounded typed rule expressions, exact unit conversions and explicit unknown outcomes.
 
-AI adapters, executable rules, review/publishing, OCR and ShipHero loading are **not implemented yet**. Document preparation preserves and renders the original; it does not interpret or approve requirements. The app makes no AI or ShipHero requests. Existing research has not been imported as executable or approved rules.
+Read the [end-to-end workflow](docs/workflow.md) for usage, contracts, integration references and limitations. AI analysis requires a configured provider key/model; ShipHero import requires an access token. Neither integration is claimed live-verified by local tests. Shared authentication, cloud deployment, dedicated OCR, non-PDF ingestion and model-quality benchmarking are not delivered by this local milestone.
 
 ## Working with guides
 
-Choose a retailer and upload its original PDF. The worker counts all PDF pages, creates a coverage record for each, then renders page images and extracts available text. Open the guide to inspect completed pages while remaining pages are processed. Pages without embedded text are informational, not preparation failures. Their images are retained for future visual analysis; lack of text never establishes lack of requirements. Only failed text extraction or page rendering triggers preparation attention. Automatic OCR is not yet available.
+Choose a retailer and upload its original PDF. The worker counts all PDF pages, creates a coverage record for each, then renders page images and extracts available text. Open the guide to inspect completed pages while remaining pages are processed. Pages without embedded text are informational, not preparation failures. Their images are retained for visual analysis; lack of text never establishes lack of requirements. Only failed text extraction or page rendering triggers preparation attention. Automatic OCR is not yet available.
 
 Originals are immutable. Uploading identical bytes for the same retailer returns the existing guide without changing its metadata. Different files remain separate uploads; semantic version comparison is not yet available. Effective dates are entered explicitly and are not inferred from upload dates.
 
@@ -50,7 +49,7 @@ Document files live in the `documents` Docker volume. Unknown database commit ou
 
 ## Configuration
 
-See `.env.example`. Optional future credentials are `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`, with separate model settings. Having a key configured does not mean the provider has been verified or its adapter implemented. Keep `.env` out of Git. Recreate API/worker containers after environment changes with `make up`. Service health and provider configuration remain available through the API for developers; they are not the user's homepage.
+See `.env.example`. Optional environment credentials are `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`, with separate model settings. Having a key configured does not mean provider access has been verified. Connections in the app override these environment defaults. Keep `.env` out of Git. Recreate API/worker containers after environment changes with `make up`. Service health and provider configuration remain available through the API for developers; they are not the user's homepage.
 
 Change `WEB_PORT` or `API_PORT` in `.env` if needed. The PostgreSQL password must match the existing database volume: changing the environment alone does not rotate an initialized database's password.
 

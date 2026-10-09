@@ -15,6 +15,7 @@ x-backend: &backend
     OPENAI_MODEL: ${OPENAI_MODEL:-}
   volumes:
     - ./backend/src:/app/src:ro
+    - ./backend/tests:/app/tests:ro
     - documents:/data
 
 services:

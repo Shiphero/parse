@@ -1,0 +1,34 @@
+import { useState } from 'react';
+import { Check, Pencil, Plus, X } from 'lucide-react';
+import { jsonRequest } from './api';
+import type { Candidate, RuleSpec, Run } from './api';
+import RuleEditor, {Evidence} from './RuleEditor';
+
+export default function ReviewPanel({run,actor,reload}: {run:Run;actor:string;reload:()=>void}) {
+  const [selected,setSelected] = useState('');
+  const [filter,setFilter] = useState('pending');
+  const [editing,setEditing] = useState(false);
+  const [adding,setAdding] = useState(false);
+  const [note,setNote] = useState('');
+  const [error,setError] = useState('');
+  const [busy,setBusy] = useState(false);
+  const [coverageNote,setCoverageNote] = useState('');
+  const current = run.payload.rules.find(r=>r.id===selected);
+  const editable = run.status==='complete';
+  const action = async (url:string, body:unknown, method='POST') => {setBusy(true);setError('');try {await jsonRequest(url,body,method);reload();return true;}catch(e){setError((e as Error).message);return false;}finally{setBusy(false);}};
+  const decision = async (candidate:Candidate, kind:'approve'|'reject') => {if(await action(`/api/analysis/${run.id}/rules/${candidate.id}`,{version:run.version,actor,note,action:kind},'PUT'))setNote('');};
+  const save = async (spec:RuleSpec) => {
+    const done=await action(adding?`/api/analysis/${run.id}/rules`:`/api/analysis/${run.id}/rules/${current!.id}`,adding?{version:run.version,actor,spec}:{version:run.version,actor,spec,action:'save'},adding?'POST':'PUT');
+    if(done){setEditing(false);setAdding(false);}
+  };
+  const pending=run.payload.rules.filter(r=>r.status==='pending').length;
+  const filtered=run.payload.rules.filter(r=>filter==='all'||r.status===filter);
+  return <div className="review-panel"><div className="section-heading"><div><h2>Review the rules</h2><p>{pending} awaiting a decision · {run.payload.rules.length} total proposals</p></div><button className="secondary" disabled={!editable} onClick={()=>{setAdding(true);setEditing(false);}}><Plus size={16}/> Add rule</button></div>
+    {error&&<div className="error" role="alert">{error}</div>}
+    <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
+    {run.payload.warnings.length>0&&<details className="coverage"><summary>Analysis notes · {run.payload.warnings.length}</summary><ul>{run.payload.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></details>}
+    {adding||editing&&current ? <RuleEditor key={adding?'new':`${current!.id}:${current!.revision}`} candidate={adding?undefined:current} guideId={run.guide_id} onSave={save} onCancel={()=>{setEditing(false);setAdding(false);}} busy={busy}/> : <div className="review-layout"><div className="rule-list"><label className="visually-hidden" htmlFor="review-filter">Review status</label><select id="review-filter" value={filter} onChange={e=>setFilter(e.target.value)}><option value="pending">Awaiting review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All proposals</option></select>{filtered.map(r=><button className={`rule-list-item ${selected===r.id?'selected':''}`} key={r.id} onClick={()=>{setSelected(r.id);setNote('');}}><span className={`status-badge ${r.status}`}>{r.status}</span><strong>{r.spec.title}</strong><small>{r.spec.subject} · {r.spec.verification==='data'?'Data check':'Inspection / evidence'}</small></button>)}{!filtered.length&&<p className="muted">No {filter==='all'?'':filter} proposals. {run.payload.rules.length===0?'Add a rule from the source, or start an AI analysis.':''}</p>}</div>
+      {current?<div className="rule-review-grid"><article className="rule-interpretation"><div className="action-row"><span className={`status-badge ${current.status}`}>{current.status}</span><button className="text-button" disabled={!editable} onClick={()=>setEditing(true)}><Pencil size={14}/> Edit</button></div><h3>{current.spec.title}</h3><p className="instruction">{current.spec.instruction}</p><dl><dt>Applies when</dt><dd>{current.spec.applicability_text}</dd><dt>Obligation</dt><dd>{current.spec.obligation}</dd><dt>Verification</dt><dd>{current.spec.verification.replaceAll('_',' ')}</dd></dl>{(current.spec.exceptions || []).map((e,i)=><p key={i}><strong>Exception:</strong> {e.description}</p>)}{(current.spec.unresolved_questions || []).map((q,i)=><p className="error" key={i}>{q}</p>)}{current.spec.assertion&&<details className="advanced"><summary>Automatic check</summary><pre>{JSON.stringify(current.spec.assertion,null,2)}</pre></details>}{current.review&&<p className="review-note">Reviewed by {String(current.review.actor)}: {String(current.review.note)}</p>}{editable&&<><label>Decision note<textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What did you verify or why should this be rejected?"/></label><div className="action-row"><button className="secondary" disabled={busy||!note.trim()||!actor.trim()} onClick={()=>decision(current,'reject')}><X size={15}/> Reject</button><button className="primary" disabled={busy||!note.trim()||!actor.trim()} onClick={()=>decision(current,'approve')}><Check size={15}/> Approve revision</button></div></>}</article><Evidence guideId={current.source_guide_id} spec={current.spec}/></div>:<div className="review-placeholder"><h3>Select a proposal</h3><p>Compare the interpretation with its original source before approving.</p></div>}
+    </div>}
+  </div>;
+}

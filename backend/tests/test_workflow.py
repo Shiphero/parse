@@ -1,0 +1,115 @@
+"""Integration checks use a rollback-only transaction, never the user's guide records."""
+import unittest
+from copy import deepcopy
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
+
+import httpx
+from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from routing_guides.config import get_settings
+from routing_guides.models import Retailer, ReleaseHead, Guide, GuidePage, AnalysisRun
+from routing_guides.rules import Extraction
+from routing_guides.analysis_provider import ProviderOutput, ProviderFailure
+from routing_guides import workflow_api, analysis_jobs
+from test_rules import rule
+
+
+class WorkflowTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.engine = create_async_engine(get_settings().database_url.get_secret_value())
+        self.conn = await self.engine.connect()
+        self.transaction = await self.conn.begin()
+        self.sessions = async_sessionmaker(self.conn,expire_on_commit=False,join_transaction_mode='create_savepoint')
+        self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions)]
+        for p in self.patches:p.start()
+        self.retailer='test-'+uuid4().hex
+        self.gid=uuid4(); self.rid=uuid4()
+        self.temp=TemporaryDirectory()
+        self.app=FastAPI();self.app.include_router(workflow_api.router)
+        self.client=httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app),base_url='http://test')
+        async with self.sessions.begin() as s:
+            s.add(Retailer(id=self.retailer,name='Synthetic test',discovery_note='Rollback-only fixture'))
+            await s.flush()
+            s.add(ReleaseHead(retailer_id=self.retailer,release_id=None))
+            s.add(Guide(id=self.gid,retailer_id=self.retailer,title='Synthetic',filename='synthetic.pdf',sha256=uuid4().hex,size_bytes=1,status='ready',page_count=1,processed_pages=1,attention_pages=0))
+            await s.flush()
+            s.add(GuidePage(guide_id=self.gid,page_index=0,text='Cartons must not exceed 50 lb.',text_status='extracted',image_status='ready'))
+            s.add(AnalysisRun(id=self.rid,guide_id=self.gid,status='complete',version=1,config={'provider':'manual'},payload={'rules':[], 'coverage':[{'page':1,'outcome':'rules_found','note':'Test fixture'}], 'warnings':[], 'batches':[], 'pending_batches':[]}))
+
+    async def asyncTearDown(self):
+        await self.client.aclose()
+        for p in reversed(self.patches):p.stop()
+        await self.transaction.rollback();await self.conn.close();await self.engine.dispose();self.temp.cleanup()
+
+    async def send(self,method,path,body,status=200):
+        response=await self.client.request(method,path,json=body)
+        self.assertEqual(response.status_code,status,response.text)
+        return response.json()
+
+    async def test_review_publish_evaluate_and_immutable_revision(self):
+        actor='Test reviewer'
+        run=await self.send('POST',f'/api/analysis/{self.rid}/rules',{'version':1,'actor':actor,'spec':rule().model_dump(mode='json')})
+        candidate=run['payload']['rules'][0]
+        endpoint=f'/api/analysis/{self.rid}/rules/{candidate["id"]}'
+        await self.send('PUT',endpoint,{'version':1,'actor':actor,'action':'approve','note':'Stale'},409)
+        run=await self.send('PUT',endpoint,{'version':run['version'],'actor':actor,'action':'approve','note':'Verified source'})
+        self.assertEqual(run['payload']['rules'][0]['status'],'approved')
+        run=await self.send('PUT',endpoint,{'version':run['version'],'actor':actor,'action':'save','spec':rule().model_dump(mode='json')})
+        self.assertEqual(run['payload']['rules'][0]['status'],'pending')
+        self.assertIsNone(run['payload']['rules'][0]['review'])
+        publish={'version':run['version'],'actor':actor,'note':'Test coverage verified','name':'Test release','effective_date':'2026-01-01','scope':'Synthetic carton test only','coverage_confirmed':True,'impact_confirmed':True,'decisions':{},'base_release_id':None}
+        await self.send('POST',f'/api/analysis/{self.rid}/publish',publish,409)
+        run=await self.send('PUT',endpoint,{'version':run['version'],'actor':actor,'action':'approve','note':'Verified changed revision'})
+        publish['version']=run['version']
+        release=await self.send('POST',f'/api/analysis/{self.rid}/publish',publish)
+        repeat=await self.send('POST',f'/api/analysis/{self.rid}/publish',publish)
+        self.assertEqual(repeat['id'],release['id'])
+        await self.send('PUT',endpoint,{'version':run['version'],'actor':actor,'action':'save','spec':rule().model_dump(mode='json')},409)
+        for weight,outcome in [('50','pass'),('51','fail'),(None,'cannot_determine')]:
+            raw={'schema_version':'1.0','shipment':{},'cartons':[{} if weight is None else {'weight':{'value':weight,'unit':'lb'}}]}
+            scenario=await self.send('POST','/api/scenarios',{'retailer_id':self.retailer,'name':'Synthetic scenario','raw':raw})
+            result=await self.send('POST',f'/api/scenarios/{scenario["id"]}/evaluate/{release["id"]}',{})
+            self.assertEqual(result['items'][0]['outcome'],outcome)
+            self.assertEqual(result['release_id'],release['id'])
+        history=await self.client.get(f'/api/audit/{self.rid}')
+        self.assertGreaterEqual(len(history.json()),4)
+
+    async def test_analysis_resume_saves_each_batch_and_does_not_duplicate(self):
+        async with self.sessions.begin() as s:
+            run=await s.get(AnalysisRun,self.rid)
+            run.status='queued';run.config={'provider':'anthropic','model':'test-model'}
+            run.payload={**run.payload,'coverage':[],'pending_batches':[[1]]}
+        output=ProviderOutput(Extraction(rules=[rule()],coverage=[{'page':1,'outcome':'rules_found','note':'Text rule'}],warnings=[]),'returned-model',{'input_tokens':100})
+        with patch.object(analysis_jobs,'analyze',AsyncMock(side_effect=ProviderFailure('Provider unavailable'))):
+            await analysis_jobs.run_analysis(self.rid)
+        async with self.sessions() as s:
+            run=await s.get(AnalysisRun,self.rid)
+            self.assertEqual(run.status,'failed');self.assertEqual(run.payload['pending_batches'],[[1]])
+        mocked=AsyncMock(return_value=output)
+        with patch.object(analysis_jobs,'analyze',mocked):
+            await analysis_jobs.run_analysis(self.rid)
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual(mocked.await_count,1)
+        async with self.sessions() as s:
+            run=await s.get(AnalysisRun,self.rid)
+            self.assertEqual(run.status,'complete');self.assertEqual(len(run.payload['rules']),1)
+            self.assertEqual(run.payload['batches'][0]['model'],'returned-model')
+
+    async def test_missing_coverage_is_not_completed(self):
+        async with self.sessions.begin() as s:
+            run=await s.get(AnalysisRun,self.rid);run.status='queued';run.config={'provider':'anthropic','model':'test'}
+            run.payload={**run.payload,'coverage':[],'pending_batches':[[1]]}
+        with patch.object(analysis_jobs,'analyze',AsyncMock(return_value=ProviderOutput(Extraction(rules=[],coverage=[],warnings=[]),'test',{}))):
+            await analysis_jobs.run_analysis(self.rid)
+        async with self.sessions() as s:
+            run=await s.get(AnalysisRun,self.rid)
+            self.assertEqual(run.status,'failed');self.assertEqual(run.payload['coverage'],[])
+
+    async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
+        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):
+            response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})
+            self.assertEqual(response.status_code,403)

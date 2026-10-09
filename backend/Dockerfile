@@ -9,6 +9,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 COPY alembic.ini ./
 COPY migrations ./migrations
+COPY tests ./tests
 RUN uv sync --frozen --no-dev && \
     useradd --uid 10001 --create-home app && mkdir /data && chown app:app /data
 USER app

@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from routing_guides.config import get_settings
+from routing_guides.connections import connection
 
 
 class ProviderStatus(BaseModel):
@@ -10,21 +10,21 @@ class ProviderStatus(BaseModel):
     name: str
     credential_configured: bool
     model: str | None
-    implementation: Literal["planned"] = "planned"
+    implementation: Literal["implemented"] = "implemented"
     connection_verified: bool = False
 
 
 def provider_statuses() -> list[ProviderStatus]:
-    settings = get_settings()
+    anthropic, openai = connection("anthropic"), connection("openai")
     return [
         ProviderStatus(
             id="anthropic", name="Claude",
-            credential_configured=bool(settings.anthropic_api_key.get_secret_value()),
-            model=settings.anthropic_model or None,
+            credential_configured=bool(anthropic["key"]),
+            model=anthropic["model"] or None,
         ),
         ProviderStatus(
             id="openai", name="OpenAI",
-            credential_configured=bool(settings.openai_api_key.get_secret_value()),
-            model=settings.openai_model or None,
+            credential_configured=bool(openai["key"]),
+            model=openai["model"] or None,
         ),
     ]

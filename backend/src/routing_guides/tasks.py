@@ -27,3 +27,10 @@ async def prepare_guide(guide_id: str) -> None:
 async def recover_stalled(timestamp: int) -> None:
     for job in await task_queue.job_manager.get_stalled_jobs():
         await task_queue.job_manager.retry_job(job)
+
+
+@task_queue.task(name='guides.analyze')
+async def analyze_guide(run_id: str) -> None:
+    from uuid import UUID
+    from routing_guides.analysis_jobs import run_analysis
+    await run_analysis(UUID(run_id))
