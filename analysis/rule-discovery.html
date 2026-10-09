@@ -1,0 +1,595 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Routing guide rule discovery</title><style>body{font:16px/1.55 system-ui,sans-serif;background:#f5f6f8;color:#192b3c;margin:0}main{max-width:1160px;margin:auto;padding:48px 28px}h1{font-size:36px;line-height:1.15;margin:8px 0 18px}h2{font-size:24px;margin-top:40px}small,.muted{color:#526577}.tag{font-size:12px;background:#e7edf4;padding:4px 9px;border-radius:10px;display:inline-block;margin:3px}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;vertical-align:top;border-bottom:1px solid #dce2e8;padding:12px}th{background:#e7edf4}a{color:#165d8f}.callout{background:#fff5df;border-left:4px solid #cb8d28;padding:18px 22px}article{background:white;border:1px solid #dce2e8;border-radius:10px;padding:20px 24px;margin:14px 0}article h3{font-size:18px;margin:0 0 8px}details{margin-top:12px}pre{white-space:pre-wrap;font:13px/1.5 ui-monospace,monospace;background:#f4f6f8;padding:14px}input,select{font:inherit;padding:10px;border:1px solid #aebdcb;border-radius:6px;margin:4px}input{width:min(430px,85%)}.filters{position:sticky;top:0;background:#f5f6f8ed;padding:12px 0;border-bottom:1px solid #ccd7e0}@media print{.filters{display:none}article{break-inside:avoid}main{padding:0}}</style><main><small>RETAILER ROUTING GUIDES · FIRST DISCOVERY PASS · 9 OCTOBER 2026</small><h1>What rules do we need to represent?</h1><p>15 rule families · 54 illustrative examples · 10 PDF text extracts · 4 retailers</p><p>The first finding: a rule needs its conditions, exceptions, source authority and relationship to other records. A retailer-wide list of limits is insufficient.</p><div class="callout"><strong>Discovery material, not an executable ruleset.</strong><p>Targeted text review only; extraction completeness and visual diagrams remain unverified. Raw PDF downloads returned HTTP 403. These are the supplied document versions, not confirmed-current retailer policies. No new production parser was built.</p></div><h2>Source coverage</h2><table><tr><th>Retailer</th><th>Document</th><th>Document date</th><th>Review status</th></tr><tr><td>Nordstrom</td><td><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a><br><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Saved text</a></td><td>2025-01</td><td>targeted text review only</td></tr><tr><td>Nordstrom</td><td><a href="https://drive.google.com/file/d/145-yhc9djl36eVGfj1S2yn_0i1z5XQvP/view?usp=drivesdk">Nordstrom Compliance Master &amp; Routing Guide - SPS Source.pdf</a><br><a href="../sources/nordstrom/Nordstrom Compliance Master &amp; Routing Guide - SPS Source.txt">Saved text</a></td><td>2002</td><td>historical do not merge as current</td></tr><tr><td>Nordstrom</td><td><a href="https://drive.google.com/file/d/1XPoYrwp1IY5zzAi8ijOYsdmh4TAwYZFL/view?usp=drivesdk">Vendor Training Packet TMS v4 July2025 .pdf</a><br><a href="../sources/nordstrom/Vendor Training Packet TMS v4 July2025 .txt">Saved text</a></td><td>2025-07-21</td><td>targeted text review only</td></tr><tr><td>Nordstrom</td><td><a href="https://drive.google.com/file/d/1O4r-82pDYwfyc8Bn2QqnOS69urFTTTCE/view?usp=drivesdk">Supplier Routing Request Guidance.pdf</a><br><a href="../sources/nordstrom/Supplier Routing Request Guidance.txt">Saved text</a></td><td>Not identified</td><td>targeted text review only</td></tr><tr><td>Nordstrom</td><td><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a><br><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Saved text</a></td><td>2025-07-16</td><td>targeted text review only</td></tr><tr><td>Walmart</td><td><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a><br><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Saved text</a></td><td>2026-04-03</td><td>targeted text review only</td></tr><tr><td>Ulta</td><td><a href="https://drive.google.com/file/d/1zn8r3tSoh3lVep1kz03NIzU7UqzoLCFv/view?usp=drivesdk">Ulta Inbound 856 v1.2.pdf</a><br><a href="../sources/ulta/Ulta Inbound 856 v1.2.txt">Saved text</a></td><td>2020-05-13</td><td>targeted text review only</td></tr><tr><td>Ulta</td><td><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a><br><a href="../sources/ulta/2025 Supply Chain Guide.txt">Saved text</a></td><td>2025-03</td><td>targeted text review only</td></tr><tr><td>Michaels</td><td><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a><br><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Saved text</a></td><td>2014-07-30</td><td>targeted text review only</td></tr><tr><td>Michaels</td><td><a href="https://drive.google.com/file/d/1xsnJy6KfXFp0B0jS4cKKgZNA4-VT8JS2/view?usp=drivesdk">EDI_850_Implementation Guide_v1.1.pdf</a><br><a href="../sources/michaels/EDI_850_Implementation Guide_v1.1.txt">Saved text</a></td><td>2018-08-22</td><td>targeted text review only</td></tr></table><p class="muted">Live source tool: Google Drive google_drive_fetch. Six DOCX/XLSX supporting files were catalogued but not read. Drive upload dates were not used as document dates.</p><h2>Coverage and authority gaps</h2><ul><li>Retailer portal currency was not verified. Upload dates are not document effective dates.</li><li>The Nordstrom Compliance Master identifies itself as 2002 and is excluded from current operational examples.</li><li>Michaels lacks the referenced VendorConnect pre-shipment/label manual; its 850 guide is non-merchandise only.</li><li>Walmart file is the Secondary Packaging section with printed pages 177–406 plus a cover, not the full 406-page standards collection or separate Shipping and Routing guide.</li></ul><h2>Rule families</h2><table><tr><th>Family</th><th>What it contains</th></tr><tr><td>Applicability and authority</td><td>Retailer, business unit, country, network, channel, PO type, department, effective version and precedence.</td></tr><tr><td>Purchase orders and shipment scope</td><td>Ship windows, partial/split shipments, PO verification, ordered quantities and ship-to versus mark-for.</td></tr><tr><td>Routing and carrier selection</td><td>Origin/destination, freight terms, mode thresholds, carrier, consolidator and routing approval.</td></tr><tr><td>Timing, appointments and readiness</td><td>Event-relative deadlines, business/calendar days, cutoff time, timezone and readiness.</td></tr><tr><td>Unit and carton packaging</td><td>Materials, protective packaging, strength, dimensions, weight, product-specific treatment.</td></tr><tr><td>Packing hierarchy and segregation</td><td>Units, inner packs, cases, masterpacks, pallets; SKU/PO/destination mixing and layer rules.</td></tr><tr><td>Pallet construction and load geometry</td><td>Grade, material, dimensions, weight, height, overhang, stacking and item-file TI/HI.</td></tr><tr><td>Wrapping, loading and trailer security</td><td>Wrap color, method, layer count, toppers, restraints, seals and vehicle requirements.</td></tr><tr><td>Labels and physical placement</td><td>Required label type, fields, label counts, location, orientation, print quality and visibility.</td></tr><tr><td>Identifiers and reuse</td><td>SSCC, GS1 AI, UPC/GTIN, vendor/SKU IDs, ASN identity, uniqueness and reuse periods.</td></tr><tr><td>EDI structure and field dependencies</td><td>Transaction/version, hierarchy, segment cardinality, retailer-specific mandatory fields and PO-to-ASN mapping.</td></tr><tr><td>Cross-record consistency</td><td>Match physical contents, labels, ASN, PO, BOL, appointments and item master.</td></tr><tr><td>Shipping documents</td><td>BOL/packing-list grouping, required fields, freight terms, placement and signatures.</td></tr><tr><td>Submission, correction and approval workflow</td><td>Acknowledgments versus acceptance, corrections, replacement identity and required authorizations.</td></tr><tr><td>Fees, disputes and commercial obligations</td><td>Chargeback basis, tiers/minimums, invoices, dispute sequence and returns; separate from operational constraint.</td></tr></table><h2>What the representation must preserve</h2><ul><li>Keep raw wording and normative force alongside interpretation.</li><li>Store applicability separately from requirement: retailer, channel/network, destination, department, PO type, freight terms, carrier/mode, product attributes and dates.</li><li>Preserve physical nesting and relationships: shipment, delivery, PO, pallet, master carton, carton, inner pack and item.</li><li>Keep identifier strings, application identifiers and barcode symbology distinct; retain leading zeros.</li><li>Represent conditions with AND/OR, units, comparison operators, deadlines and explicit exceptions; unresolved boundary cases stay unresolved.</li><li>Link an exception to the specific rule it changes; do not assume later upload wins.</li><li>Record data needed to evaluate each rule, human/visual evidence requirements, and missing-information states.</li><li>Keep fees and consequences separate from requirements and from guarantees of enforcement.</li></ul><h2>Open questions before encoding</h2><article><strong>Nordstrom</strong><p>2002 compliance manual uploaded recently alongside 2025 documents.</p><p class="muted">Historical only until current authority is established.</p></article><article><strong>Nordstrom</strong><p>Routing guide gives 48/72-hour pickup lead times; newer TMS packet discusses noon next-day consideration and retaining two-day booking.</p><p class="muted">Preserve workflow-specific statements and flag precedence; do not collapse into one deadline.</p></article><article><strong>Ulta</strong><p>Parcel wording varies between &lt;150 lb and do not exceed 150 lb, &lt;15 cases versus palletize &gt;15, and consolidation uses &gt;150 AND &gt;15.</p><p class="muted">Unresolved equality and mixed-threshold cases; no automatic mode decision at those boundaries.</p></article><article><strong>Ulta</strong><p>Case dimension table extraction has &gt;/&lt; signs that appear inconsistent with maximum/minimum headings; label examples have visual geometry.</p><p class="muted">Render and inspect original pages before numeric encoding.</p></article><article><strong>Ulta</strong><p>EDI tare hierarchy appears optional in revision notes and accepted SOPI, while sequence chart also displays Must use.</p><p class="muted">Retain generic X12 and retailer usage fields; resolve context from detailed hierarchy and original layout.</p></article><article><strong>Michaels</strong><p>SSCC-18 is described as 20 digits; authoritative label specification is external.</p><p class="muted">Preserve raw phrase; candidate distinction is AI 00 plus 18-digit SSCC, not a verified replacement for portal requirements.</p></article><article><strong>All</strong><p>Financial tables, visual label samples, full carrier matrices, product-specific and regulated-product appendices are not exhaustively reviewed.</p><p class="muted">Track as unreviewed, not absent or compliant. No current legal/regulatory conclusion is drawn.</p></article><h2>Source-linked examples</h2><p>Some examples group closely related requirements for discovery. Split these into atomic rules before implementation. Every example is marked non-executable in the JSON.</p><div class="filters"><input id="search" placeholder="Search rules, conditions, or source…" aria-label="Search examples"><select id="retailer" aria-label="Retailer"><option value="">All retailers</option><option>nordstrom</option><option>walmart</option><option>ulta</option><option>michaels</option></select><span id="count"></span></div><article class="rule" data-retailer="nordstrom"><h3>RG-001 · Nordstrom</h3><span class="tag">packaging</span><span class="tag">requirement</span><p>Store-order cartons have a 36 x 27 x 30 inch maximum; ecommerce cartons have a 23 x 17 x 17 inch maximum. Maximum carton weight is 50 lb.</p><p class="muted"><strong>Inputs:</strong> order channel, carton dimensions and units, carton gross weight</p><p><strong>Qualification:</strong> Orientation and dimension semantics require the referenced packaging standards.</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Maximum Carton Dimensions/Weights · printed page 8</p><details><summary>Extracted evidence · text lines 318–329</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>The maximum cartons dimensions are (in inches) Store Orders 36x27x30 &amp; Ecommerce Orders 23x17x17
+The maximum weight per carton is 50 lbs.
+Please refer to the Packaging &amp; Labeling Standards found on Supplier Compliance Website for more detailed 
+information.
+Carton Dimensions Required on Surface and Air Shipments 
+Our carrier programs require the shipper to provide accurate carton count by size (dimensions) on your Bill of Lading or Airway Bill 
+at time of shipment. For Example: 4 ctns @ AA X BB X CC / 10 ctns @ CC X DD X EE
+Declaration of Value
+Do not declare value on surface or air shipments, except in the following cases:
+• When shipping Jewelry or Watches via the US Mail system
+• When shipping high value merchandise to departments 608, 827, 828, 829, 832, 833, 834, 835, 836, 837, 879, 881, 905, 
+922, 923, 926, 927, 928, 929, 930, 931, 932, 933, 945, 955, 967, and 968 </pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-002 · Nordstrom</h3><span class="tag">routing</span><span class="tag">requirement</span><p>Surface shipments exceeding 10,000 lb OR 1,800 cubic feet per DC require the volume-load routing process.</p><p class="muted"><strong>Inputs:</strong> destination DC, aggregate shipment weight, aggregate volume</p><p><strong>Qualification:</strong> The LTL section uses overlapping OR wording; do not turn both paragraphs into independent exhaustive classifiers.</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Volume Load (FTL) Shipments · printed page 8</p><details><summary>Extracted evidence · text lines 315–326</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>If your shipment exceeds 10,000 pounds per DC or 1,800 cubic feet per DC, please review the Volume Shipments 
+guidelines below.
+Maximum Carton Dimensions/Weights
+The maximum cartons dimensions are (in inches) Store Orders 36x27x30 &amp; Ecommerce Orders 23x17x17
+The maximum weight per carton is 50 lbs.
+Please refer to the Packaging &amp; Labeling Standards found on Supplier Compliance Website for more detailed 
+information.
+Carton Dimensions Required on Surface and Air Shipments 
+Our carrier programs require the shipper to provide accurate carton count by size (dimensions) on your Bill of Lading or Airway Bill 
+at time of shipment. For Example: 4 ctns @ AA X BB X CC / 10 ctns @ CC X DD X EE
+Declaration of Value
+Do not declare value on surface or air shipments, except in the following cases:</pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-003 · Nordstrom</h3><span class="tag">timing</span><span class="tag">requirement</span><p>Request volume-load pickup at least 72 hours before requested ship date, excluding weekends; requests after noon origin local standard time count as next business day.</p><p class="muted"><strong>Inputs:</strong> mode, requested pickup, request timestamp, origin timezone, business calendar</p><p><strong>Qualification:</strong> Reconcile with July 21 TMS workflow before execution.</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Volume Load (FTL) Shipments · printed page 8</p><details><summary>Extracted evidence · text lines 332–343</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Contact Routing@nordstrom.com for pickup scheduling at least 72 hours prior to your requested ship date (weekends excluded) 
+for instructions. Any requests sent after 12:00pm (local standard time for origin ship state) will be considered received on the 
+following business day. Same day pickup requests will not be accepted. Suppliers will fill out our Nordstrom Request Form, with 
+shipment details for scheduling. 
+Surface shipments (per DC):
+• Weighing more than 10,000 lbs. or having a cubic measure greater than 1,800 cubic feet
+Air shipments (per DC):
+• Weighing more than 2,000 lbs.
+To schedule a Volume Load pickup, please email Routing@nordstrom.com
+• Your shipping dock must be accessible to a standard 53-foot tractor-trailer combination.
+• Cartons are to be floor loaded into the trailers. However, if the entire load will fit on the trailer using pallets this can be 
+allowed, but only if the pallets are not double stacked. Loads that are received double stacked may incur an unloading </pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-004 · Nordstrom</h3><span class="tag">timing</span><span class="tag">requirement</span><p>Request LTL pickup at least 48 hours before requested ship date, excluding weekends; noon origin cutoff applies.</p><p class="muted"><strong>Inputs:</strong> mode, request timestamp, requested pickup, origin timezone</p><p><strong>Qualification:</strong> Reconcile with later TMS workflow.</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Less-than-truckload (LTL) Shipments · printed page 9</p><details><summary>Extracted evidence · text lines 360–371</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date (weekends excluded) 
+for instructions. Any requests sent after 12:00pm (local standard time for origin ship state) will be considered received on the 
+following business day. Same day pickup requests will not be accepted. Suppliers will fill out our Nordstrom Request Form, with 
+shipment details for scheduling.
+Surface shipments (per DC).
+• Weighing less than 10,000 lbs. or having a cubic measure less than 1,800 cubic feet
+Air shipments (per DC).
+• Weighing less than 2,000 lbs.
+To schedule an LTL load pickup, please email Routing@nordstrom.com
+• Cartons are to be palletized into the trailers. 
+• Same day pick up requests will not be scheduled
+• Shipper will provide the shipping documents</pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-005 · Nordstrom</h3><span class="tag">pallet</span><span class="tag">prohibition</span><p>Palletized LTL shipments must not exceed 84 inches in pallet height.</p><p class="muted"><strong>Inputs:</strong> mode, loaded pallet height</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Bill of Lading Preparation for LTL Shipments · printed page 9</p><details><summary>Extracted evidence · text lines 385–396</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• DO NOT ship pallets higher than 84” maximum 
+• Chargebacks will result for failing to follow these instructions 
+Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 Make out one Bill of Lading document:
+• For each DC;
+• For each day.
+2 Mark the Bill of Lading ‘Collect’.
+3 Include the following information on the Bill of Lading:
+• Shipper’s name;
+• Shipper’s address;
+For each verified Purchase Order, list:</pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-006 · Nordstrom</h3><span class="tag">securement</span><span class="tag">requirement</span><p>Apply a numbered metal ISO 17712 bolt seal to the load and record the number on the BOL.</p><p class="muted"><strong>Inputs:</strong> mode, seal type, seal number, BOL seal number</p><p><strong>Qualification:</strong> Volume-load scope; plastic, cable and tin metal seals are not approved.</p><p><a href="https://drive.google.com/file/d/1KwiTWTd0LPCLC-yYqOnmm-oZGPcKQTRm/view?usp=drivesdk">Nordstorm Routing Guide.pdf</a> · Volume Load (FTL) Shipments · printed page 8</p><details><summary>Extracted evidence · text lines 354–365</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• The shipper must apply a numbered metal ISO 17712 bolt seal to all loads and this number must be noted on the bill of 
+lading. Failure to properly seal the trailer transfers all shortage liability to the shipper. Plastic, cable and tin metal seals are 
+not approved.
+If you have any questions about volume shipments, email Routing@nordstrom.com.NORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 9
+Less-than-truckload (LTL) Shipments
+Contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date (weekends excluded) 
+for instructions. Any requests sent after 12:00pm (local standard time for origin ship state) will be considered received on the 
+following business day. Same day pickup requests will not be accepted. Suppliers will fill out our Nordstrom Request Form, with 
+shipment details for scheduling.
+Surface shipments (per DC).
+• Weighing less than 10,000 lbs. or having a cubic measure less than 1,800 cubic feet</pre><a href="../sources/nordstrom/Nordstorm Routing Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-007 · Nordstrom</h3><span class="tag">edi</span><span class="tag">requirement</span><p>Consolidated shipments require one carton-level ASN per shipment per ship-to DC, with a unique sub-BOL.</p><p class="muted"><strong>Inputs:</strong> transport mode, shipment ID, ship-to DC, ASN grouping, sub-BOL</p><p><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a> · Consolidated ASN Requirements · printed page 2</p><details><summary>Extracted evidence · text lines 74–85</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>For consolidated shipments Nordstrom requires that there is one VICS 856 ASN with carton level information per shipment, per 
+ship-to location (distribution center), and each ship notice must contain its own unique sub-bill of lading number. Nordstrom also 
+requires that the ASN is transmitted and received by Nordstrom’s warehouse management system prior to the shipment’s arrival in 
+the distribution center. A chargeback will be applied if this requirement is not met. 
+UPS ASN Requirements
+For shipments sent via UPS, Nordstrom requires that there is one ASN transmitted per case and the tracking number provided by 
+UPS must populate the sub-bill of lading field (REF*BM segment) and the PRO number field (REF*CN segment). Nordstrom also 
+requires that the ASN is transmitted and received by Nordstrom’s warehouse management system prior to the shipment’s arrival in 
+the distribution center.
+Bulk Pack ASN
+If asked to bulk pack a PO by receiving a code of &quot;BULK&quot; in the REF*QC segment, the 856/ASN should contain the DC number in 
+both the ship-to (N1*ST) and mark-for (N1*BY) segments.</pre><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-008 · Nordstrom</h3><span class="tag">edi</span><span class="tag">requirement</span><p>UPS shipments require one ASN per case; tracking number populates REF*BM and REF*CN.</p><p class="muted"><strong>Inputs:</strong> carrier, case IDs, tracking, ASN references</p><p><strong>Qualification:</strong> UPS masterpacks use one ASN per master case; preserve nesting.</p><p><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a> · UPS ASN Requirements · printed page 2</p><details><summary>Extracted evidence · text lines 79–90</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>For shipments sent via UPS, Nordstrom requires that there is one ASN transmitted per case and the tracking number provided by 
+UPS must populate the sub-bill of lading field (REF*BM segment) and the PRO number field (REF*CN segment). Nordstrom also 
+requires that the ASN is transmitted and received by Nordstrom’s warehouse management system prior to the shipment’s arrival in 
+the distribution center.
+Bulk Pack ASN
+If asked to bulk pack a PO by receiving a code of &quot;BULK&quot; in the REF*QC segment, the 856/ASN should contain the DC number in 
+both the ship-to (N1*ST) and mark-for (N1*BY) segments.
+Masterpack ASN requirementsIn the event that small individual store cartons for multiple stores (going to the same DC) are combined for one purchase order into a 
+masterpack. Nordstrom maintains two masterpack ASN requirements depending on the mode of transportation used:
+The ASN requirement for shipping consolidated master-packed cases is that there is one ASN transmitted where the REF*BM 
+segment reflects the unique sub-bill of lading number, the N1*ST segment reflects the correct ship-to location (distribution center), 
+the N1*BY segment indicates the appropriate store destination and the MAN segments reflect the correct GS1-128 case IDs for all </pre><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-009 · Nordstrom</h3><span class="tag">packing</span><span class="tag">conditional exception</span><p>Separately packed and clearly marked no-charge merchandise can be excluded from ASN requirements; other packing requires valid UPCs and ASN representation.</p><p class="muted"><strong>Inputs:</strong> merchandise charge status, container hierarchy, marking, UPCs</p><p><strong>Qualification:</strong> Separate inner cartons may sit within larger retail cases if separation and marking are maintained.</p><p><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a> · ASNs for No Charge Merchandise · printed page 2</p><details><summary>Extracted evidence · text lines 98–109</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>ASNs for “No Charge” Merchandise
+Shipments containing “no charge” merchandise (i.e. testers, samples) must be packed in separate case(s) from the retail 
+merchandise and clearly marked as “no charge”. Separate inner carton (s) of “no charge” merchandise (i.e. testers, samples) may be 
+packed within large case (s) of retail merchandise but must be clearly marked as “no charge” and maintain separation from retail 
+merchandise. ASNs are not required for “no charge” merchandise shipped in this manner.
+“No charge” merchandise shipped in any other manner, including loose within case(s) containing retail merchandise must have valid 
+UPCs with the Nordstrom Inventory system and accurately represented within the ASN for that shipment. Expense offset 
+chargebacks will be accessed for inaccurate ASNs containing “no charge” merchandise that do not meet these requirements.01/2025 Ship Notice/Manifest - 856
+856 - 4010 3 Nordstrom
+Vendor Accuracy Audit Program
+Nordstrom uses warehouse management technology to receive merchandise using the ASN and pay vendors with EDI invoices. 
+Therefore, vendors must make every effort to ensure that shipments are 100% accurate. Nordstrom’s audit program samples a </pre><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-010 · Nordstrom</h3><span class="tag">workflow</span><span class="tag">requirement</span><p>ASN replacements use BSN01=07 and retain the original sub-BOL and PO/DC combination; retransmit before arrival.</p><p class="muted"><strong>Inputs:</strong> original ASN, replacement ASN, arrival time, sub-BOL, PO, DC</p><p><strong>Qualification:</strong> Source advises waiting 60 minutes to avoid duplication; retain as advice.</p><p><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a> · Re-transmitting ASN Data · printed page 3</p><details><summary>Extracted evidence · text lines 118–129</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>ASN data can be retransmitted to Nordstrom at any time prior to the shipment’s arrival in the distribution center. When retransmitting 
+data, please be sure to update the BSN01 to ‘07’ for duplicate/replacement.
+Also, to ensure correct retransmission, the new or corrected ASN must maintain the same sub-bill of lading value PO/DC 
+combination as the original. This is the value sent in the REF/BM. This will allow the “new” ASN to overwrite the original ASN in our 
+warehouse management system. If the ‘new‘ data reaches our warehouse management system before the warehouse personnel 
+begin to process the shipment and all other information within the transmission is accurate, no charge backs should be incurred. 
+However, if the shipment arrives before the “new” ASN is received then the shipment will be received with the original ASN data. 
+Please note, to avoid duplication errors, we advise waiting 60 minutes before re-transmitting the correct EDI 856.
+997/Functional Acknowledgments
+Nordstrom sends a 997 (functional acknowledgment) back within 24 hours for any inbound file we receive. Please be aware a 997 
+indicates receipt of a file only. A 997 does not indicate the data was processed through Nordstrom’s warehouse management system 
+successfully. To ensure Nordstrom is receiving any 856 files from your company, please be sure to monitor your 997’s.</pre><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-011 · Nordstrom</h3><span class="tag">workflow</span><span class="tag">interpretation</span><p>A 997 proves file receipt, not successful WMS processing.</p><p class="muted"><strong>Inputs:</strong> 997 status, downstream processing status</p><p><a href="https://drive.google.com/file/d/1BEZqXiJZIOB2aQwU9NFDF04DkNOTT_-E/view?usp=drivesdk">Nordstrom 856 EDI Specification.pdf</a> · 997/Functional Acknowledgments · printed page 3</p><details><summary>Extracted evidence · text lines 128–139</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>indicates receipt of a file only. A 997 does not indicate the data was processed through Nordstrom’s warehouse management system 
+successfully. To ensure Nordstrom is receiving any 856 files from your company, please be sure to monitor your 997’s.
+NOTE – To avoid formatting errors, please do not include special characters in any field including but not limited to -- any European 
+accents ~ ! @ # $ % ^ &amp; * ( ) + / ? &gt; &lt; ^ `.01/2025 Ship Notice/Manifest - 856
+856 - 4010 4 Nordstrom
+ISA Interchange Control Header Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 16
+User Option (Usage): Must use
+Purpose: To start and identify an interchange of zero or more functional groups and interchange-related control segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage</pre><a href="../sources/nordstrom/Nordstrom 856 EDI Specification.txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-012 · Nordstrom</h3><span class="tag">timing</span><span class="tag">conditional guidance</span><p>Submit by noon local standard time to be considered for next-day pickup.</p><p class="muted"><strong>Inputs:</strong> request timestamp, origin timezone, pickup date</p><p><strong>Qualification:</strong> Consideration is not a guarantee. Same packet also says booking two days ahead remains expected; coexistence with 48/72-hour routing rules unresolved.</p><p><a href="https://drive.google.com/file/d/1XPoYrwp1IY5zzAi8ijOYsdmh4TAwYZFL/view?usp=drivesdk">Vendor Training Packet TMS v4 July2025 .pdf</a> · FAQs / Next day pick-up · printed page 33</p><details><summary>Extracted evidence · text lines 274–285</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Submit request by 12pm local standard time to be considered for next day pick up. Routing requests submitted after 12pm 
+local time will be planned for the following business day.
+WHAT DOES NORDSTROM RECOMMEND FOR BOL FORM?
+Nordstrom recommends vendors use the MATM provided BOL for shipping because it includes all the required information.
+If you use your own BOL, you must include required data on the BOL.
+WHAT IS REQUIRED DATA THAT MUST BE ON A BOL?
+Must include:
+1. MATM Shipment number must be used
+2. PO numbers
+3. Accurate carton count34
+4. Accurate weight
+5. Accurate Origin and destination</pre><a href="../sources/nordstrom/Vendor Training Packet TMS v4 July2025 .txt">Full saved text</a></details></article><article class="rule" data-retailer="nordstrom"><h3>RG-013 · Nordstrom</h3><span class="tag">reconciliation</span><span class="tag">requirement</span><p>Carton and pallet counts on routing requests are whole numbers; floor loads use zero pallets.</p><p class="muted"><strong>Inputs:</strong> routing request, carton count, pallet count, load type</p><p><strong>Qualification:</strong> For one pallet shared across multiple POs, guide assigns 0 to earlier POs and 1 to the last; this is reporting allocation, not physical pallet count by PO.</p><p><a href="https://drive.google.com/file/d/1O4r-82pDYwfyc8Bn2QqnOS69urFTTTCE/view?usp=drivesdk">Supplier Routing Request Guidance.pdf</a> · PO header shipment details</p><details><summary>Extracted evidence · text lines 43–54</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>✓ Enter Carton count by each PO using 
+whole numbers. No decimal point value 
+for carton count
+✓ Enter Pallet count by each PO using 
+whole numbers. No decimal point value 
+for pallet count
+✓ Floor load shipments should have a pallet 
+value of “0” for all PO lines. Carton and 
+volume must be accurate for floor loaded 
+routing requests.
+✓ If multiple POs on routing request is only 
+1 pallet, enter a “0” value for all the POs </pre><a href="../sources/nordstrom/Supplier Routing Request Guidance.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-014 · Walmart</h3><span class="tag">labels</span><span class="tag">requirement</span><p>Pallet labels are required on at least two adjacent sides.</p><p class="muted"><strong>Inputs:</strong> network, pallet labels, label placement</p><p><strong>Qualification:</strong> Upper-right placement is preferred; placement between wrap layers is best practice. Other networks may add requirements.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Pallet Shipping Labels - Domestic · printed page 227</p><details><summary>Extracted evidence · text lines 2914–2925</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Pallet labels are required on at least 2 adjacent sides of the pallet, preferred on 
+the upper right corner. It is best practice to place the label between layers of 
+stretch wrap.
+• The use of SSCC-18 barcode does not negate the requirement of the orderable 
+GTIN barcode at the case level.
+NOTE - 3rd party consolidators are required to submit an ASN with SSCC18 barcode that will be used to identify each supplier PO and/or item that is 
+included on the pallet.
+NOTE - Specific networks may have additional pallet label requirements. 
+Be sure to check with your network standards (e.g. DSDC, RX, etc.) for 
+additional instruction.
+REQUIRED
+• SSCC-18 Barcode in GS1-128 Format w/ appropriate application </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-015 · Walmart</h3><span class="tag">labels</span><span class="tag">prohibition</span><p>A mixed-item pallet label must not contain the orderable GTIN barcode.</p><p class="muted"><strong>Inputs:</strong> pallet SKU count, label barcode contents</p><p><strong>Qualification:</strong> Case-level GTIN requirements remain.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Pallet Shipping Labels - Domestic · printed page 227</p><details><summary>Extracted evidence · text lines 2911–2922</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>The SSCC-18 barcode is the required barcode format for all pallet labels. A Mixed Item 
+pallet label is NOT ALLOWED to contain the orderable GTIN in either ITF-14 or GS1-
+128 formats.
+• Pallet labels are required on at least 2 adjacent sides of the pallet, preferred on 
+the upper right corner. It is best practice to place the label between layers of 
+stretch wrap.
+• The use of SSCC-18 barcode does not negate the requirement of the orderable 
+GTIN barcode at the case level.
+NOTE - 3rd party consolidators are required to submit an ASN with SSCC18 barcode that will be used to identify each supplier PO and/or item that is 
+included on the pallet.
+NOTE - Specific networks may have additional pallet label requirements. 
+Be sure to check with your network standards (e.g. DSDC, RX, etc.) for </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-016 · Walmart</h3><span class="tag">identifiers</span><span class="tag">requirement</span><p>ASN MAN fields must match the SSCC barcode value on the logistic unit.</p><p class="muted"><strong>Inputs:</strong> physical SSCC, ASN MAN</p><p><strong>Qualification:</strong> AI 00 and the 18-digit SSCC are distinct components; do not flatten as one universal identifier length.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · GS1-128 Barcode with SSCC-18 · printed page 219</p><details><summary>Extracted evidence · text lines 2441–2452</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Shipping Notice (ASN) data. Each Supplier is required to comply with matching the ASN 
+“MAN” fields with the SSCC barcode value, as seen in the diagram below.
+SSCC
+NOTE - For detailed technical requirements, see the EDI 856 Technical Specifications 
+Guide: Walmart Retail Link Path: Retail Link &gt; Academy &gt; Getting Started &gt; EDI.
+Case Requirements:
+• Department 38 Pharmacy RX shipments
+• Shipping a PO Type 73 (DSDC)
+• Shipping a PO Type 37 (DSD)
+• Small Parcel Shipments
+• Floor Loaded Shipments into eCommerce
+• Shipments into GM Consolidation Centers</pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-017 · Walmart</h3><span class="tag">pallet</span><span class="tag">requirement</span><p>Grade A pallets have a maximum loaded weight of 2,100 lb; block pallets 2,800 lb.</p><p class="muted"><strong>Inputs:</strong> pallet construction, loaded weight</p><p><strong>Qualification:</strong> Preserve pallet type and network-specific standards.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Pallet Standards · printed page 230</p><details><summary>Extracted evidence · text lines 3194–3205</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Grade A pallet maximum loaded weight is 2,100 lbs.
+• Block pallet maximum loaded weight is 2,800 lbs.
+• Staple stock items are required to be palletized. All 
+other items are preferred to be palletized.
+• Pallets contaminated with items not shipped on that 
+pallet (cross-contamination) or contaminated prior to 
+being loaded for shipment are NOT ALLOWED.
+• Fees or charge-backs may be assessed if pallets fail 
+to meet Walmart’s pallet requirements.
+Alternative Pallet Materials
+Walmart supports the use of alternative pallet materials 
+such as plastic, metal, etc. Approval may require proof </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-018 · Walmart</h3><span class="tag">pallet</span><span class="tag">requirement</span><p>Maximum pallet height is 96 inches including base; full pallet pull is 85 inches; department 4 permits 108 inches.</p><p class="muted"><strong>Inputs:</strong> department, full pallet pull, stacking configuration, total height including base</p><p><strong>Qualification:</strong> These are scoped alternatives, not three competing global limits.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Double Stacking - Inbound · printed page 238</p><details><summary>Extracted evidence · text lines 3539–3550</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>NOTE - 96&quot;is the maximum pallet height allowed when shipping to Walmart. 
+85&quot; is the maximum height when shipping a full pallet pull.
+Dept 4 Consumer Paper Goods allows maximum pallet height of 108”, 
+single or double stacked.
+Double Stacking
+Pallets may be double stacked in the trailer, providing the weight and/or height permits 
+double stacking without risk to packaging or product integrity 
+NOTE - ISTA 3E testing is highly encouraged for all unitized pallets and product that 
+used slip sheets or tiersheets.
+48&quot; 
+48&quot;
+48&quot; 48&quot; 48&quot;</pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-019 · Walmart</h3><span class="tag">pallet</span><span class="tag">conditional exception</span><p>Overhang is prohibited generally; department 4 allows up to 2 inches on any side.</p><p class="muted"><strong>Inputs:</strong> department, overhang per side, pallet footprint</p><p><strong>Qualification:</strong> Oversized-pallet provisions also apply; Grocery Network has separate restrictions.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Pallet Overhang and Underhang · printed page 242</p><details><summary>Extracted evidence · text lines 3702–3713</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Pallet overhang - When merchandise is placed on pallets, 
+ensure there is no freight overhanging the edge of the 
+pallet. Merchandise is required to fit within a 48&quot; x 40&quot; 
+pallet footprint. Pallet overhang is NOT ALLOWED.
+Oversized pallets are allowed only if the packaging 
+size does not fit onto a standard 48&quot; x 40&quot; pallet 
+without overhang.
+Overhang not to exceed 2” on any side of the pallet is 
+allowed for Dept. 4 only.
+Pallet underhang - Should be minimized to support the 
+unitized load.
+Unitized Shipments</pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-020 · Walmart</h3><span class="tag">securement</span><span class="tag">prohibition</span><p>Colored stretch wrap is prohibited with possible special-event exceptions; black corrugated material or black stretch wrap is prohibited.</p><p class="muted"><strong>Inputs:</strong> wrap color, material, approved event exception</p><p><strong>Qualification:</strong> The black-material sentence is unconditional in the text; do not assume special-event permission extends to black.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Stretch Wrapping · printed page 247</p><details><summary>Extracted evidence · text lines 3925–3936</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Colored stretch wrap is NOT ALLOWED. Exceptions may be given to support 
+special events. Black corrugated or black stretch wrap is NOT ALLOWED.
+• Netting and twine for pallet containment is NOT ALLOWED.
+• Using more than 10 layers of stretch wrap is NOT ALLOWED.
+• Stretch wrap tails are NOT ALLOWED. The end of the stretch wrap is 
+required to be pressed firmly against the unit load.
+• Ventilated stretch wrap is allowed as needed for product.
+• Cases are required to be secured to the pallet with stretch wrap.
+Containment Force
+• Containment force is the amount of force the wrap exerts on a load in 
+order to hold it together for the duration of the shipping process.
+• Containment force is the only consistent measurement that can be </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-021 · Walmart</h3><span class="tag">securement</span><span class="tag">prohibition</span><p>Netting and twine are prohibited; wrap must not exceed 10 layers or cover fork entry holes.</p><p class="muted"><strong>Inputs:</strong> securement material, wrap layers, fork-entry visibility</p><p><strong>Qualification:</strong> Grouped discovery example; split into atomic rules for production.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Stretch Wrapping · printed page 247</p><details><summary>Extracted evidence · text lines 3927–3938</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Netting and twine for pallet containment is NOT ALLOWED.
+• Using more than 10 layers of stretch wrap is NOT ALLOWED.
+• Stretch wrap tails are NOT ALLOWED. The end of the stretch wrap is 
+required to be pressed firmly against the unit load.
+• Ventilated stretch wrap is allowed as needed for product.
+• Cases are required to be secured to the pallet with stretch wrap.
+Containment Force
+• Containment force is the amount of force the wrap exerts on a load in 
+order to hold it together for the duration of the shipping process.
+• Containment force is the only consistent measurement that can be 
+taken regardless of the gauge of wrap, manufacturer of wrap, or 
+wrapping method (type of equipment used vs. hand application).</pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-022 · Walmart</h3><span class="tag">packing</span><span class="tag">requirement</span><p>Separate POs by layers/tier sheets and mark Multi-PO; do not mix staple-stock with assembly POs or destinations on one pallet.</p><p class="muted"><strong>Inputs:</strong> PO type, destination, pallet layer contents, separators, markings</p><p><strong>Qualification:</strong> Explicitly not applicable to Consolidation Centers or Direct Store Delivery.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Multi-PO Pallet · printed page 235</p><details><summary>Extracted evidence · text lines 3446–3457</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Multi-PO Pallet (Same PO Type- Staple Stock or Assembly) 
+• You are required to load each PO completely by layer.
+• If your order does not complete a full layer, orders are required to be segregated . . 
+ together with clear delineation of where the next item begins.
+• You are required to label pallet as “Multi-PO.”
+• Use tier sheets to separate each PO.
+• Do not load staple stock and assembly POs on the same pallet.
+• Do not load POs for multiple DCs on the same pallet.
+• Do not place loose cases on top of the pallet.
+NOTE - For Consolidation Centers, refer to the Consolidation Center Section.
+This instruction is not applicable for Consolidation Centers.
+These instructions are not applicable for Direct Store Delivery. Refer to the Direct </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-023 · Walmart</h3><span class="tag">documents</span><span class="tag">requirement</span><p>For a BOL with multiple POs and different must-arrive-by dates, use the earliest MABD.</p><p class="muted"><strong>Inputs:</strong> BOL PO membership, PO arrival dates</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Bill of Lading · printed page 252</p><details><summary>Extracted evidence · text lines 4260–4271</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• For BOLs that have multiple POs and different MABDs,the earliest MABD should be
+specified.
+Walmart eCommerce makes use of multiple 3PL providers within its fulfillment center network. All 
+3PL fulfillment centers within the Walmart.com network have a Walmart store number that will be
+included on all routing instructions for collect freight to these FCs. When filling out bills of lading for
+loads going to these facilities, vendors should fill out the consignee field on the BOL to match the
+destination as it appears on the routing instructions received from Walmart.com.
+For collectshipments, failure to indicate correct consignee name and address,freightterms, 
+Walmartload number, and PO numbers may resultin chargebacksto the Supplier.
+VICS BOL Guidelines
+Ourlong-term strategy is to supportimplementation of the VICS Standard BOL.
+For more information on the VICS BOL see these resources: </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-024 · Walmart</h3><span class="tag">workflow</span><span class="tag">requirement</span><p>Monitor 997 and 824, correct and retransmit ASN errors before freight arrives.</p><p class="muted"><strong>Inputs:</strong> 997, 824, corrected ASN, arrival</p><p><strong>Qualification:</strong> No 824 after a 997 is described as reasonable confidence, not an explicit final acceptance event.</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · ASN Digital Transmission Process · printed page 254</p><details><summary>Extracted evidence · text lines 4364–4375</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>If Walmart identifies specific data issues in the ASN, an 824 (Application Advice) will be issued. Suppliers must be set up to detect when an 824 is received and be prepared 
+to review and resolve the issues it identifies.
+4. Correction and Retransmission:
+Once issues from the 824 are addressed, the supplier must correct the ASN and retransmit it. This restarts the validation cycle:
+• Wait for a new 997 response
+• Check for any new 824 messages
+5. Compliance Impact:
+If the ASN is not corrected and retransmitted before the freight arrives at the Walmart receiving facility, the supplier’s ASN compliance will be negatively affected.
+6. Successful Transmission:
+If no 824 is received after a 997 acknowledgment, the supplier can be reasonably confident that the ASN was successfully processed.
+Supply Chain Standards / Shipping
+ASN Digital</pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="walmart"><h3>RG-025 · Walmart</h3><span class="tag">reconciliation</span><span class="tag">requirement</span><p>Before arrival, appointment SCAC, PO numbers and case counts by PO must match the actual load.</p><p class="muted"><strong>Inputs:</strong> appointment, carrier SCAC, PO membership, case counts</p><p><a href="https://drive.google.com/file/d/16cgQJI421wQMqq7bBGeXphBw7GkGWjc_/view?usp=drivesdk">WalMart supply-chain-packaging-guide.pdf</a> · Appointment Accuracy · printed page 255</p><details><summary>Extracted evidence · text lines 4425–4436</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>The following information is required to be updated and accurate in DC Scheduler 
+priorto the load&#x27;s arrival at the DC:
+• SCAC (Standard Carrier Alpha Code) - The appointment is required to have a valid 
+SCAC that matches the carrier that will be delivering the load 
+• POs Numbers on the Load - All POs delivered on the load are required to be included 
+on the appointment with valid Walmart PO numbers 
+• Case Count- The appointmentis required to reflect the correct number of cases on 
+the load by PO 
+Appointment On-Time
+• Loads are required to gate in on-time per the scheduled appointment 
+• A delivery is required to be rescheduled prior to the appointment time if there is 
+a known delay </pre><a href="../sources/walmart/WalMart supply-chain-packaging-guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-026 · Ulta</h3><span class="tag">edi</span><span class="tag">requirement</span><p>One ASN per PO per delivery, regardless of TL/LTL/parcel mode.</p><p class="muted"><strong>Inputs:</strong> PO, delivery, ASN grouping</p><p><strong>Qualification:</strong> Blanket/Mega PO across trucks requires one unique ASN per truck/shipment; multiple POs on a pallet still have separate ASNs referencing shipment ID.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 4.2 Required EDI Transactions · printed page 10</p><details><summary>Extracted evidence · text lines 282–293</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>o One ASN per PO, per delivery is required regardless of shipment method 
+(TL/LTL/Parcel)
+o For Blanket or Mega POs that do not fit on one truck, each truck/shipment 
+against the PO, is required to have its own unique ASN submitted
+o When shipping more than one PO on a pallet, each PO will need to have its own 
+ASN but reference the shipment ID. Refer to section 15.2 Pallet Loading and 
+Wrapping.
+o Multiple Ulta Beauty vendor numbers to one ASN are not accepted
+o ASN must be sent prior to shipment arrival at Ulta Beauty DC
+ 810 Invoice
+ GSI-128 Labels with proper SSCC-18 codes are required for pallet and carton labels. 
+Refer to Section 14: Packing &amp; Label Requirements for GS1-128 label standards.</pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-027 · Ulta</h3><span class="tag">identifiers</span><span class="tag">prohibition</span><p>Carton and pallet SSCC-18 codes cannot be reused for three years.</p><p class="muted"><strong>Inputs:</strong> SSCC allocation history, reuse dates</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 4.2 Required EDI Transactions · printed page 10</p><details><summary>Extracted evidence · text lines 294–305</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>o Carton &amp; Pallet GS1-128 SSCC 18-digit serial shipping container codes cannot be 
+reused for a period of 3 years.Ulta Beauty Supply Chain Guide – Published March 2025
+11
+Refer to the Ulta Beauty Supplier Portal / EDI Documentation for comprehensive 
+transactional guidelines, EDI requirements and helpful documents: 
+https://supplierportal.ultabeauty.com
+4.3 EDI Transaction Methods
+Brand Partners may select from two EDI methods for data exchange through OpenText: 
+OpenText EDI Integrated:
+The EDI Integrated method allows Brand Partners the ability to configure, integrate and 
+transact all of Ulta’s required EDI transactions electronically.
+o This method is recommended for mid-sized and large businesses that need to </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-028 · Ulta</h3><span class="tag">packaging</span><span class="tag">requirement</span><p>Use sealed fully enclosed corrugated cartons rated at least 200-pound test OR ECT 32.</p><p class="muted"><strong>Inputs:</strong> carton closure, material, burst rating, ECT</p><p><strong>Qualification:</strong> Alternative strength standards; do not combine into two mandatory simultaneous tests.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 14.1 Packaging Requirements · printed page 23</p><details><summary>Extracted evidence · text lines 703–714</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• All items must be packed in sealed fully enclosed corrugated cartons with a minimum 
+rating of 200-pound test or ECT 32, to ensure cartons can be stacked and palletized 
+without jeopardizing product integrity.
+• Glass items, including candles, must be properly secured to 
+avoid damage. Each glass item should be properly packaged 
+inside an individual carton at the each level (see Unit Pack).
+• Delicate items including but not limited to bottles, liquids, 
+hairsprays, and mousse should be equipped with proper 
+packaging material such as dividers, shipping paper, and/or 
+air pillows.
+• Case pack must include an additional layer of protection to 
+account for prepping the carton by Ulta associates, via a </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-029 · Ulta</h3><span class="tag">packaging</span><span class="tag">prohibition</span><p>Carton weight must not exceed 40 lb, except display materials.</p><p class="muted"><strong>Inputs:</strong> carton weight, product category</p><p><strong>Qualification:</strong> Source says should under Unacceptable; preserve this wording alongside normalized modality.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 14.2 Packing Requirements · printed page 27</p><details><summary>Extracted evidence · text lines 828–839</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> No carton weight should exceed 40 pounds (except for display materials).
+ Do not ship SKUs in MIXED cartons if the SKU quantity shipped is in more than one 
+master case.
+ Full case quantities should not be packaged inside a master carton. 
+14.3 Label Content Requirements
+GS1-128 Master Pack Label
+ All Shipments to Ulta Beauty Distribution centers require GS1-128 Shipping 
+Container labels, including a scannable barcode. 
+ All GS1-128 Master Pack Labels must follow all format and content requirements 
+outlined in Image 14.3.1
+ Master Pack Labels must be adhered to each individual carton (see 14.4 Carton 
+Label Placement)</pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-030 · Ulta</h3><span class="tag">packing</span><span class="tag">requirement</span><p>A partial single-SKU case must be marked PARTIAL.</p><p class="muted"><strong>Inputs:</strong> SKU count, case-pack quantity, actual quantity, carton marking</p><p><strong>Qualification:</strong> Less-than-case quantity display is worded should.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 14.2 Partial Case Requirements · printed page 27</p><details><summary>Extracted evidence · text lines 809–820</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> The master case must be clearly marked “PARTIAL” 
+ The master case should display the less-than-case quantity
+ For example: If full case = 24, use “PARTIAL” when QTY = 18 (see Image 14.3.2 
+Partial Case Requirements Example)
+Mixed Case Packing Requirements
+A MIXED CASE is when orders contain items that are less than full case quantity and is 
+shipped with more than one SKU in the master case:
+ All Mixed cases should be clearly marked &quot;MIXED&quot; or “MIXED SKUs”.
+ SKUs inside a mixed case should be clearly segregated (i.e. rubber bands, layer 
+separation, bags in boxes etc.).
+ There can be no more than one inner pack per SKU inside a mixed case 
+ Use an Inner Pack Label (when necessary) for SKU identification/differentiation (see </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-031 · Ulta</h3><span class="tag">packing</span><span class="tag">prohibition</span><p>A carton must not contain multiple POs.</p><p class="muted"><strong>Inputs:</strong> carton contents, PO per line</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 14.2 Mixed Case Packing Requirements · printed page 27</p><details><summary>Extracted evidence · text lines 827–838</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> No cartons may contain multiple PO’s.
+ No carton weight should exceed 40 pounds (except for display materials).
+ Do not ship SKUs in MIXED cartons if the SKU quantity shipped is in more than one 
+master case.
+ Full case quantities should not be packaged inside a master carton. 
+14.3 Label Content Requirements
+GS1-128 Master Pack Label
+ All Shipments to Ulta Beauty Distribution centers require GS1-128 Shipping 
+Container labels, including a scannable barcode. 
+ All GS1-128 Master Pack Labels must follow all format and content requirements 
+outlined in Image 14.3.1
+ Master Pack Labels must be adhered to each individual carton (see 14.4 Carton </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-032 · Ulta</h3><span class="tag">labels</span><span class="tag">conditional permission</span><p>If carton height is below 4.5 inches, the GS1-128 label may rotate 90 degrees counterclockwise; the barcode must not be folded.</p><p class="muted"><strong>Inputs:</strong> carton height, label orientation, fold location</p><p><strong>Qualification:</strong> Visual diagram not reviewed; section also distinguishes &gt;7 and &lt;7 inches without specifying exactly 7.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 14.4 Carton Label Placement · printed page 30</p><details><summary>Extracted evidence · text lines 921–932</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> If your carton is under 4 ½” in height, the GS1-128 label may be rotated 90 degrees 
+counterclockwise (refer to image 14.4.3). The label may be folded overlapped over 
+the side of the carton if the barcode is not folded. 
+ Any shipped carton that requires a Hazmat label, the Hazmat label must be 
+completely visible, not covered by any other label or sticker.
+Unacceptable 
+ Never place any part of the label over the seam. 
+ Do not place labels over product ID numbers, UPC barcodes, retail price or other 
+consumer information. 
+ Do not place labels over hazmat or shipping labels 
+ Image 14.4.1:
+Carton Label Placement </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-033 · Ulta</h3><span class="tag">pallet</span><span class="tag">requirement</span><p>Use four-way 48 x 40 inch hardwood GMA #2 or Grade B pallets.</p><p class="muted"><strong>Inputs:</strong> pallet material, grade, dimensions, entry</p><p><strong>Qualification:</strong> Context has small-parcel exceptions; do not infer all parcel shipments require pallets.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 15.1 Pallet Types · printed page 33</p><details><summary>Extracted evidence · text lines 1011–1022</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>All products must be shipped on a Four Way 48” x 40” Hardwood GMA #2 Or Grade B 
+Pallet. 
+Specifications for a GMA#2 or Grade B pallet
+• No less than 4 boards on bottom
+• Average top deck spacing 2-1/2″ to 3-1/2″ but can be up to 4″
+• 3 stringers (1-1/2″ x 3-1/2″ each)
+• 4-way entry
+• Has plugs (repairs) on stringers
+• Plugs can be various length and location
+• No more than two boards (stringers) thick at any one point
+• Chips or partial split boards are acceptable and may have multiple blemishes and 
+color degradation</pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-034 · Ulta</h3><span class="tag">pallet</span><span class="tag">requirement</span><p>Stackable single-item pallets: at most 51 inches floor-to-top; multi-SKU pallets: at most 75 inches.</p><p class="muted"><strong>Inputs:</strong> SKU count, stackability, loaded height from floor</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 15.2 Pallet Loading · printed page 34</p><details><summary>Extracted evidence · text lines 1041–1052</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Limit height of stackable, single item pallets to a maximum height of 51” (floor to 
+top). This allows for double stacking. 
+ Pallets with multiple SKU’s can be no higher than a height of 75” (floor to top). 
+ Shipments with multiple POs must be shipped as one PO per pallet. On an exception 
+basis if PO quantities are small and loaded on one pallet, POs should be separated 
+by a slip sheet.
+Image 15.2.1:
+Loading Multiple 
+SKUs on a PalletUlta Beauty Supply Chain Guide – Published March 2025
+35
+Requirements for Wrapping a Pallet
+ Stretch-wrap the pallet using plastic, heavyweight film wrapped as tightly as </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-035 · Ulta</h3><span class="tag">packing</span><span class="tag">conditional exception</span><p>Normally one PO per pallet; small PO quantities may share a pallet separated by a slip sheet.</p><p class="muted"><strong>Inputs:</strong> PO quantities, pallet membership, slip sheets</p><p><strong>Qualification:</strong> Small is not numerically defined in this passage; retain unresolved condition.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 15.2 Pallet Loading · printed page 34</p><details><summary>Extracted evidence · text lines 1044–1055</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Shipments with multiple POs must be shipped as one PO per pallet. On an exception 
+basis if PO quantities are small and loaded on one pallet, POs should be separated 
+by a slip sheet.
+Image 15.2.1:
+Loading Multiple 
+SKUs on a PalletUlta Beauty Supply Chain Guide – Published March 2025
+35
+Requirements for Wrapping a Pallet
+ Stretch-wrap the pallet using plastic, heavyweight film wrapped as tightly as 
+possible to ensure stability, especially including any single cartons on the top layer.
+ Apply a pallet topper to each pallet to ensure pallet load integrity.
+ The stretch-wrap should be tied or attached to the pallet ensuring that the first </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-036 · Ulta</h3><span class="tag">securement</span><span class="tag">requirement</span><p>Orders exceeding 15 cases must be palletized and stretch-wrapped.</p><p class="muted"><strong>Inputs:</strong> order case count, palletization, wrap</p><p><strong>Qualification:</strong> Exactly 15 cases and parcel weight boundaries require clarification across sections.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 15.2 Wrapping · printed page 35</p><details><summary>Extracted evidence · text lines 1059–1070</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> All orders exceeding 15 cases must be palletized and stretch-wrapped. 
+ Pallets must be labeled using the requirements provided in Section 14.5: Pallet Label 
+Requirements
+Recommendation for Wrapping a Pallet
+ Stretch-wrap the pallet using NON-clear (black preferred) plastic heavyweight film, 
+with a pallet topper, wrapped as tightly as possible for added security during 
+transportation 
+Unacceptable
+ No overhang is allowed.
+ Do not mix the same item on the same PO across multiple mixed pallets.
+ Do not mix cartons for different DCs on the same pallet.
+ Do not double stack pallets and wrap them together to create a single handling unit.</pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-037 · Ulta</h3><span class="tag">securement</span><span class="tag">recommendation</span><p>Use non-clear heavyweight plastic stretch wrap, black preferred, with a pallet topper.</p><p class="muted"><strong>Inputs:</strong> wrap color, wrap material, topper</p><p><strong>Qualification:</strong> This color recommendation differs from Walmart&#x27;s prohibition. Pallet toppers are separately required.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 15.2 Recommendation for Wrapping · printed page 35</p><details><summary>Extracted evidence · text lines 1063–1074</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Stretch-wrap the pallet using NON-clear (black preferred) plastic heavyweight film, 
+with a pallet topper, wrapped as tightly as possible for added security during 
+transportation 
+Unacceptable
+ No overhang is allowed.
+ Do not mix the same item on the same PO across multiple mixed pallets.
+ Do not mix cartons for different DCs on the same pallet.
+ Do not double stack pallets and wrap them together to create a single handling unit.
+Refer to Section 25.9: Pallet Examples for Acceptable and Unacceptable
+ 
+Acceptable Pallet Topper 
+ </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-038 · Ulta</h3><span class="tag">timing</span><span class="tag">requirement</span><p>Enter PO details into TMS at least 48 hours before requested ship date.</p><p class="muted"><strong>Inputs:</strong> freight terms, TMS submission, requested ship date</p><p><strong>Qualification:</strong> Collect shipment scope.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 17.2 Collect Shipment Requirements · printed page 38</p><details><summary>Extracted evidence · text lines 1182–1193</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• PO Details must be entered into the TMS at least 48 hours prior to the Requested Ship 
+Date to allow for tendering.
+• POs entered in TMS INSIDE of 48 hours may be at risk for on-time pickup, including Pos 
+entered into TMS ON the Requested Ship Date
+• The shipment must be ready for Carrier pick-up on the Requested Ship Date. The 
+Requested Ship Date = PO Submission Date + pick/pack/ship calendar days.
+• If you use a 3PL that ships other Ulta brands, your shipment may be consolidated with 
+other Ulta brands on the same shipment.
+• Changes to a single PO shipping terms must be approved by your Ulta Beauty 
+Inventory Analyst and Ulta Beauty Transportation.For changes to your overall freight 
+terms, reach out to your Ulta Beauty Merchant.
+• If a Brand Partner is receiving PO(s) without adequate pick, pack and ship days to meet </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-039 · Ulta</h3><span class="tag">routing</span><span class="tag">needs review</span><p>Parcel exemption uses combined order weight below 150 lb and case count below 15; other passages use inconsistent boundary wording.</p><p class="muted"><strong>Inputs:</strong> same-day destination grouping, aggregate weight, aggregate cases</p><p><strong>Qualification:</strong> Do not resolve exactly 150 lb, exactly 15 cases, or mixed threshold cases automatically.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 17.2 Carriers &amp; Transportation · printed page 39</p><details><summary>Extracted evidence · text lines 1242–1253</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Small parcel shipments via UPS are &lt; less than 150lbs and &lt;15 cases for the combined
+total order including all PO’s. Small parcel shipments do not require entry in TMS. 
+o If there are multiple POs shipping on the same day to the same destination, 
+regardless of mode, combine weight and pallet count to determine consolidated 
+mode of transport. When CONSOLIDATED shipment is &gt; greater than 150lbs and 
+&gt;15 cases, enter all POs into TMS and follow guidelines in section 15.2 Pallet 
+Loading and Wrapping.
+o If individual UPS shipments are sent and not consolidated as outlined above, Ulta 
+Beauty reserves the right to charge a penalty fee along with the cost of the 
+parcel shipment, refer to chart in Section 23: Shipment Non-Compliance Fees. 
+• No POs or shipments should be shipped directly to an Ulta Beauty retail location unless 
+it is previously authorized by the Ulta Beauty Merchant in writing. </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-040 · Ulta</h3><span class="tag">timing</span><span class="tag">requirement</span><p>Approved floor-loaded appointment requests require at least 72 hours before requested delivery date.</p><p class="muted"><strong>Inputs:</strong> load type, approval, appointment request, requested delivery date</p><p><strong>Qualification:</strong> Pallet-loaded requests use 48 hours; same-day appointments not accepted.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 18.1 Delivery Appointments · printed page 45</p><details><summary>Extracted evidence · text lines 1462–1473</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>appointment requests require a minimum of 72 hours in advance of the Purchase 
+Order Requested Delivery Date. 
+ Same-day delivery appointments are NOT accepted. 
+ The Brand Partner must plan shipping, transportation and appointment scheduling 
+in advance to secure a delivery appointment on the Purchase Order RDD. 
+ Ulta Beauty DC standard receiving hours are listed in Table 19.1.1 for reference.
+** Please allow up to 2 hours for unloading scheduled deliveries. Floor loaded (non-palletized) 
+shipments will be an exception. Ulta Beauty cannot guarantee 2 hour unloading time for floor loaded 
+shipments.**
+18.2 Ulta Beauty DC Appointment Process
+Collect Shipments:
+ Brand Partners are required to tender the shipment through E2OPEN TMS for Ulta </pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-041 · Ulta</h3><span class="tag">commercial</span><span class="tag">requirement</span><p>For fill-rate disputes, request invoice discrepancy resolution before the compliance dispute process.</p><p class="muted"><strong>Inputs:</strong> dispute type, invoice discrepancy status, compliance dispute status</p><p><strong>Qualification:</strong> Commercial workflow kept separate from shipment physical compliance.</p><p><a href="https://drive.google.com/file/d/14jhi6mcosOnTRiGMBFWO558trFhcMD7t/view?usp=drivesdk">2025 Supply Chain Guide.pdf</a> · 22.2 Dispute Process · printed page 53</p><details><summary>Extracted evidence · text lines 1771–1782</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>• Invoice Discrepancies must be requested for Fill Rate prior to going thru the 
+Compliance Dispute Process.
+Best Practice: 
+• Brand Partners should leverage a copy of their Invoice as backup when disputing 
+through the Chargeback Process, if the Remittance Advice form has not yet been 
+received from A/P.
+• Brand Partners must ensure all contact details (emails, point of contacts, numbers, etc.) 
+are accurate and up to date. Failure to do so may result in missed or delayed 
+communications. Brand Partners are responsible for updating all contact details and 
+notifying Ulta Beauty of any changes.
+22.3 Chargeback Program Tools &amp; Resources
+Useful resources include the following:</pre><a href="../sources/ulta/2025 Supply Chain Guide.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-042 · Ulta</h3><span class="tag">edi</span><span class="tag">requirement</span><p>Retailer Must use overrides generic X12 optional status; only one HL Order per ST/SE.</p><p class="muted"><strong>Inputs:</strong> transaction hierarchy, X12 usage, retailer usage</p><p><strong>Qualification:</strong> Grouped discovery example; the two requirements need separate checks.</p><p><a href="https://drive.google.com/file/d/1zn8r3tSoh3lVep1kz03NIzU7UqzoLCFv/view?usp=drivesdk">Ulta Inbound 856 v1.2.pdf</a> · Ulta Notes · printed page 2-3</p><details><summary>Extracted evidence · text lines 125–136</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>1, Ulta is expecting one HL Order per ST/SE
+.
+2. X12 optional segments/elements that are mandatory for Ulta are identified in the Guideline as &quot;User Option 
+(Usage): Must use&quot; and &quot;Ulta Note: Ulta mandatory&quot;.5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 3 For external use
+3. The following data from the 850 Purchase Order are required on this ASN (856):
+Description Provided on the 850 Purchase 
+Order
+850 Purchase Order value returned 
+on the 856
+Ulta DC Code
+N104 of the N1 Ship-to loop -</pre><a href="../sources/ulta/Ulta Inbound 856 v1.2.txt">Full saved text</a></details></article><article class="rule" data-retailer="ulta"><h3>RG-043 · Ulta</h3><span class="tag">reconciliation</span><span class="tag">requirement</span><p>Return 850 ship-to DC, SAP vendor code and PO line number in the specified 856 fields.</p><p class="muted"><strong>Inputs:</strong> original 850, ASN N104, REF IA, LIN01</p><p><strong>Qualification:</strong> Preserve leading zeros and exact identifier strings.</p><p><a href="https://drive.google.com/file/d/1zn8r3tSoh3lVep1kz03NIzU7UqzoLCFv/view?usp=drivesdk">Ulta Inbound 856 v1.2.pdf</a> · Additional Notes / PO data · printed page 3</p><details><summary>Extracted evidence · text lines 130–141</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>3. The following data from the 850 Purchase Order are required on this ASN (856):
+Description Provided on the 850 Purchase 
+Order
+850 Purchase Order value returned 
+on the 856
+Ulta DC Code
+N104 of the N1 Ship-to loop -
+Example,
+N1*ST*ULTA DC 
+Romeoville*92*0888~
+Expected return value in N104 of the 
+N1 Ship-to loop will be 0888-</pre><a href="../sources/ulta/Ulta Inbound 856 v1.2.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-044 · Michaels</h3><span class="tag">timing</span><span class="tag">requirement</span><p>ASN must arrive at least 24 hours before shipment arrival.</p><p class="muted"><strong>Inputs:</strong> ASN receipt time, shipment arrival time</p><p><strong>Qualification:</strong> Parenthetical on corrected ASNs is ambiguous; do not silently reinterpret.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Shipment-Level Guidance · printed page 5</p><details><summary>Extracted evidence · text lines 127–138</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> ASNs should be sent at time of shipment to Michaels. ASNs must arrive at 
+Michaels before the shipment arrives, at least 24 hours prior to shipment arrival (within the 24 hour window includes corrected ASNs).
+ Michaels requires one ASN per ship-to location (store, DC, or cross-dock 
+DC). If a shipment is to be sent to more than one ship-to location, send a 
+separate ASN for each ship-to location.
+ Split shipments require one ASN per shipment.
+ The ASN number (BSN02) is assigned by the vendor. It must be unique and 
+may not be repeated or duplicated unless sending a corrected ASN. Do not 
+use the purchase order number or the bill of lading number as your ASN 
+number. Do not recycle ASN numbers.
+ For pallet-level DC ASNs, the ASN number in BSN02 will be the LPN (license 
+plate number) of the pallet. A separate ASN is required for each pallet </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-045 · Michaels</h3><span class="tag">edi</span><span class="tag">requirement</span><p>One ASN per ship-to location and shipment; multiple POs for that same shipment/location may share an ASN.</p><p class="muted"><strong>Inputs:</strong> shipment, ship-to, POs, ASN grouping</p><p><strong>Qualification:</strong> Pallet-level DC ASN exception requires separate ASN per pallet.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Shipment-Level / Order-Level Guidance · printed page 5-6</p><details><summary>Extracted evidence · text lines 156–167</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Multiple purchase orders going to the same ship-to location in the same 
+shipment can be reported in the same ASN. In this scenario, use multiple 
+HL order loops to report each purchase order.
+Carton-Level Guidance
+ The contents of a carton may not span multiple purchase orders. If multiple 
+orders are being shipped in the same shipment, each order must be packaged and labeled separately.
+ A scannable UCC-128 barcode must be applied to every carton. The UCC128 carton number must be 20 digits long, unique and may not be reused or 
+recycled. Missing or unscannable barcodes will be considered a compliance 
+violation and can result in chargebacks for non-compliance. If you are using 
+a thermal transfer printer to create labels, take reasonable precautions to 
+ensure that the transfer medium is protected from being rubbed off during 
+transportation. If necessary, you can cover the label with clear plastic tape </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-046 · Michaels</h3><span class="tag">edi</span><span class="tag">conditional exception</span><p>For pallet-level DC ASNs, send one ASN per pallet and use pallet LPN as BSN02.</p><p class="muted"><strong>Inputs:</strong> DC ASN level, pallet LPN, BSN02</p><p><strong>Qualification:</strong> This changes both grouping and ASN identity.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Pallet-level DC ASNs · printed page 5</p><details><summary>Extracted evidence · text lines 137–148</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> For pallet-level DC ASNs, the ASN number in BSN02 will be the LPN (license 
+plate number) of the pallet. A separate ASN is required for each pallet 
+shipped.
+ The ASN can only be retransmitted prior to the shipment’s arrival at the 
+ship-to location. If sending a corrected ASN, use the appropriate qualifier in 
+BSN01 and use the original ASN number in BSN02 — do not send a different 
+ASN number on corrected ASNs.
+ For Canada cross-dock orders, the N1*ST will report the cross-dock DC 
+number, and N1*BY will report the store number to receive the shipment.
+ All shipments must contain a master bill of lading number at the shipment 
+level. This number is reported in the REF segment at the header level. See 
+the implementation notes for that segment for additional details.Michaels EDI 856 Specifications </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-047 · Michaels</h3><span class="tag">workflow</span><span class="tag">requirement</span><p>Corrected ASN must retain original BSN02 and use appropriate BSN01; retransmission only before shipment arrival.</p><p class="muted"><strong>Inputs:</strong> original ASN ID, corrected ASN, arrival time</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Shipment-Level Guidance · printed page 5</p><details><summary>Extracted evidence · text lines 140–151</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> The ASN can only be retransmitted prior to the shipment’s arrival at the 
+ship-to location. If sending a corrected ASN, use the appropriate qualifier in 
+BSN01 and use the original ASN number in BSN02 — do not send a different 
+ASN number on corrected ASNs.
+ For Canada cross-dock orders, the N1*ST will report the cross-dock DC 
+number, and N1*BY will report the store number to receive the shipment.
+ All shipments must contain a master bill of lading number at the shipment 
+level. This number is reported in the REF segment at the header level. See 
+the implementation notes for that segment for additional details.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+6</pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-048 · Michaels</h3><span class="tag">packing</span><span class="tag">prohibition</span><p>Carton contents must not span multiple POs.</p><p class="muted"><strong>Inputs:</strong> carton contents, PO per line</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Carton-Level Guidance · printed page 6</p><details><summary>Extracted evidence · text lines 160–171</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> The contents of a carton may not span multiple purchase orders. If multiple 
+orders are being shipped in the same shipment, each order must be packaged and labeled separately.
+ A scannable UCC-128 barcode must be applied to every carton. The UCC128 carton number must be 20 digits long, unique and may not be reused or 
+recycled. Missing or unscannable barcodes will be considered a compliance 
+violation and can result in chargebacks for non-compliance. If you are using 
+a thermal transfer printer to create labels, take reasonable precautions to 
+ensure that the transfer medium is protected from being rubbed off during 
+transportation. If necessary, you can cover the label with clear plastic tape 
+to protect the label and its contents. 
+Item-Level Guidance
+ Country of Origin is a mandatory data element in the LIN segment. 
+ The country of origin must be the two-character ISO country code. Do </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-049 · Michaels</h3><span class="tag">edi</span><span class="tag">requirement</span><p>Each ASN item requires two-character ISO country-of-origin, UPC and Michaels SKU.</p><p class="muted"><strong>Inputs:</strong> item COO, UPC, Michaels SKU</p><p><strong>Qualification:</strong> Missing/invalid values can cause ASN rejection; do not infer these are optional because general X12 fields are optional.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Item-Level Guidance · printed page 6</p><details><summary>Extracted evidence · text lines 170–181</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Country of Origin is a mandatory data element in the LIN segment. 
+ The country of origin must be the two-character ISO country code. Do 
+not transmit the full country name (“Japan,” “China,” etc.) or threecharacter ISO country codes (“USA,” “CHN,” etc.).
+ ISO country codes are available at numerous sites on the Internet. 
+Search for “iso country code” for additional links. The 20 most commonly reported countries of origin are listed in Appendix A.
+ ASNs that do not have a country of origin (a valid two-character ISO 
+country code) listed for each line item will be rejected. These will be regarded as a compliance violation and can result in chargebacks for noncompliance. 
+ The UPC and the Michaels SKU numbers are mandatory elements in the LIN 
+segments for all orders. Missing UPCs and/or SKUs result in the ASN being 
+rejected back to the vendor.
+Additional Guidance
+ Make sure the number of cartons reported in the ASN equals the carton </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-050 · Michaels</h3><span class="tag">reconciliation</span><span class="tag">requirement</span><p>ASN carton count must equal shipment count; sum of carton weights must equal shipment gross weight.</p><p class="muted"><strong>Inputs:</strong> physical cartons, ASN count, carton weights, shipment gross weight</p><p><strong>Qualification:</strong> Do not double count parent/child weights; source does not resolve pallet-tare treatment.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · Additional Guidance · printed page 6</p><details><summary>Extracted evidence · text lines 181–192</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> Make sure the number of cartons reported in the ASN equals the carton 
+count for the shipment. 
+ Make sure the sum of the carton weights equals the gross weight reported 
+for the shipment. 
+ Reference Identification codes used in the REF segments:
+o Shipment ID # - from the load report – assigned by Michaels for TL/LTL
+o Load # - from the load report – assigned by Michaels Transportation Dept
+o BOL # - assigned by carrier
+o PRO # - assigned by carrier for TL/LTLMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+7</pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-051 · Michaels</h3><span class="tag">applicability</span><span class="tag">precedence</span><p>VendorConnect labeling requirements are definitive; the EDI specification does not supersede them.</p><p class="muted"><strong>Inputs:</strong> source authority, VendorConnect chapter 6</p><p><strong>Qualification:</strong> Referenced current labeling/pre-shipment manual is absent from supplied folder.</p><p><a href="https://drive.google.com/file/d/1-JofA6hwvU6pHMgy57KwelW24W8ygu_K/view?usp=drivesdk">Michaels_856_4010_Rev_1_0_7.pdf</a> · UCC-128 Label Requirements · printed page 7</p><details><summary>Extracted evidence · text lines 195–206</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>portal, www.VendorConnect.com. Label information posted on the vendor information portal is to be considered definitive — nothing in these EDI specs supersedes or alters the labeling guidelines posted on the vendor information portal. 
+Please read chapter 6 Pre-Shipment Requirements manual in Vendor Connect for 
+any shipping requirement questions you may have; if you still have questions after 
+reading chapter 6, please contact your Michaels Supply chain analyst. Contact the 
+EDI group if you have EDI 856 questions.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+8
+Data Segment Sequence Chart (Pick/Pack ASN)
+Pos. 
+No.
+Seg. </pre><a href="../sources/michaels/Michaels_856_4010_Rev_1_0_7.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-052 · Michaels</h3><span class="tag">applicability</span><span class="tag">scope</span><p>This 850 guide applies to Standard PO type for Non Merchandise Procurement.</p><p class="muted"><strong>Inputs:</strong> PO type, merchandise vs non-merchandise</p><p><strong>Qualification:</strong> Do not generalize to retail merchandise POs.</p><p><a href="https://drive.google.com/file/d/1xsnJy6KfXFp0B0jS4cKKgZNA4-VT8JS2/view?usp=drivesdk">EDI_850_Implementation Guide_v1.1.pdf</a> · Introduction</p><details><summary>Extracted evidence · text lines 30–41</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre>Note: This document defines the 850 purchase order transaction for Standard PO type used by Michaels 
+for Non Merchandise Procurement. 
+Implementation Notes 
+1. The following section descriptions list only those segments used by Michaels. Unused 
+segments are not listed. 
+2. In the segment breakout listings, only those elements used by Michaels are listed. Unused 
+elements are not listed. Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+EDI Contacts 
+General EDI Email: edi@michaels.com
+ </pre><a href="../sources/michaels/EDI_850_Implementation Guide_v1.1.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-053 · Michaels</h3><span class="tag">timing</span><span class="tag">requirement</span><p>Return 997 within three business days of transmission; its receiver IDs match the 850 sender IDs.</p><p class="muted"><strong>Inputs:</strong> 850 transmission, 997 transmission, business calendar, envelope IDs</p><p><strong>Qualification:</strong> Source scope is non-merchandise 850.</p><p><a href="https://drive.google.com/file/d/1xsnJy6KfXFp0B0jS4cKKgZNA4-VT8JS2/view?usp=drivesdk">EDI_850_Implementation Guide_v1.1.pdf</a> · Implementation Guidance / 997 Required</p><details><summary>Extracted evidence · text lines 52–63</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> All EDI transactions sent by Michaels are expected to have a 997 returned. It is important 
+that the ISA and GS Receiver IDs on the 997 match the ISA and GS Sender IDs on the 850 it is 
+acknowledging. Michaels expects vendors to return the 997s within three business day of 
+transmission. 
+Ship To
+ In Case of Multiple Ship To, Header level Ship to will be “SEE LINE DETAILS”. If case of 
+Single Ship To location, Ship To details will be printed in header only. Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Data Segment Sequence Chart 
+Header Section
+Pos.No. Seg ID Name Req Des Max use Loop Repeat</pre><a href="../sources/michaels/EDI_850_Implementation Guide_v1.1.txt">Full saved text</a></details></article><article class="rule" data-retailer="michaels"><h3>RG-054 · Michaels</h3><span class="tag">order</span><span class="tag">conditional requirement</span><p>Single destination is at header; multiple destinations are in line details, with header SEE LINE DETAILS.</p><p class="muted"><strong>Inputs:</strong> header destination, line destinations</p><p><strong>Qualification:</strong> Preserve destination at line level for non-merchandise POs.</p><p><a href="https://drive.google.com/file/d/1xsnJy6KfXFp0B0jS4cKKgZNA4-VT8JS2/view?usp=drivesdk">EDI_850_Implementation Guide_v1.1.pdf</a> · Implementation Guidance / Ship To</p><details><summary>Extracted evidence · text lines 57–68</summary><p class="muted">Anchor excerpt only; use the named source section for full context.</p><pre> In Case of Multiple Ship To, Header level Ship to will be “SEE LINE DETAILS”. If case of 
+Single Ship To location, Ship To details will be printed in header only. Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Data Segment Sequence Chart 
+Header Section
+Pos.No. Seg ID Name Req Des Max use Loop Repeat
+010 ST Transaction Set Header M 1 
+020 BEG Beginning Segment for Purchase Order M 1 
+040 CUR Currency O 1 
+080 FOB FOB Related Instructions O 1 
+130 ITD Terms of Sale/Deferred Terms of Sale O 1 </pre><a href="../sources/michaels/EDI_850_Implementation Guide_v1.1.txt">Full saved text</a></details></article><p><a href="initial-rule-inventory.json">Download discovery inventory as JSON</a> · <a href="../sources/manifest.json">Source folder manifest</a></p></main><script>const s=document.querySelector("#search"),r=document.querySelector("#retailer"),a=[...document.querySelectorAll(".rule")];function filter(){let n=0;for(const x of a){const show=(!r.value||x.dataset.retailer===r.value)&&x.textContent.toLowerCase().includes(s.value.toLowerCase());x.hidden=!show;if(show)n++;}document.querySelector("#count").textContent=` ${n} examples`;}s.addEventListener("input",filter);r.addEventListener("change",filter);filter();</script></html>

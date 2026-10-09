@@ -1,0 +1,2543 @@
+DOMESTIC USA ROUTING GUIDE
+In our efforts to simplify our routing guide and make it easier to follow and ship to 
+Nordstrom, we have made updates. The biggest change is the reduction of each state 
+page. If your origin state does not ship through one of our 3 consolidators CTE, NorCon, 
+Gilbert, They will now be consolidated on one page and regardless of shipment size, 
+contact Nordstrom routing team for instructions at routing@nordstrom.com. This update 
+can be found on page 32. States included for Direct to Nordstrom DC/FC States – AL, AK, 
+AZ, CO, DE, District of Columbia (DC), FL, ID, IA, KS, LA, ME, MD, MA, MN, MT, NE, NV, NH, 
+NM, ND, OK, OR, PA, RI, SD, TX, UT, VT, WA, WY.
+UPDATED: JULY 16, 2025NORDSTROM ROUTING GUIDE
+2
+SECTION 1: INTRODUCTION .....................................................................................................................4
+How to Get Started...............................................................................................................................4
+Shipping Guidelines..............................................................................................................................4
+Small Package Shipments ...................................................................................................................5
+Collect/Prepaid Shipments ...................................................................................................................5
+Shipping Timeframes (Ship Windows) .................................................................................................5
+International Shipments........................................................................................................................6
+Shipment Destinations .........................................................................................................................6
+Shipments to NEJ.................................................................................................................................6
+SECTION 2: SHIPMENT PREPARATION ...................................................................................................7
+General Rules.......................................................................................................................................7
+PO Verification......................................................................................................................................7
+Nordstrom Order Verification System (NOVS).....................................................................................7
+Maximum Shipment Weight Limits .......................................................................................................8
+Carton Dimensions Required on Surface and Air Shipments ..............................................................8
+Declaration of Value .............................................................................................................................8
+Volume Load (FTL) Shipments ............................................................................................................8
+Less-than-truckload (LTL) Shipments ..................................................................................................9
+Bill of Lading Preparation for LTL Shipments.......................................................................................9
+Palletization of Freight........................................................................................................................11
+How to Provide a Unique Bill of Lading Number for an EDI 856 ASN ...............................................12
+Bill of Lading Preparation ...................................................................................................................12
+SECTION 3: SPECIAL HANDLING ...........................................................................................................13
+Shipments Requiring Special Handling..............................................................................................13
+Hazardous Materials...........................................................................................................................13
+Customer Owned Goods Repair Claims ............................................................................................13
+Furniture and Residential Shipments .................................................................................................13
+Gourmet Foods...................................................................................................................................13
+Designer Division................................................................................................................................14
+High Value Shipping Procedures .......................................................................................................14
+SECTION 4: FREIGHT INVOICING AND INQUIRIES...............................................................................19
+Freight Invoicing and Re-Billing..........................................................................................................19
+Refusals and Related Charges ..........................................................................................................20
+SECTION 5: MISCELLANEOUS INFORMATION4B .................................................................................21
+Shipping Guidelines from U.S. Mainland to Hawaii............................................................................21
+SCAC Codes ......................................................................................................................................21
+Expense Offset Policies .....................................................................................................................21
+Freight Agreement Codes/Descriptions .............................................................................................21
+Freight Chargeback Code Descriptions .............................................................................................22
+SECTION 6: CARRIER PAGES.................................................................................................................23
+CTE – California Transport Enterprises .............................................................................................23
+CTE – California Transport Enterprises (cont.) ..................................................................................24
+Gilbert .................................................................................................................................................25
+Gilbert (cont.)......................................................................................................................................26
+NorCon, LTD. .....................................................................................................................................27
+NorCon, LTD. (cont.) ..........................................................................................................................28
+UPS Small Package ...........................................................................................................................29
+UPS Small Package (cont.)................................................................................................................30
+UPS Small Package (cont.)................................................................................................................31
+SECTION 7: ORIGIN STATE PAGES........................................................................................................32
+Direct to Nordstrom DC/FC States – AL, AK, AZ, CO, DE, District of Columbia (DC), FL, ID, IA, KS, 
+LA, ME, MD, MA, MN, MT, NE, NV, NH, NM, ND, OK, OR, PA, RI, SD, TX, UT, VT, WA, WY........32
+ARKANSAS (AR)................................................................................................................................33
+CALIFORNIA (CA): Zip Code Prefixes 900-939 ................................................................................34
+CALIFORNIA (CA): Zip Code Prefixes 940-969 ................................................................................35
+CONNECTICUT (CT) .........................................................................................................................36
+GEORGIA (GA) ..................................................................................................................................37
+HAWAII (HI)........................................................................................................................................38
+ILLINOIS (IL) ......................................................................................................................................39
+INDIANA (IN)......................................................................................................................................40
+KENTUCKY (KY)................................................................................................................................41
+MICHIGAN (MI) ..................................................................................................................................42NORDSTROM ROUTING GUIDE
+3
+MISSISSIPPI (MS) .............................................................................................................................43
+MISSOURI (MO).................................................................................................................................44
+NEW JERSEY (NJ) ............................................................................................................................45
+NEW YORK (NY): Zip Codes Prefixes 100-119.................................................................................46
+NEW YORK (NY): Zip Code Prefixes 120-149 ..................................................................................47
+NORTH CAROLINA (NC)...................................................................................................................48
+OHIO (OH)..........................................................................................................................................49
+SOUTH CAROLINA (SC) ...................................................................................................................50
+TENNESSEE (TN)..............................................................................................................................51
+VIRGINIA (VA)....................................................................................................................................52
+WEST VIRGINIA (WV) .......................................................................................................................53
+WISCONSIN (WI)...............................................................................................................................54
+SECTION 8: STORE/DC LIST....................................................................................................................55
+Store / DC Look-Up Process ..............................................................................................................55
+Nordstrom Product Group Orders ......................................................................................................55
+Manhattan NYC Full Line Stores........................................................................................................55
+Pre-Allocation Stores..........................................................................................................................55
+Store / DC Relationships ....................................................................................................................55
+Ecommerce Orders ............................................................................................................................57
+Ship to Nordstrom.com.......................................................................................................................57
+Ship to NordstromRack.com ..............................................................................................................57
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS ...................................................................58
+APPENDIX B: SAMPLE NORDSTROM FREIGHT PARTNERSHIP ........................................................63
+APPENDIX C: SAMPLE BILL OF LADING...............................................................................................64NORDSTROM ROUTING GUIDE
+SECTION 1: INTRODUCTION 4
+SECTION 1: INTRODUCTION
+How to Get Started
+Purpose of this Guide
+The Nordstrom Routing Guide provides instructions on carrier selection and shipping specifications for all Domestic 
+Purchase Orders with an FOB point in the United States. Carrier selection is based on:
+• Shipment point of origin (state or zip code)
+• Shipping method/routing mode
+• Shipment weight
+• Ship To Distribution Center or Consolidator
+How to use this Guide
+Please review the Shipping Guidelines section of this manual carefully. Violation of the instructions and/or rules 
+contained in these guidelines may result in refused shipment(s) and/or additional charges to the supplier.
+You may use this guide to identify which carrier to use for any given shipment and to determine whether any special 
+handling is required by either Nordstrom or the carrier for that shipment.
+Please note that the information in this guide is updated periodically and can change without notice. We do not 
+recommend that you print any section of this guide. Please refer to the online version of the Routing Guide found at
+Supplier Compliance Website to make sure you have the most current information available.
+Finding the Authorized Carrier for Your Shipment
+Follow these steps to identify the authorized carrier for your freight shipment to Nordstrom:
+• Consult Maximum Shipment Weight Limits (in Section 2: Shipment Preparation) to calculate the total weight of 
+your shipment.
+• Refer to Section 8: Store/DC List to determine which Distribution Center is associated with the store(s) on your 
+Purchase Order (PO).
+• Determine which authorized shipping mode – Air or Surface – has been specified on the PO.
+• Go to the Origin State Pages (Section 6) and select the page for the state (or zip code area) from which the 
+shipment will originate.
+o Review the ‘General Rules’ section of the State Page.
+o Locate the chart, about mid-page, containing column headers ‘Ship To DC’, ‘PO Specifies 
+Surface’, ‘PO Specifies Air’.
+o Determine what DC(s) you are shipping to, the weight you are shipping (NOTE: Refer to 
+‘General Rules’ for instructions on how to calculate weight)
+o Determine the shipping mode from the Nordstrom PO you are shipping
+o Locate the authorized carrier based on mode, weight, and DC you are shipping to.
+o Note: It is possible to have more than one carrier by DC—be sure to check carefully.
+After identifying the authorized carrier for your shipment, refer to the Carrier Pages (Section 6) for specific instructions 
+on shipping with this carrier.
+For More Help
+Please email traffic@nordstrom.com with any carrier or shipping questions. 
+Shipping Guidelines
+Who May Authorize Carriers
+This routing guide is the only authorized source of instructions about carrier selection, receiving addresses and 
+shipping specifications for Domestic Purchase Orders (POs).
+Nordstrom Buyers may select the shipping method for a PO, but they are not authorized to select the carrier. If the 
+carrier name that appears on the PO does not agree with the authorized carrier as determined by the Routing Guide, 
+please contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE
+SECTION 1: INTRODUCTION 5
+Failure to comply with this routing guide places full liability for loss or damage on the supplier.
+• Deviation from these instructions without approval of the Nordstrom DC Traffic office, or Nordstrom Corporate 
+Transportation office may result in a $250.00 handling charge, which will be deducted from your invoice.
+• If you choose to send your shipment via a carrier not authorized by Nordstrom, your shipment must be sent 
+prepaid. If you opt for collect billing via a carrier not authorized by Nordstrom Traffic, Nordstrom 
+reserves the right to either refuse the shipment or reverse the freight charges back to the shipper. Use 
+of any carrier or shipping method (routing) not specifically authorized in this guide or by Nordstrom Traffic will 
+result in the supplier paying all transportation charges, regardless of whether or not Nordstrom might have 
+incurred lower or higher transportation costs with the unauthorized shipping method.
+• Using a carrier not authorized by Nordstrom Traffic or outlined within this routing guide puts the responsibility
+of all Overage, Shortage, Damages. Nordstrom will not file a claim with the carrier and any OSD will be 
+deducted from the suppliers invoice. 
+Supplier/Shipper Benefits
+When suppliers follow the Nordstrom Routing Guide instructions on carrier selection and shipping, they enjoy several 
+benefits, including:
+• Discounted carrier rates when sharing freight costs with Nordstrom
+• Pre-scheduling and prioritization of shipments for delivery at the Ship To DC
+Small Package Shipments
+In an effort to decrease the number of small package shipments received at our Distribution Centers, Nordstrom 
+requests that your shipping dock make every effort to consolidate packages/Purchase Orders FROM your single 
+shipping location TO the Nordstrom Ship To DC so that your shipments may meet our standard shipment criteria...
+Collect/Prepaid Shipments
+All shipments to Nordstrom must be sent ‘Collect’ or ‘Bill Third Party’ via an appropriate authorized carrier, with the 
+exception of Parcel Post shipments. Small Package shipments on UPS must be billed to Nordstrom’s Third-Party Bill 
+To account, (see UPS pages in Section 6 ‘Carrier Pages’ for details).
+POs that stipulate ‘Vendor Pays Total Freight’ should be shipped ‘Collect’, or ‘Bill Third Party’ via an authorized 
+carrier as explained in this guide. Nordstrom will deduct any freight charges owed from the next check remittance. This 
+is typically advantageous to the shipper, as they are able to take advantage of Nordstrom’s contracted rates.
+Nordstrom will not reimburse shippers for any ‘prepaid’ shipments, whether via authorized or non-authorized carriers...
+Should you accidentally ship ‘prepaid’ via an authorized carrier, please contact traffic@nordstrom.com for assistance 
+with rebilling the freight charges to Nordstrom. See also Section 4 ‘Freight Invoicing and Reimbursement’
+Note: Suppliers are responsible for any loss and/or damage associated with prepaid shipments
+Unauthorized Carriers
+The following rules apply when shipping via a carrier not listed in this guide: 
+• The merchandise must be shipped PREPAID (including any accessorials involved with delivering per our 
+guidelines)
+• The merchandise must be delivered to the destination DC (or store if not delivering to a DC) within the 
+shipping window on the PO
+• Your prepaid carrier must contact our DCs for delivery appointments prior to the delivery attempt. At the time 
+of contact the carrier must present your bill of lading number, carrier pro#, ship date, PO numbers and carton 
+count per PO
+Shipping Timeframes (Ship Windows)
+The PO shipping window (i.e., ‘Not Before date’ to ‘Not After date’), indicates the first and last date that merchandise 
+may leave the shipper’s dock. Merchandise shipped outside of this shipping window may be refused by the DC’s or the 
+carrier, and if accepted by a DC may result in a chargeback... If one of the shipping window dates falls on a weekend 
+or a holiday, the order must be shipped on the weekday following the earliest ship date or prior to the latest ship date 
+in order to be considered valid.
+If for any reason the supplier cannot meet the latest ship date, an extension may be requested from and granted only 
+by the Nordstrom buyer who owns the Purchase Order. In all cases, the Routing Guide instructions on carrier NORDSTROM ROUTING GUIDE
+SECTION 1: INTRODUCTION 6
+selection must be followed. Buyers are not authorized to give instructions on carrier selection. Failure to comply 
+with this guideline will result in the supplier being held liable for all freight and handling costs incurred.
+International Shipments
+Nordstrom participates in the Customs Trade Partnership Against Terrorism (C-TPAT).
+Nordstrom will not be responsible for international freight charges, nor will we act as the importer of record for Customs 
+and Border Protection clearance or Importer Security Filing. 
+The price you negotiate with Nordstrom should include all costs associated with producing the product and importing it 
+into the United States.
+Important:
+If your order is sourced outside of the United States and the domestic Purchase Order states ‘FOB factory’, it is 
+incorrect and/or invalid. The correct term of sale on the Purchase Order should be ‘Delivered Duty Paid’ (DDP), and 
+the named DDP point should be the United States Border Crossing City. The DDP Location is determined by the 
+shipper. Nordstrom will not act as or be listed as the Importer of Record. When shipping from outside of the United 
+States, you will be the shipper of the merchandise and your carrier will bill you for the freight movement from your 
+factory to the DDP location. This freight cost is at your expense and will appear on the freight bill as prepaid by the 
+shipper. All domestic PO shipments originating in Canada or Mexico must be shipped PREPAID to your United States 
+Border Crossing City at least 2 days prior to the PO cancel date. Nordstrom takes ownership and is responsible for 
+freight charges that are incurred after the cargo clears U.S. Customs at the Border Crossing City.
+If your PO is DDP, it is regarded as a domestic purchase order. For authorized routing, reference your United States 
+Border Crossing City to determine the state or zip code page to use in the Routing Guide as your Origin State for 
+carrier selection. All Nordstrom DC’s regard the ship date from your United States Border Crossing City as the actual 
+domestic PO ship date.
+If a PO sourced outside of the United States shows the term of sale as ‘FOB factory’, contact your Nordstrom buyer to 
+alert them that this PO is being sourced outside of the United States and that ‘FOB factory’ is an improper term of sale 
+for future POs. International shipping points with ‘FOB factory’ on a Domestic type order are invalid and can be 
+refused.
+Shipment Destinations
+Nordstrom Distribution Centers
+Ship to the Nordstrom Distribution Centers listed in Section 8: Store/DC List, unless the buyer has provided an override 
+Ship-To DC on the PO Direct-to-Store
+Direct-to-Store
+If Ship-to is a store number rather than a DC number, the PO is considered a ‘Direct-to-Store’ PO.
+Please contact Routing@nordstrom.com and provide the following PO details to receive shipping instructions:
+• PO number
+• Ship from City, State, Zip
+• Ship-to: Direct-to-Store number
+• When ready to ship
+• When needed in store
+• Total weight of shipment
+• CC the Nordstrom buyer you are working with
+For Designer Merchandise please refer to SECTION 3: SPECIAL HANDLING of this guide.
+Shipments to NEJ 
+If you have Nordstrom purchase orders (PO Type: TP, RACK THIRD PARTY LOGISTICS or TL, RACK THIRD PARTY 
+LOGISTICS) to ship to NEJ (Beacon Falls, CT), contact Nordstrom at Routing@nordstrom.com to receive routing 
+instructions. 
+NOTE: this is an EXCEPTION routing process
+When contacting Nordstrom at the email above, attach the ‘Nordstrom 3PL Request Form’ (filled out).
+Notes:
+• Pick Up must be scheduled at least 72 hours prior to start ship.
+• Use ‘Date expected to leave supplier warehouse’ as start ship date.
+• Do not ship directly to Nordstrom DC locations.
+• Do not ship directly to the Consolidators (CTE, NorCon, Gilbert)NORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 7
+SECTION 2: SHIPMENT PREPARATION
+General Rules
+We urge all shippers to consolidate their shipments to the smallest possible number of shipments per week (as PO 
+shipping windows permit). The heavier the shipment, the more economical the freight charges. This is especially 
+important to shippers if they are sharing freight costs via Freight Agreements and/or PO Freight Allowances.
+If your warehouse ships numerous small package shipments each day or week, please contact us at 
+Routing@nordstrom.com and we will be glad to help you review your carrier selection process to ensure correct 
+interpretation of the Nordstrom Routing Guide. 
+Shipment Definitions
+Shipments fall into three general categories: 
+1. Gilbert, CTE and NorCon Consolidation Shipping States
+A shipment is defined as all cartons for all POs going to all DC’s on a given day. 
+2. Small Package Carrier: UPS
+A shipment is defined as each package. 
+3. Volume Load
+A shipment is defined as a full truckload shipment who destination is one DC/FC
+PO Verification
+All shippers are required to provide the POs they are shipping to Nordstrom when you submit a pickup request with the 
+Nordstrom authorized carrier.
+EXCEPTION:
+This PO Verification requirement is not required for: UPS Small Package shipments
+Carriers must verify that the shipper’s POs are valid and that they are ready to enter the Nordstrom Transportation 
+pipeline prior to issuing a Pickup Number and scheduling a pickup. Carriers will not schedule a pickup until they have 
+confirmed that the POs are valid. Shippers have access to the Nordstrom Order Verification System (NOVS) website, 
+which enables them to check the status of their POs. However, shippers must continue to verify their POs with 
+the carrier. The validity of a PO is dependent upon the actual ship date, which is the day the carrier signs for the POs
+on the shipping dock.
+Please refer to the Carrier Pages (Section 6) to locate contact numbers and PO Verification instructions for the specific 
+carrier your company will be using for shipping.
+NOTE: Shippers are required to ship within the Nordstrom PO ship window. Shipping outside the ship window could 
+result in a freight chargeback or refusal at our DC/FC.
+Nordstrom Order Verification System (NOVS)
+Nordstrom’s carriers and consolidators are required to validate Nordstrom POs for shippers in the NOVS web portal in 
+accordance with Nordstrom Routing Guide shipping specifications prior to picking up.
+The carriers will verify your PO’s in NOVS when you schedule a pickup with them. The carrier will advise if the NOVS 
+status is ‘Accept’ or ‘Refuse’. If ‘Refuse’ the carrier will not pick up and shipper should contact their Nordstrom Buyer 
+team for more information.
+If you would also like to verify your Nordstrom PO’s yourself prior to submitting to our carriers, you can request access 
+to NOVS by emailing NOVS@nordstrom.com with the following information:
+Subject: “NOVS Access Request”
+Information to be submitted: User First Name, User Last Name, Nordstrom Vendor Number, Vendor Company NameNORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 8
+Maximum Shipment Weight Limits
+The following standard shipment weight limits are covered in this guide:
+• Maximum surface shipment per DC: up to 10,000 pounds or up to 1,800 cubic feet
+• Maximum air shipment per DC: 2,000 pounds
+Charges for surface shipments are assessed based on the higher of two values:
+• The actual weight of the shipment – OR –
+• The dimensional weight of all cartons within a shipment, as calculated using the following formula:
+Sample Dimensional Weight Calculation
+Height
+(In Inches)
+Width
+(In Inches)
+Length
+(In Inches)
+Cubic
+Inches
+Factor Cubic
+Feet
+Number of
+Cartons
+Total Cubic
+Feet
+36” 27” 30” 29,160” 0.000579 16.88 24 405.12
+H x W x L = Cubic Inches x 0.000578704 = Cubic Feet x Cartons = Shipment Cubic Feet
+If your shipment exceeds 10,000 pounds per DC or 1,800 cubic feet per DC, please review the Volume Shipments 
+guidelines below.
+Maximum Carton Dimensions/Weights
+The maximum cartons dimensions are (in inches) Store Orders 36x27x30 & Ecommerce Orders 23x17x17
+The maximum weight per carton is 50 lbs.
+Please refer to the Packaging & Labeling Standards found on Supplier Compliance Website for more detailed 
+information.
+Carton Dimensions Required on Surface and Air Shipments 
+Our carrier programs require the shipper to provide accurate carton count by size (dimensions) on your Bill of Lading or Airway Bill 
+at time of shipment. For Example: 4 ctns @ AA X BB X CC / 10 ctns @ CC X DD X EE
+Declaration of Value
+Do not declare value on surface or air shipments, except in the following cases:
+• When shipping Jewelry or Watches via the US Mail system
+• When shipping high value merchandise to departments 608, 827, 828, 829, 832, 833, 834, 835, 836, 837, 879, 881, 905, 
+922, 923, 926, 927, 928, 929, 930, 931, 932, 933, 945, 955, 967, and 968 
+• See: High Value Shipping Procedures (in Section 3: Special Handling)
+Volume Load (FTL) Shipments
+Contact Routing@nordstrom.com for pickup scheduling at least 72 hours prior to your requested ship date (weekends excluded) 
+for instructions. Any requests sent after 12:00pm (local standard time for origin ship state) will be considered received on the 
+following business day. Same day pickup requests will not be accepted. Suppliers will fill out our Nordstrom Request Form, with 
+shipment details for scheduling. 
+Surface shipments (per DC):
+• Weighing more than 10,000 lbs. or having a cubic measure greater than 1,800 cubic feet
+Air shipments (per DC):
+• Weighing more than 2,000 lbs.
+To schedule a Volume Load pickup, please email Routing@nordstrom.com
+• Your shipping dock must be accessible to a standard 53-foot tractor-trailer combination.
+• Cartons are to be floor loaded into the trailers. However, if the entire load will fit on the trailer using pallets this can be 
+allowed, but only if the pallets are not double stacked. Loads that are received double stacked may incur an unloading 
+chargeback. The chargeback amount will be deducted from your invoice.
+• Same Day Cancellation of a Volume Load Pickup may result in a chargeback for Truck Ordered, Not Used. 
+• When shipping multiple POs, we ask that you make every effort to load by PO number, keeping all POs in close proximity to 
+facilitate ease of count confirmation at the DC receiving dock.
+• Carriers typically allow two hours load time per trailer. Detention time begins after the second hour. The vendor must make
+every effort to load the trailer within two hours. In cases of extreme detention, the vendor may be subject to a chargeback to 
+cover the resulting detention charges. If applicable, this charge would be deducted from your invoice.
+• Any add-on cartons to the shipment must be either emailed to Routing@nordstrom.com Nordstrom pays for full Valuation 
+Insurance on all volume shipments. Do not put a release value on the bill of lading. Bills of lading must be marked with the 
+designated DC number and address. 
+• The shipper must apply a numbered metal ISO 17712 bolt seal to all loads and this number must be noted on the bill of 
+lading. Failure to properly seal the trailer transfers all shortage liability to the shipper. Plastic, cable and tin metal seals are 
+not approved.
+If you have any questions about volume shipments, email Routing@nordstrom.com.NORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 9
+Less-than-truckload (LTL) Shipments
+Contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date (weekends excluded) 
+for instructions. Any requests sent after 12:00pm (local standard time for origin ship state) will be considered received on the 
+following business day. Same day pickup requests will not be accepted. Suppliers will fill out our Nordstrom Request Form, with 
+shipment details for scheduling.
+Surface shipments (per DC).
+• Weighing less than 10,000 lbs. or having a cubic measure less than 1,800 cubic feet
+Air shipments (per DC).
+• Weighing less than 2,000 lbs.
+To schedule an LTL load pickup, please email Routing@nordstrom.com
+• Cartons are to be palletized into the trailers. 
+• Same day pick up requests will not be scheduled
+• Shipper will provide the shipping documents
+• Nordstrom provided BOL number will be used for shipment reference at pick up and shipper must use this number as their 
+BOL number on the shipping documents
+Bill of Lading Preparation for LTL Shipments
+Bill of Lading Instructions/Shipment Addressing for Direct to DC/FC
+NORDSTROM DC# (indicate the Nordstrom DC number you are shipping to)
+DC Street Address 
+DC City, State, Zip Code 
+Mark Freight Charges ‘Collect’ 
+In the ‘Bill Freight Charges To’ field, fill in as below: 
+NORDSTROM, Inc. c/o Intelligent Audit
+1355 Windward Concourse, Suite 205
+Alpharetta, GA 30005
+Special Note for palletized LTL shipments: 
+• DO NOT ship pallets higher than 84” maximum 
+• Chargebacks will result for failing to follow these instructions 
+Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 Make out one Bill of Lading document:
+• For each DC;
+• For each day.
+2 Mark the Bill of Lading ‘Collect’.
+3 Include the following information on the Bill of Lading:
+• Shipper’s name;
+• Shipper’s address;
+For each verified Purchase Order, list:
+• Purchase Order number;
+• Number of cartons by PO number;
+• Department number by PO number;
+• Weight in LBS.by PO number;
+• Accurate carton count by size dimensions;
+• Description of all articles in shipment. Be as specific as possible 
+and conform to classifications and tariffs in effect on the date of the 
+shipment. If additional pages are needed to list POs, mark them ‘Page 2 of 
+3’, etc., and only total the number of cartons/total weight on the last page.
+4 Do not declare value. (See Declaration of Value in Section 2: Shipment 
+Preparation for complete details.)
+• Suppliers must tender freight to pick up carrier by DC, which must correspond to each bill. Failure to comply will result in a 
+consolidation traffic freight chargeback, plus handling fees.NORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 10
+Bill of Lading Instructions/Shipment Addressing for consolidator shipments (to Gilbert, to CTE)
+Master Bill of Lading Address (Ship To)
+NORDSTROM 
+Consolidator Name
+Consolidator Address
+Sub Bill of Lading Address (Ship To)
+• Nordstrom DC# only, NO DC Address 
+Important note: Include the Nordstrom DC number, but not the DC address. DC addresses must not appear on Sub Bills of Lading 
+(for shipments to Gilbert and NorCon)
+With Freight Charge Terms marked ‘Collect’
+• Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 If shipping to more than one DC on the same day, create a unique sub-bill 
+for each DC itemized by:
+• PO number(s) and department number, with carton count and LBS. for 
+each PO.
+2 Cross-reference individual sub-bills on the Master Bill of Lading.
+3 Combine all surface shipments to Nordstrom from your facility on the same
+day onto one Master Bill of Lading, including:
+• Total cartons and total LBS. by each DC.
+4 At the bottom of the Master Bill of Lading, include:
+• Total cartons for all DC’s;
+• Total weight in LBS. for all DC’s.
+NOTE: The Master Bill of Lading is the document the carrier’s driver will 
+sign.
+• Staple the individual shippers’ sub-bills under the one Master Bill of Lading. Cross-reference individual shippers’ sub-bill 
+numbers on the Master Bill of Lading.
+• Supplier must tender freight to pick up carrier by DC, which must correspond to individual sub-bills. Failure to comply will 
+result in a consolidation traffic freight chargeback, plus handling fees.
+If you have any questions about volume shipments, email Routing@nordstrom.comNORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 11
+Palletization of Freight
+Nordstrom REQUIRES the palletization of cartons when shipping on LTL carriers direct to Nordstrom DC’s. 
+This rule does NOT apply to shipments to Nordstrom Consolidators CTE, Gilbert, and NorCon.
+We recommend you consult with the carrier about palletizing prior to arranging a pickup.
+Follow these instructions when palletizing freight:
+Shipments direct to Nordstrom DC/FC’s by Nordstrom’s routing department, routing@nordstrom.com
+• All cartons on the pallet must be plainly visible to allow for accurate carton count.
+• DO NOT mix cartons for different DCs on the same pallet
+• Stack the heaviest weight cartons on the bottom row
+• Use your best judgment based on burst strength of the cartons being stacked and overall stability of the pallet 
+when building the pallet. Build layers in pallets in a brick fashion (i.e., turning cartons 90 degrees each layer).
+Keep in mind the door height of the truck you’ll be loading the pallet onto, do not stack cartons on pallet 
+higher than 7 feet (84”).
+• After carrier has counted the cartons on the pallet, shrink-wrap the pallet using heavyweight film wrapped as 
+tightly as possible to ensure stability, especially including any single cartons on the top row. Use clear plastic 
+film.
+• Nordstrom requires its carriers to sign for cartons. If a carrier is unable to confirm the number of cartons 
+tendered for any reason (i.e., due to carton stacking method or lack of visibility for shrink-wrapped pallets), 
+shipper must either resolve the conditions that prevent the carrier from an accurate count or accept 
+responsibility for any shortages upon delivery to Nordstrom. 
+• Absolutely do not mark or note the Bill of Lading: ‘x pallets said to contain y number of cartons.’ If freight is 
+tendered to a Nordstrom carrier in a ‘Said-To-Contain’ manner and the correct numbers of pallets are
+received, all carton shortages will be treated as a vendor short-shipment.
+• Your Bill of Lading must contain a total carton count by DC, and the number of pallets by DC that are being 
+shipped. Shippers must require the driver to sign for the total carton and pallet count by DC that they are 
+receiving for all live-loaded shipments.
+• You must list the pallet weight separately on the BOL by DC, i.e. ‘2 pallets, 50 lb. pallet weight’.
+Shipments via Nordstrom carriers NorCon, CTE or Gilbert (IF carrier approves palletized pickup): 
+• All cartons on the pallet must be plainly visible to allow for accurate carton count.
+• Cartons should be palletized BY DC for the majority of your shipments. A very limited exception is provided 
+for the following situations: If there is only a small quantity of cartons left after palletizing by DC, the last pallet 
+may contain mixed DCs provided it is clearly labeled as ‘MIXED DCS’. 
+• Stack the heaviest weight cartons on the bottom row
+• Loading the pallet more than six feet high is not recommended; use your best judgment based on burst 
+strength of the cartons being stacked and overall stability of the pallet when building the pallet.
+• After carrier has counted the cartons on the pallet, shrink-wrap the pallet using heavyweight film wrapped as 
+tightly as possible to ensure stability, especially including any single cartons on the top row. Use clear plastic 
+film.
+• Nordstrom requires its carriers to sign for cartons. If a carrier is unable to confirm the number of cartons 
+tendered for any reason (i.e., due to carton stacking method or lack of visibility for shrink-wrapped pallets), 
+shipper must either resolve the conditions that prevent the carrier from an accurate count or accept 
+responsibility for any shortages upon delivery to Nordstrom. 
+• Absolutely do not mark or note the Bill of Lading: ‘x pallets said to contain y number of cartons.’ If freight is 
+tendered to a Nordstrom carrier in a ‘Said To Contain’ manner and the correct numbers of pallets are
+received, all carton shortages will be treated as a vendor short-shipment.
+Designer Shipments
+• Pallets must be shrouded and wrapped in any color other than clear and must be opaque.
+• Pallet must be wrapped in a way that there are no visible cartons nor have access to any carton on the pallet. 
+• Cartons must be wrapped to the pallet and should not be stacked in a ‘chimney’ with loose cartons in the 
+middle.
+• Pallet license plate must contain the following information. Ship Date, DC Number, Carton Count. No brand 
+identifying information will be displayed.NORDSTROM ROUTING GUIDE
+SECTION 2: SHIPMENT PREPARATION 12
+How to Provide a Unique Bill of Lading Number for an EDI 856 ASN
+The GS1 US (VICS became part of GS1 in 2012) Standard Bill of Lading Number
+A Bill of Lading (BOL) number is a unique identification number assigned by the shipper and is mandatory for all Bills of 
+Lading and Master Bills of Lading. For more information, please visit the GS1 website (https://www.gs1us.org) 
+Companies Sending EDI Shipments
+Companies sending shipments via EDI must create a unique BOL (VICS) number to serve as a tracking number for 
+each shipment. This unique number must not be reused for at least 18 months. The BOL number must consist of a 
+maximum of 20 alpha or numeric characters. Special characters such as dashes cannot be used. 
+For further information on Nordstrom BOL requirements refer to our EDI 856 ASN Mapping Document on the EDI page
+of Supplier Compliance Website
+Companies Sending Non-EDI Shipments
+Companies sending non-EDI shipments must create a unique BOL number to serve as a tracking number for each 
+shipment. The BOL number must consist of a maximum of 20 alpha or numeric characters. This unique number must 
+not be reused for at least 18 months. 
+Bill of Lading Preparation
+Detailed carrier-specific bill of lading instructions is provided in the Carrier Pages (Section 6), 
+Use the Bill of Lading Guidelines (on www.gs1us.org), which includes examples of the industry standard sub-bills and 
+Master Bill of Lading- see Appendixes A, B & C: For Sample Bills of Ladings.NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+13
+SECTION 3: SPECIAL HANDLING
+Shipments Requiring Special Handling
+Shipment types covered in this section require special handling above & beyond the general shipping guidelines provided 
+in the previous section.
+Hazardous Materials
+Shippers are legally & solely responsible for identifying, packaging, marking, labeling & documenting each hazardous material 
+shipment. Documentation for all Air and Ground Delivery service shipments must be in compliance with IATA or 49 CFR 
+regulations. Shippers must comply with any additional FAA or other government regulations in effect at the time of shipment.
+Shipping Hazardous Materials via Air
+Shippers should ship only those articles that are authorized for air shipment (as of the ship date) in IATA’s Dangerous 
+Goods Regulations and must follow the labeling and shipping requirements as set forth in these regulations. Copies of 
+these regulations may be ordered by calling 800-716-6326, or online at www.iata.org Shippers must also comply with any 
+additional Federal Aviation Administration (FAA) or other official requirements in effect at the time of shipment.
+Hazardous materials may only be shipped via Air if this has been requested in the Purchase Order shipping method field. 
+All other articles not specifically authorized for air shipment must be shipped Surface. If a shipment authorized for Air does 
+not qualify for air shipment, contact the destination DC Traffic Office or traffic@nordstrom.com for instructions.
+Shipping Hazardous Materials via Surface
+Shippers must follow the labeling, classification and shipping instructions set forth in the 49CFR regulations. Shippers are 
+legally & solely responsible for identifying, packaging, marking, labeling & documenting each hazardous material shipment.
+UPS and Hazardous Materials
+Shipments containing hazardous materials, as defined in Title 49 of the United States Code of Federal Regulations (49 
+CFR), must be shipped in accordance with the Dangerous Goods Regulations or 49 CFR in effect at the time of shipment. 
+UPS also has its own requirements for shipping Hazardous Materials. Go to UPS.com and enter ‘Hazardous Materials’ in 
+the search field for a list of Hazardous Materials related topics.
+Shippers are legally & solely responsible for identifying, packaging, marking, labeling & documenting each hazardous material 
+shipment.
+Customer Owned Goods Repair Claims
+Except for fine jewelry/watches and heirloom/one-of-a-kind Nordstrom items, Customer owned repair claims should be 
+shipped via UPS 2nd Day Air. ‘REPAIR’ will need to be printed in the ‘Reference 1’ field on UPS.com or WorldShip.
+If the repaired Customer Owned goods are fine jewelry/ watches or heirloom/one-of-a-kind Nordstrom items, please refer 
+to the Fine Jewelry and Watch shipping Instructions below. 
+If the claim was generated at a Distribution Center, ship to the generating DC. If the claim was generated at a store, ship 
+to the generating store.
+Furniture and Residential Shipments 
+All furniture shipments and some residential shipments require special handling. For instructions on furniture and 
+residential shipments, please send email to traffic@nordstrom.com, identify yourself as a furniture or residential shipper.
+Gourmet Foods
+Vendor/Suppliers shipping candy that is chocolate and /or perishable to must ship direct to store. Shipping food 
+items is not permitted to ship through any Nordstrom DC/FC. For routing instructions, contact 
+Routing@nordstrom.com
+Perishable items such as chocolate and candies must be labeled ‘perishable food item’ on the Bill of Lading.
+If items are shipped via Air carrier in a cold pack containing dry ice, the shipper must declare ‘On Dry Ice’ on the Bill of Lading 
+and on the cartons outside label. Refer to the Packaging & Labeling Standards found on Supplier Compliance Website for 
+marking and labeling instructions.NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+14
+For further assistance on gourmet food shipments (especially chocolates and perishables), please contact Nordstrom 
+Corporate Transportation via email at traffic@nordstrom.com.
+Designer Division
+Nordstrom departments 608, 827, 828, 829, 832, 833, 834, 835, 836, 837, 922, 923, 926, 927, 928, 929, 930, 931, 932, 
+933, 955, 967 are considered Designer. Vendors shipping to these departments should ship as follows:
+Note - All European-Sourced Designer merchandise will now be shipping to all Nordstrom DCs (same as U.S. sourced 
+designer merchandise). And 599/568 Designer Web now can ship to all Nordstrom FCs.
+All Designer Merchandise:
+Please note that Vendors shipping U.S. sourced Designer Merchandise should follow the standard routing for their State as 
+found in the Store / DC List and State Pages.
+There are updates to packaging and labeling standards including:
+• No Brand/Supplier Name on GS1-128
+• No Brand/Supplier Name on carton
+• No Brand/Supplier Name on carton tape
+• No Brand/Supplier Name on UPS Label
+Please see Packaging & Labeling Standards for complete carton and labeling guidelines.
+High Value Shipping Procedures
+Nordstrom Purchase Orders consisting of high value merchandise such as jewelry and watch items or select products from 
+designer brands that are destined for departments 608, 827, 828, 829, 832, 833, 834, 835, 836, 837, 879, 881, 905, 922, 
+923, 926, 927, 928, 929, 930, 931, 932, 933, 945, 955, 967, or 968 may require Declared Value protection based on the 
+invoice value at the time of shipment. Shipments for these departments may be sent via UPS or prepaid via USPS (United 
+States Postal Service) per below instructions.
+High Value Merchandise via UPS
+When shipping high value merchandise via UPS, it is very important that the correct packaging, labeling, and account 
+number be used. All these instructions are designed to ensure that your shipment arrives at its destination without loss, 
+damage, or delay. Shippers must follow these instructions exactly to be reimbursed for lost or damaged packages. Failure 
+to do so will result in the shipper being liable for any loss or damage incurred with the shipment. Please see Packaging & 
+Labeling Standards for complete carton and labeling guidelines
+Creating a UPS shipment
+▪ You must create your UPS shipment on a UPS system like World-Ship, I-Ship, UPS.com, or other UPS-PackageLevel Detail compliant shipping system and use a system-generated shipping label on each carton. Hand-written
+UPS shipping labels are not permitted, and if used will result in the shipper being liable for any loss, damage or 
+delay. 
+▪ An ‘end of day’ manifest upload must be performed at least daily, to make sure that your shipment details are 
+uploaded to UPS. Failing to do so could result in delayed visibility to tracking information for your packages, or 
+denial of declared value coverage by UPS in the event of loss or damage. Check with UPS if you have any 
+questions about this process, and to confirm that your system is compatible.
+▪ The Nordstrom PO number you are shipping must be entered in one of the Reference Fields. 
+▪ The Nordstrom department number, found on your purchase order, must also be entered in one of the reference 
+fields, i.e., ‘Dept. 881’, or ‘Dept. 879’. 
+▪ Do not include PO. number or department number on the same line as the consignee name/address of your 
+shipping label. This information belongs in the reference fields as described above.
+▪ For packages that will contain items with a declared value of $1,000 or more, it is recommended that you create a 
+duplicate shipping label per carton by using the ‘reprint label’ function of your shipping system. This duplicate label 
+will be applied to the inner carton (see ‘Packaging Procedures’ below) as extra protection in case the label on the 
+outer shipping carton is somehow damaged or removed. IMPORTANT: Do NOT create a new shipping label for 
+this task—make sure you are only reprinting (or photocopying) an existing label.NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+15
+Nordstrom UPS 3rd Party Account Number
+Unless shipping pre-paid, you must use the Nordstrom High-Value Third-Party UPS inbound account number for all 
+Nordstrom shipments to Nordstrom DC’s and stores. Contact Nordstrom at Routing@nordstrom.com to receive the correct 
+UPS account number.
+Please provide the following information when requesting the Nordstrom Account number:
+▪ Vendor name
+▪ Shipper name (if different than vendor name)
+▪ Nordstrom PO number that you will be shipping
+▪ State in your message that you are a Fine Jewelry shipper
+▪ Very Important: If you are shipping an N-Direct Drop Shipment, please state this information as well as 
+these shipments require the use of a different account number.
+Nordstrom will respond with the account number as soon as possible, but not later than the next business day. This 
+account number must be used to bill freight and declared value charges third-party; ‘Collect’ or ‘Bill Receiver’ options will 
+not be accepted and will result in charges being billed directly to the shipper by UPS.
+Weekly 15 Package Shipping Limit Per Destination
+Special Notes for UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact 
+Routing@nordstrom.com
+Declared Value Guidelines (for shipments to Nordstrom stores or DC’s)
+It is very important that all shipments for Fine Jewelry departments destined for a Nordstrom DC or store be shipped with 
+values declared per below table. 
+IMPORTANT: Nordstrom will not reimburse shippers for loss or damaged shipments for which our Declared Value 
+guidelines were not followed.
+Invoice Value per Package Value to Declare
+$100-$299 Do not declare value
+$300-$50,000 Declare Actual invoice value
+$50,000 is the maximum allowable declared value per package
+If the invoice value is more than $50,000 per package, split the shipment between as many packages as required to keep 
+the maximum declared value per package at $50,000 or less. If the shipment cannot be split (i.e. one item valued at more 
+than $50,000) please contact Routing@nordstrom.com for instructions on how to ship.
+Customer-Owned Goods/Repaired Items
+Declare the total value of the merchandise (as represented by the originating store’s documentation) including any 
+additional value added by the shipper (i.e., updated setting, etc.) for every package.
+Note: For any package with declared value of $1,000 or more, a Proof of Pickup document will print along with your 
+shipping label. This document MUST be signed by your UPS driver upon pickup. The shipper should also request that the 
+driver scan each of your packages at time of pickup so that UPS will receive a pickup scan for these packages as soon as 
+the pickup is completed.
+Service Levels
+Refer to the table below for the appropriate service level to choose by ship day. 
+Service Level Table (for shipments to Nordstrom stores or DC’s)
+Ship Day UPS Second Day 
+Air UPS 3-Day Select
+UPS Ground 
+(to Zone 2 
+locations)
+UPS Ground 
+(to Zone 3 
+locations)
+Monday X X X
+Tuesday X X X
+Wednesday X X X
+Thursday X X X
+Friday X X X
+Note: When shipping with 3-Day Select service level, you will need to select ‘other’ as the packaging type in your label 
+creation process. This will allow user to declare value per instructions. NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+16
+How to determine the UPS Zone for your Destination
+To confirm the correct UPS Shipping Zone, follow these instructions:
+Go to UPS.com. You do not need to log-in for this information.
+▪ Select the ‘Shipping’ tab from the row of tabs near the top of the screen.
+▪ From the ‘Additional Shipping Resources’ menu on the right side of the screen, click on the ‘View Zone & Rate 
+Charts’ link
+▪ Under ‘Packages and Services, Choose Your Location’ click on the ‘48 Contiguous States’ link 
+▪ After the page loads, scroll down to the ‘Download Zone Charts’ menu, and type your origin (ship-from) zip code in 
+the space provided. Click the blue ‘Download’ button
+▪ Open the Excel file that downloads and find the zone by service level for all destination zip codes based on your 
+shipping zip code. You will find the Ground Destination Zone listed in column B ‘Ground’. You may wish to keep 
+this chart as a reference for any future shipments.
+Locate the zip codes for each of the DC’s (or stores if shipping direct to store). Note the ones that fall in Zone 2 or Zone 3. 
+These you will ship via Ground service level per chart below. For all other zones ship using service level listed in chart 
+below; do NOT ship via Ground
+Weight Breaks for UPS High-Value Shipments
+• Add the total weight for all PO’s shipping to the same DC on the same day
+• Consult table below for routing instructions:
+Ship to DC PO Specifies Surface or Air
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+Weight Carrier
+1-200 lbs.
+UPS (see Service Level Table 
+above)
+201+ lbs.
+Contact Routing@nordstrom.com
+for carrier instructions
+Packaging Procedures
+All jewelry and watch shipments sent to Nordstrom via UPS must be double boxed to ensure that they are securely 
+packaged. Please follow these shipping and packaging procedures exactly:
+• Place the jewelry and/or watch item(s) in a plastic bag.
+• Place the plastic bag in a UPS Small Box or other sturdy corrugated cardboard carton, taping the bag to the 
+bottom of the carton to prevent any rattling or shifting inside the box. Mark the top of this inner box with the correct 
+Nordstrom store number, PO number and department number. 
+• If you created a duplicate shipping label (as recommended in ‘Creating a UPS Shipment’ above), apply the extra 
+label to the inner carton---this will allow UPS to deliver the carton should the shipping label on the outer carton 
+become damaged or lost.
+• Verify the shipping value and contents per your company’s security procedures and seal the box.
+• Place the small box inside a UPS medium or large box or other sturdy corrugated cardboard carton, adding 
+packing material as needed to prevent the inner box from moving during transit, and then seal the outer box.
+• Attach the UPS shipping label to the top of the outer carton.
+Carton Markings
+The outside of the shipping carton must not provide any indication (including label or brand names) that the 
+shipment may contain jewelry, watches or other high value items.
+In addition to the shipping label (see ‘Creating a UPS Shipment’ above), each carton should be marked with the following 
+information:
+• Nordstrom PO number 
+• Nordstrom store number
+• Nordstrom Department Number (i.e., ‘D 881’, ‘D 879’, ‘D 905’ etc.)
+• Write on the carton the month shipped, as the month number with a circle around it. (i.e., a package shipped in 
+December would be represented by a circled number ‘12’)
+Do NOT use a UPS Drop-Box or UPS Store for shipment. You must contact UPS and ask for a pickup if you do not 
+already have a daily pickup with UPS.NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+17
+Nordstrom Direct Drop Shipment Program
+If you are shipping in the Nordstrom or Nordstrom Rack Drop Ship Program, please contact the Drop Ship Operations 
+Team at dropship@nordstrom.com.
+Important: You will be shipping on a different UPS or FedEx account number than the one used for shipments to DC’s or 
+Stores. Contact your Drop Ship team.
+Shippers/vendors are required to track all Nordstrom fine-jewelry shipments and to obtain full proof of delivery 
+information
+If you are unable to confirm delivery of any package within 24 hours (excluding weekends/holidays) after the scheduled 
+delivery date, you or your designated representative must report the package missing on UPS.com. UPS will conduct a 
+search for the package, and if the package cannot be located and delivered, they will send the shipper a Damage/Loss 
+Notification Claim letter, which allows the shipper to begin the claims process (see below). 
+Shipper must also notify the Nordstrom buyer of the missing cartons by tracking number, with traffic@nordstrom.com on 
+copy.
+Filing a Claim for Loss or Damage on UPS.com
+• Nordstrom files the claim if shipment was made using the Nordstrom jewelry account.
+• For all other UPS shipments, shipper files the claim (on UPS.com)
+If your package fails to deliver within 24 hours (excluding weekends/holidays) after the ‘expected delivery date’ (found in 
+UPS.com Tracking), follow these instructions:
+Lost Shipment Claims with Declared Value
+• Go to UPS.com
+• Select the ‘Support’ tab
+• In the ‘Browse by Topic’ section, locate ‘Receiving Your Shipment’ in the menu, and click on ‘File a Claim’
+• Under ‘Report Package Problem’, enter the requested package details. This will initiate the tracer process. This 
+can take 7-10 business days to complete. 
+• If the package is unable to be located, UPS will send you a Damage/Loss Notification claim letter, which you will 
+need in order to begin the claims process. 
+• Follow the claims process described in detail on UPS.com
+• Once the claim is approved, the shipper will receive a check from UPS for the invoice amount or the declared 
+value amount, whichever is less.
+Lost Shipment Claims for invoice values less than $300
+File a Claim with UPS as instructed above. UPS will pay approved claims up to a maximum of $100/shipment directly to 
+the shipper. 
+Damaged Shipments with Declared Value 
+The Nordstrom D.C. (or store if sent store-direct) will notify the shipper of any cartons received damaged, with contents 
+damaged or missing.
+Nordstrom will provide digital photos of the damaged carton(s) and/or contents whenever possible, plus a description of the 
+damaged or missing items. The shipper will then be responsible for filing a claim with UPS on UPS.com. UPS will pay 
+approved claims directly to the shipper, including declared value shipments.
+• Go to UPS.com
+• Select the ‘Support’ tab
+• In the ‘Browse by Topic’ section, locate ‘Receiving Your Shipment’ in the menu, and click on ‘File a Claim’
+• Follow the step-by-step instructions.
+Damaged Shipment Claims with invoice values less than $300
+The Nordstrom D.C. (or store if sent store-direct) will notify the shipper of any cartons received damaged, with contents 
+damaged or missing. Nordstrom will provide the shipper with digital photos of the damaged carton(s) and/or contents
+whenever possible, plus a description of the damaged or missing items. The shipper will then be responsible for filing a 
+claim with UPS on UPS.com (see ‘Damaged Shipments with Declared Value’ above for instructions). UPS will pay 
+approved claims up to a maximum of $100/shipment directly to the shipper.NORDSTROM ROUTING GUIDE 
+SECTION 3: SPECIAL HANDLING
+18
+High Value Merchandise via USPS
+The following rules apply to jewelry and watch shipments sent via US Mail for departments 608, 827, 828, 829, 832, 833, 
+834, 835, 836, 837, 879, 881, 905, 922, 923, 926, 927, 928, 929, 930, 931, 932, 933, 945, 955, 967, or 968:
+• Surface: Use Registered Mail.
+• Air: Use Express Mail.
+• Declare and pay for full replacement value on all shipments.
+o Registered Mail offers insurance of up to $25,000 per carton.
+o Express Mail offers insurance of up to $5,000 per carton.
+• The outside of the shipping carton must not provide any indication (including label or brand names) that the 
+shipment may contain jewelry, watches or other high value items.
+• Mark all cartons with the correct Nordstrom store/DC number, PO number and department number.
+•
+•
+•
+• Refer to the Packaging & Labeling Standards found on Supplier Compliance Website for marking and labeling 
+instructions. Proof of postal charges is required.NORDSTROM ROUTING GUIDE 
+SECTION 4: FREIGHT INVOICING AND INQUIRIES
+19
+SECTION 4: FREIGHT INVOICING AND INQUIRIES
+Freight Invoicing and Re-Billing
+All shipments must be sent to Nordstrom ‘Collect’, or ‘Bill Third Party’. There are specific requirements for UPS small 
+package shipments (see UPS carrier pages for details).
+Use of any carrier or shipping method (routing) not specifically authorized in this guide or by Nordstrom Traffic will result in 
+the supplier paying all transportation charges, regardless of whether or not Nordstrom might have incurred lower or higher 
+transportation costs with the unauthorized shipping method.
+Nordstrom does not reimburse vendors for prepaid shipments sent via carriers not authorized by Nordstrom Traffic or 
+Nordstrom Corporate Transportation offices.
+Nordstrom will not accept any accessorial charges from carriers not authorized in this guide, even if the freight charges are
+prepaid. These charges must all be billed to the shipper—consult with your carrier about how to correctly set up your BOL 
+to have any of these accessorial charges billed to your account.
+If you accidentally ship ‘Prepaid’ instead of ‘Collect’ or ‘Bill Third Party using one of our authorized carriers and you wish to 
+have the charges re-billed to Nordstrom, please contact traffic@nordstrom.com and provide the following information:
+• Shipper name
+• Vendor name/vendor number
+• Carrier used
+• Pro number/tracking number(s)
+• Ship Date
+• Request to re-bill to Nordstrom
+• We will contact you within 2 business days regarding your request
+Note: Re-bill requests must be made within 60 days of ship date. Requests made later than 60 days will be denied
+and there will not be a reimbursement for freight invoices already paid.
+If at any time you are not clear about which carrier to use or have any other questions, email us at traffic@nordstrom.com. 
+Freight Chargeback Inquiries
+Nordstrom asks that you keep your account current and inquire regularly on freight deductions, we encourage suppliers to 
+avoid accumulating inquiries for monthly, quarterly, seasonal or annual review and to submit any questions promptly, 
+preferably within 60 days of the shipping date. Documents older than 12 months of the shipping date will not be addressed.
+To view, and if necessary, inquire on your freight deductions go to the OpenText Active Intelligence Portal, and log 
+in*. Here you will find all the pertinent information regarding your deductions, in addition there is instruction regarding 
+navigating the portal and maintaining your account. Note: It is the supplier's responsibility to maintain current contact 
+information in the portal to ensure deductions are reaching the appropriate team members. 
+38BNORDSTROM ROUTING GUIDE 
+SECTION 4: FREIGHT INVOICING AND INQUIRIES
+20
+Refusals and Related Charges
+This section outlines the supplier’s liabilities and responsibilities when Nordstrom refuses a non-compliant shipment or 
+Purchase Order.
+Reasons for Shipment/Purchase Order Refusals
+Some of the reasons shipments and/or Purchase Orders may be refused by Nordstrom are:
+• The PO number on the Bill of Lading or package label is missing or invalid. 
+NOTE: On shipments containing multiple PO numbers, a single invalid or missing PO number may result in refusal 
+of the entire shipment.
+• The Purchase Order and/or shipment is non-compliant and has been refused because:
+o The order was shipped outside the shipping window, either prior to the Earliest Ship Date or after the 
+Latest Ship Date
+o The order has been cancelled, is not on file or is not activated in our system. (Please be sure to verify all 
+Purchase Orders before shipping.)
+o The order contains unauthorized substitutions, overages or defective goods.
+o The shipment was delivered to the wrong Ship to DC.
+o The shipment was sent Collect on Delivery (COD), even when shipped via UPS and/or Parcel Post.
+o Your Prepaid (house carrier/non-routing guide carrier) or Hand Carry deliveries/POs were shipped after the 
+Latest Ship Date.
+o Your carrier did not pre-schedule a delivery appointment at the Ship to DC 24 hours prior to delivery.
+o Your carrier is not the Nordstrom authorized carrier identified in this manual and the goods were shipped 
+after the Latest Ship Date.
+Fees Assessed for Refused Shipments
+When a shipment or order is refused, the supplier will be held liable for the following:
+• Return freight fees
+• $250.00 handling fee
+• Inbound freight charges
+• Any charges incurred due to the refused shipment (i.e., redelivery and storage charges)
+If a shipment qualifies for refusal but is nevertheless accepted by Nordstrom, the supplier may still be held liable for the 
+above charges or fees via freight offset charges.
+Refused Shipment Handling and Liability
+Refused goods routed through Gilbert, NorCon or CTE (Consolidators) may be held on hand at the Consolidator’s facility. 
+The Consolidators will notify the shipper whose name appears on the bill of lading if the shipment or order is refused or
+undeliverable. Storage charges are accumulated until the Consolidator receives both disposition instructions in writing and
+payment of charges from the shipper.
+All refused goods received at a Nordstrom facility will be returned to the vendor at the vendor’s expense. Return
+Authorization stickers will not be used on refused merchandise. If the vendor chooses not to receive this returned refused
+merchandise, the merchandise may be destroyed, salvaged through jobbers, or sold in our off-price channels.
+Supplier bears full liability for loss or damage on refused shipments resulting from non-compliant shipments or Purchase 
+Orders, and improper shipping, packaging or labeling.
+Recalls
+Only a Nordstrom merchant or buyer is authorized to recall a refused shipment or PO. The Nordstrom merchant or buyer
+must contact the appropriate Ship to DC Traffic Office in order to initiate any recall actionNORDSTROM ROUTING GUIDE 
+SECTION 5: MISCELLANEOUS INFORMATION4B 21
+SECTION 5: MISCELLANEOUS INFORMATION4B
+Shipping Guidelines from U.S. Mainland to Hawaii 
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+Stores 47,48, and 706 are supported by DC 499 in Newark, CA (see section 8 for DC address).
+If the PO dictates to pack and ship these stores to DC 499, please follow the instructions for shipping to DC499 from 
+your state page in this Routing Guide.
+If the PO dictates to ship direct to store, please follow these instructions:
+PO Specifies AIR
+Direct to Store (Ship Direct to Store)
+Weight Carrier
+1-150 lbs UPS Next Day
+151-1,000 lbs Contact Corporate Transportation via email at Routing@nordstrom.com
+Hawaii Store Addresses:
+Store 47 Store 48 Store 706
+Waikiki Trade Center Rack
+2255 Kihiro Avenue, Ste 200
+Honolulu, HI 96815
+Phone:(808) 275-2555
+Victoria Ward Center Rack
+1170 Auahi Street
+Honolulu, HI 96814
+Phone:(808) 589-2060
+Ala Moana Center
+1450 Ala Moana Boulevard Ste 2950
+Honolulu, HI 96814
+Phone: (808) 953-6100
+Mis-routed POs (incorrect DC or unauthorized Direct-to-Store) will be subject to vendor chargebacks. If you have any
+questions, please contact Corporate Logistics by emailing to traffic@nordstrom.com
+SCAC Codes
+The SCAC is used to populate TD503 field on the EDI 856 document. When a Nordstrom authorized carrier dispatches an 
+agent or joint-line carrier to pick up your Nordstrom shipment(s), you may use the dispatching carrier’s SCAC in the EDI 
+856 TD503 field or you may contact the agent or joint-line carrier and ask them for their SCAC.
+Expense Offset Policies
+Freight Agreement Codes/Descriptions
+Reason Code Handling Fee Freight Agreement Reason Description Short Description
+AAC N Per Agreement-Half Freight Air + Advance Fees 1/2AFOBC AAC
+AA1 N Per Agreement-Chargeback Full Freight Air FULL-AIR AA1
+AA2 N Per Agreement-Chargeback Half Freight Air HALF-AIR AA2
+ASC N Per Agreement-Half Freight Surface + Advance Fees 1/2 FOBC ASC
+AS1 N Per Agreement-Chargeback Full Freight Surface FULFRTSU AS1
+AS2 N Per Agreement-Chargeback Half Freight Surface HLFFRTSU AS2
+A01 N Per Agreement-Chargeback Full Freight FULFRTAG A01
+A02 N Per Agreement-Chargeback Half Freight HLFFRTAG A02
+A03 N Per Agreement-Difference Between Air & Surface DIFSA-AG A03
+A04 N Per Agreement-1/2 Diff Between Air & Surface 1/2DIFAG A04
+A2C N Per Agreement-Chargeback Half Freight + Advance Fees 1/2+ADVC A2C
+Transportation
+Routing Guide or Purchase Order Violations Per Routing and PO: 100% Shipment cost plus $250.00 Handling fee.
+Freight Agreement Allowance Per Purchase Order Contract or Freight Partnership Contract: Options are 
+either 100% or 50% for both Air and Surface shipment costs, or 60% for Air 
+shipments and 30% of shipping costs.NORDSTROM ROUTING GUIDE 
+22
+A3C N Per Agreement-Chargeback Diff of Surf & Air + Advance Fees DIFSA+AD A3C
+A4C N Per Agreement-Chargeback 1/2 Diff Surf & Air +Advance Fees 1/2DIFSA A4C
+FOB N Chargeback Advance Charges Based on Fob Point ADV CHGS FOB
+F01 N Per PO Freight Term-Chargeback Full Freight. FULL FRT F01
+F02 N Per PO Freight Term-Chargeback Half Freight. HALF FRT F02
+F03 N Per PO-Difference Between Air & Surface Freight DIFF S/A F03
+F04 N Per PO-1/2 Difference Between Air & Surface 1/2 DIFF F04
+F05 N Per PO-Chargeback at Per Unit Rate UNT RATE F05
+F06 N FOB Consol = 25% Of Total Shipment Charge FOBC=25% F06
+Freight Chargeback Code Descriptions 
+Violation Code Handling Fee Freight Chargeback Reason Description Short Description
+I01 Y Routing Violation-Must Ship Collect Per Routing Guide S/B CLCT I01
+I02 Y Dbl Bill Adv/Pu Paid to Consol MISC. I02
+I03 Y Routing Violation-Shipped Ups Overweight A OVR WT I03
+I04 Y Routing Violation-Must Ship UPS ND to Dc UPS TO DC I04
+I05 Y Chargeback for Failure to Consolidate Shipments NONCNSOL I05
+I09 Y Routing Violation - Must Call FedEx Freight for P/U FEDEXP/U I09
+M02 Y Merchandise Was to Have Been Shipped Store Direct S-DIRECT M02
+M03 N Event Miss-ship Aired Direct to Store EVNT M/S M03
+P01 Y Po Violation-Po States Surface-Shipped Air S/B AIR P01
+P02 Y Po Violation-Po States Air-Shipped Surface S/B SURF P02
+P03 Y Po Violation-Merchandise Shipped Past Cancel Date PAST CAN P03
+P04 Y Po Violation-Merchandise Shipped Too Soon TOO SOON P04
+P05 Y Merchandise Refused Due to Invalid Purchase Order PO INVLD P05
+P06 Y Inbound Freight for Merchandise Refused at Door PO REFSD P06
+P07 N Charges for Refused/Recalled Merchandise PO RECAL P07
+P08 Y Outbound Freight on Merchandise Claimed or Refused CLM-RFSD P08
+P09 N Inbound Freight on Merchandise Claimed CLM-OTHR P09
+P10 Y Po Not Authorized to Ship Store Direct NO STDIR P10
+P11 Y Not Authorized to Ship Overnight OVERNITE AIR
+P12 Y Failure to Complete BOL Requirements NO P.O. P12
+R01 Y Routing Violation-Incorrect Carrier Used WRNGCARR R01
+R02 Y Routing Violation-Must Call Gilbert for Pickup GBEA P/U R02
+R03 N Freight Chargeback - Must Not Use Declared Value DCLR VLU R03
+R04 Y Routing Violation- Must Call XPO Logistics (FKA: Con-Way) For Pickup CNWY 
+R05 Y Routing Violation-Underweight Must Ship UPS ND to DC UNDER WT R05
+R06 Y Routing Violation-Must Call NorCon for Pickup NCON P/U R06
+R07 Y Routing Violation-Must Call FedEx National for Pickup FXNL P/U R07
+R09 Y Routing Violation-Must Call CTE for Pickup CAIE P/U R09
+R10 N Detention Charges/Volume Shipments Exceeds 2hr Limit EXCD LIM R10
+R11 Y Routing Violation-Must Call Colonial for Pickup CLNK P/U R11
+R12 Y Routing Violation-Must Call BTX Global Logistics for Pickup BTXA P/U R12
+Z99 Y See Chargeback Explanation Below MISC. Z99NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+23
+SECTION 6: CARRIER PAGES
+CTE – California Transport Enterprises
+Carrier Contact Information
+• Phone: (800) 540-0244
+o Within California: (323) 357-1720
+• Fax: (323) 357-1724
+• Website www.cteinc.net
+• SCAC Code - CAIE
+Verifying PO and Pick-Up Scheduling
+• We recommend that shippers use CTE’s on-line web tool for scheduling pick-ups rather than faxing documents 
+and information. Please contact CTE directly about how to be set up for this web tool.
+• Call (800) 540-0244 or (323) 357-1720 (within California).
+Bill of Lading Instructions/Shipment Addressing
+Consigned to: Nordstrom DC #
+C/O CTE
+2610 Wisconsin
+South Gate, CA 90280
+Timeline and Procedure for PO Verification, To Schedule a Pickup and Sending your ASN 856 to Nordstrom
+Prior to requesting pick up you must:
+• Verify all POs that will be physically presented to the carrier driver on the requested pickup day.
+• Edit your Bill of Lading and physical cartons to match. Only valid POs may be presented to the carrier driver.
+• Your ASN 856 must match your Bills of Lading and physical cartons exactly!
+• Key Matching Fields: Bill of Lading numbers, DC number, carton count by PO number.
+After all POs for the requested pickup day have been validated and shipping paperwork has been matched to the ASN 
+856:
+• You must obtain a pickup number from your carrier by 3:00 PST, locking in pickup for the next day.
+o Your carrier will give you a 4-hour pickup window, and you must have your shipment ready by the start of 
+that window.
+o If you miss the 3:00 PST deadline and your PO is at risk of becoming Past Cancelled, you must contact 
+the POs Nordstrom buyer for a PO extension.
+o The pickup number may be used as the CN Pro number in the ASN 856.
+o The SCAC code of the pickup carrier must be used in the ASN 856.
+Your ASN 856 must not be sent to Nordstrom until after the driver has signed ‘CLEAR’ on your Bill of Lading.
+• ‘Clear’ means that no changes were made to the carton count on your Bill of Lading by the driver.
+• If the driver makes any changes to the carton count on your Bill of Lading, your ASN 856 must be edited to reflect 
+the actual physical shipment picked up by the driver before it is transmitted.
+• The date of the driver’s signature must match the ASN 856 Ship Date field. 
+If you have any questions about these procedures, please direct them to traffic@nordstrom.com.
+Designer / FTL Trailer Seal Requirements
+• The shipper must apply a numbered ISO 17712 metal bolt seal to all loads and this number must be noted on 
+the bill of lading. Failure to properly seal the trailer transfers all shortage liability to the shipper. Plastic, 
+cable and tin metal seals are not approved.
+Routing Instructions
+Refer to the Purchase Order for FOB point, shipping method, freight terms, shipping window and stores. See Section 8: 
+Store/DC List for the Ship To DC’s.NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+24
+CTE – California Transport Enterprises (cont.)
+With Freight Charge Terms marked ‘Collect’
+• Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 Make out one Bill of Lading document:
+• For each DC;
+• For each day.
+2 Mark the Bill of Lading ‘collect’.
+3 Include the following information on the Bill of Lading:
+• Shipper’s name;
+• Shipper’s address;
+For each verified Purchase Order, list:
+• Purchase Order number;
+• Number of pieces (cartons or GOH) by PO number;
+• Department number by PO number;
+• Weight in LBS. by PO number;
+• Accurate carton count by size dimensions;
+• Description of all articles in shipment. Be as specific as possible and 
+conform to classifications and tariffs in effect on the date of the 
+shipment.
+If additional pages are needed to list POs, mark them ‘Page 2 of 3’, etc., 
+and only total the number of cartons/total LBS. on the last page.
+4 Do not declare value. (See Declaration of Value in Section 2: Shipment 
+Preparation for complete details.)
+• Supplier must tender freight to pick up carrier by DC, which must correspond to each bill.
+Contact traffic@nordstrom.com with questions.NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+25
+Gilbert
+Carrier Contact Information:
+• Email; GilbertPickups@GilbertUSA.com
+• Phone: (732) 395-6230
+• Fax: (732) 709-5502 or (732) 709-5503
+SCAC Code - GBEA
+Purchase Order Verification and Pickup Request Line:
+Call (732) 395-6230, then follow the prompts:
+Schedule a pickup (#1)
+Customer Service (#2)
+Master of Bill of Lading Address (Ship To):
+Nordstrom
+C/O Gilbert
+1000 Riverside Drive
+Keasbey, NJ 08832-0186
+Sub Bill of Lading Address (Ship To)
+• Nordstrom DC#
+Important note: Include the DC number, but not the DC address. DC addresses must not appear on Sub Bills of Lading.
+Timeline and Procedure for PO Verification, To Schedule a Pickup and Sending your ASN 856 to Nordstrom
+Prior to requesting pick up you must:
+• Verify all POs that will be physically presented to the carrier driver on the requested pickup day.
+• Edit your Bill of Lading and physical cartons to match. Only valid POs may be presented to the carrier driver.
+• Your ASN 856 must match your Bills of Lading and physical cartons exactly!
+• Key Matching Fields: Bill of Lading numbers, DC number, carton count by PO number.
+After all POs for the requested pickup day have been validated and shipping paperwork has been matched to the ASN 
+856:
+• You must obtain a pickup number from your carrier by 3:00pm EST, locking in pickup for the next day.
+• Your carrier will give you a 4-hour pickup window, and you must have your shipment ready by the start of that 
+window.
+Your ASN 856 must not be sent to Nordstrom until after the driver has signed ‘CLEAR’ on your Bill of Lading.
+• ‘Clear’ means that no changes were made to the carton count on your Bill of Lading by the driver.
+• If the driver makes any changes to the carton count on your Master Bill of Lading, your ASN 856 must be edited to 
+reflect the actual physical shipment picked up by the driver before it is transmitted.
+• The date of the driver’s signature must match the ASN 856 Ship Date field.
+• The driver will sign only the Master Bill of Lading.
+If you have any questions about these procedures, please direct them to traffic@nordstrom.com.
+* Designer / FTL Trailer Seal Requirements
+• The shipper must apply a numbered ISO 17712 metal bolt seal to all loads and this number must be noted on 
+the bill of lading. Failure to properly seal the trailer transfers all shortage liability to the shipper. Plastic, 
+cable and tin metal seals are not approved.
+Routing Instructions
+Refer to the Purchase Order for FOB point, shipping method, freight terms, shipping window and stores. See Section 8: 
+Store/DC List for ShipTo DC’s.NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+26
+Gilbert (cont.)
+With Freight Charge Terms marked ‘Collect’
+• Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 If shipping to more than one DC on the same day, create a unique sub-bill 
+for each DC itemized by:
+• PO number(s) and department number, with carton count and LBS. for 
+each PO.
+2 Cross-reference individual sub-bills on the Master Bill of Lading.
+3 Combine all surface shipments to Nordstrom from your facility on the same
+day onto one Master Bill of Lading, including:
+• Total cartons and total LBS. by each DC.
+4 At the bottom of the Master Bill of Lading, include:
+• Total cartons for all DCs.
+• Total weight in LBS. for all DCs.
+NOTE: The Master Bill of Lading is the document the carrier’s driver will 
+sign.
+• Staple the individual shippers’ sub-bills under the one Master Bill of Lading. Cross-reference individual shippers’ 
+sub-bill numbers on the Master Bill of Lading.
+• Supplier must tender freight to pick up carrier by DC, which must correspond to individual sub-bills. Failure to 
+comply will result in a consolidation traffic freight chargeback, plus handling fees.
+Use the Bill of Lading Guidelines (on www.gs1us.org), which includes examples of the industry standard sub-bills and 
+Master Bill of Lading (or see Appendix C: Sample Bill of Lading).NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+27
+NorCon, LTD. 
+Carrier Contact Information 
+• Phone: (513) 942-5768 
+• Fax: (513) 942-2798 
+• Web: www.NorConltd.com
+• SCAC Code – NCON 
+Verifying PO and Pick-Up/Delivery Scheduling 
+• EMAIL – pickups@NorConltd.com
+• Call (513) 942-5768. 
+For Volume Multi-DC Truckload pickups (Over 8 pallets/10,000 lbs.) 
+Contact NorCon at least 3 business days prior to your requested ship/pickup date to arrange for a 53’ pickup 
+trailer. POs must be valid on actual pickup day.
+Master of Bill of Lading Address 
+Nordstrom 
+C/o NorCon, LTD 
+9811 Harwood Ct. 
+Fairfield, OH 45014 
+Sub Bill of Lading Address 
+• Nordstrom DC # only, NO DC Address
+*GPS Note; NorCon’s City in GPS is Westchester but US Mailing address is Fairfield
+Important note: Include the DC number, but not the DC address. DC addresses must not appear on Sub Bills of Lading. 
+Timeline & Procedure for; PO Verification, Scheduling a Pickup/Obtaining a Delivery Appointment and Sending 
+your ASN 856 to Nordstrom 
+Prior to requesting pickup or delivery appointment you must: 
+• Verify all POs that will be physically presented to the carrier driver on the requested pickup day or in your delivery. 
+• Edit your Bills of Lading and physical cartons to match. Only valid POs may be presented to the carrier driver or 
+delivered to NorCon. Provide # of cartons AND # of pallets by DC.
+• Your ASN 856 must match your Bills of Lading and physical cartons exactly! 
+• Key Matching Fields Bill of Lading numbers, DC number, Carton count by PO number. 
+After all POs for the requested pickup day have been validated and shipping paperwork has been matched to the ASN 
+856: 
+• You must obtain a pickup/delivery appointment number from your carrier by 3:00 EST, locking in
+your pickup for the next day.
+o Your carrier will give you a 4-hour pickup window, and you must have your shipment ready by the start of that 
+window. 
+o If you miss the 3:00 EST deadline and your PO is at risk of becoming Past Cancelled, you must contact the POs 
+Nordstrom buyer for a PO extension. 
+o The pickup number may be used as the CN Pro number in the ASN 856. 
+o The SCAC code of the pickup carrier must be used in the ASN 856. 
+Your ASN 856 must not be sent to Nordstrom until after the driver has signed ‘CLEAR’ on your Bill of Lading. 
+• ‘Clear’ means that no changes were made to the carton count on your Bill of Lading by the driver. 
+• If the driver makes any changes to the carton count on your Master Bill of Lading, your ASN 856 must be edited to reflect 
+the actual physical shipment picked up by the driver before it is transmitted. 
+• The date of the driver’s signature must match your ASN 856 Ship Date field. 
+• The driver signs only the Master Bill of Lading. 
+Contact traffic@nordstrom.com with any questions.NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+28
+NorCon, LTD. (cont.)
+Designer / FTL Trailer Seal Requirements
+• The shipper must apply a numbered ISO 17712 metal bolt seal to all loads and this number must be noted on 
+the bill of lading. Failure to properly seal the trailer transfers all shortage liability to the shipper. Plastic, 
+cable and tin metal seals are not approved.
+Routing Instructions
+Refer to the Purchase Order for FOB point, shipping method, freight terms, shipping window and stores. See Section 8: 
+Store/DC List for Ship To DC’s.
+Check box on BOL With Freight Charge Terms marked as ‘Collect’
+• Create an individual shipper’s Bill of Lading as follows:
+Step Action
+1 If shipping to more than one DC on the same day, create a unique sub-bill 
+for each DC itemized by:
+• PO number(s) and department number, with carton count and LBS. for 
+each PO.
+2 Cross-reference individual sub-bills on the Master Bill of Lading.
+3 Combine all surface shipments to Nordstrom from your facility on the same
+day onto one Master Bill of Lading, including:
+• Total cartons and total LBS. by each DC.
+4 At the bottom of the Master Bill of Lading, include:
+• Total cartons for all DCs
+• Total weight in LBS. for all DCs
+NOTE: The Master Bill of Lading is the document the carrier’s driver will 
+sign.
+• Staple the individual shippers’ sub-bills under the one Master Bill of Lading. Cross-reference individual shippers’ 
+sub-bill numbers on the Master Bill of Lading.
+• Supplier must tender freight to pick up carrier by DC, which must correspond to individual sub-bills. Failure to 
+comply will result in a consolidation traffic freight chargeback, plus handling fees.
+Use the Bill of Lading Guidelines (on www.gs1us.org), which includes examples of the industry standard sub-bills and 
+Master Bill of Lading (or see Appendix C: Sample Bill of Lading).NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+29
+UPS Small Package
+Carrier Contact Information
+• Phone: (800) 742-5877 or (800) PICK-UPS
+• Web Site: http://www.ups.com
+• SCAC Code – UPSN 
+Shippers must have an active UPS account number in order to use Nordstrom’s 3rd Party UPS account.
+If you do not have an active UPS account number, you may sign up online at https://www.ups.com/myups and click 
+‘Register’ at the bottom of the page. Or you may call (800) 742-5877. You can request UPS shipping software, WorldShip, 
+to put on your computer if you are a daily pick up account. WorldShip can also be downloaded from: 
+http://www.ups.com/worldship
+Jewelry and Watch Program
+Nordstrom Purchase Orders that consist of jewelry and watch items destined for departments 881 and 879 must ship 
+under the UPS High-Value requirements contained in Section 3: “Special Handling, Jewelry and Watch Shipping 
+Procedures”. This requires using a different UPS account than standard UPS shipping covered below.
+Shipment Addressing
+All Nordstrom shipments are to be addressed to:
+Nordstrom DC # 
+Nordstrom DC Street Address
+Nordstrom DC City, State, and Zip Code
+See Section 8: Store/DC List for the ‘Ship to’ DC’s and their addresses.
+Nordstrom Third Party Bill to Account Number and Address Set Up Procedure Contact Routing@nordstrom.com to 
+receive the Nordstrom UPS account number to ship on. Please provide the following information:
+• supplier name/number
+• supplier contact information
+• PO number(s) being shipped 
+• State and zip code you are shipping from
+• Total weight by DC
+• Total cartons by DC
+We will email our 3rd Party Account and Address to you no later than the next business day after receiving your email. 
+Should we change the UPS account number for any reason, we will update the Routing Guide alert section on the home 
+page of Supplier Compliance Website You will then need to follow the above process to receive the new account number. 
+Please check the Routing Guide regularly to be sure to get any updates.
+Important
+• If Nordstrom is paying the freight charges for your shipment, DO NOT ship on your own account and ask that 
+Nordstrom reimburse you—we must have UPS charges billed to our account in order to receive our 
+contracted rates. 
+Weekly 15 Package Shipping Limit Per Destination
+Special Notes for UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Routing Instructions
+Refer to the Purchase Order for FOB point, shipping method, freight terms, shipping window and stores. 
+Service Selection
+• If PO specifies ‘Air’, use UPS 2
+nd Day Air service level.
+• If PO specifies ‘Surface’, use UPS Ground service level.
+Please contact Routing@nordstrom.com prior to shipping if you are being requested to use any other service level. 
+Nordstrom will not pay for use of any other service level without prior permission.
+Suppliers must tender freight to pick up carrier by DC, which must correspond to each bill. Failure to 
+comply will result in a consolidation traffic freight chargeback, plus handling fees.NORDSTROM ROUTING GUIDE 
+SECTION 6: CARRIER PAGES
+30
+UPS Small Package (cont.)
+Verification of Delivery
+Nordstrom strongly recommends that Proof of Delivery (POD) inquiries be made within 120 days of the 
+ship date. It is always best to verify delivery within two weeks of the ship date. Contact 
+TRAFFIC@Nordstrom.com with questions.
+UPS General Instructions
+• You must use an authorized 3rd Party account number to bill third party to Nordstrom. 
+• In order to transmit electronic Package Level Detail (PLD) for each shipment, you must use a UPS shipping system, 
+such as World Ship, UPS Internet, or a UPS compatible shipping system.
+• It is important to complete the ‘End of Day’ process when using UPS systems like World Ship at least once per day 
+for your shipment data to be transmitted to UPS. This is a critical step that is needed to ensure your packages are 
+shipped and received without delay. Failure to perform this task could result in a freight chargeback due to incorrect 
+ship date being shown on the tracking information reported by UPS to Nordstrom.
+• The use of hand-written air bills is not authorized. Your shipment could be delayed or returned unless 
+system-generated shipping labels are created using a UPS system or UPS-compatible shipping systems.
+• The date your UPS shipment is created is the date that is transmitted to Nordstrom as the actual ship date. Keep this 
+in mind if you are creating UPS shipments prior to actual ship date, as it could result in a charge back if the reported 
+ship date falls outside the PO ship window.
+• All packages must have the Nordstrom PO number (example: ‘12345678’) clearly entered in the ‘Reference 1’ field of 
+the shipping system and appear on the shipping label. You will not be able to process your shipment via UPS 
+Shipping System without this information.
+• If you do not have a daily pickup from UPS: When preparing a shipment on UPS World Ship system, and scheduling 
+a pickup for your packages online, only request a pickup for the first package you process. DO NOT request more 
+than one pickup per day. 
+• The PO number and the department number must be clearly written near the label on all packages. Please be sure 
+that the carrier shipping label does not cover up the GS1-128 carton label.
+• Please provide accurate carton count by size (dimensions) when creating your shipment.
+• We suggest that all small package shippers track each shipment to delivery. 
+UPS Claims/Liability (The shipper must file all cargo claims with UPS directly)
+The shipper is responsible for all loss and damage regardless of FOB point stated on the Purchase Order.
+Nordstrom pays for merchandise that is received in good repair only. If your shipment is never received or is received 
+short or damaged, the balance of your invoice must be covered by your cargo claim with UPS. UPS gives 60 days from 
+the day of delivery or from the scheduled day of delivery if delivery was not made for the filing of claims for domestic 
+packages. International package claims must be filed within 60 days of the date of delivery.
+Domestic Air Shipments: UPS Limit of Liability for domestic air and ground shipments is $100 per outer carton per 
+shipment or the replacement value of the shipment, whichever is less.
+UPS offers Declared Value for packages up to a limit of $50,000, If the shipper chooses to purchase additional Declared 
+Value to cover the contents of their cartons; the premium is the responsibility of the shipper. 
+Damage Claims: Concealed damage must be reported to UPS within 60 days of the date of delivery (Domestic) and within 
+60 days of the date of delivery (International).
+A written claim must be submitted to UPS for standard Limit of Liability loss and damage claims.
+Time Limit for Filing Claims for Loss or Damage to Property
+As a condition precedent to recovery, all claims for loss or damage to property must be filed in writing or electronically with 
+UPS within the following time limits: 
+Domestic shipments, claims must be filed within 60 days after delivery of the package or in case of failure to make delivery
+then within 60 days after a reasonable time for delivery has elapsed. 
+Written claims must be sent to UPS (address on the UPS Claim form found at https://www.ups.com/myups) Attn: Cargo 
+Claims. NORDSTROM ROUTING GUIDE 
+31
+UPS Small Package (cont.)
+Shippers who choose to purchase additional Declared Value to cover the contents of their cartons are responsible for any 
+associated premiums. Nordstrom will not reimburse for Declared Value charges. Shippers are also responsible for any 
+additional premiums, such as hazardous material, delivery confirmation, fax POD (Proof of Delivery), Saturday pick up 
+charges, delivery and address correction fees, etc.
+Shippers tendering unauthorized packages are responsible for paying the list rate charges published by UPS.
+Verification of Delivery
+Nordstrom strongly recommends that Proof of Delivery (POD) inquiries be made within 90 days of the ship date. It is 
+always best to verify delivery within two weeks of the ship date.NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+32
+SECTION 7: ORIGIN STATE PAGES
+Direct to Nordstrom DC/FC States – AL, AK, AZ, CO, DE, District of Columbia (DC), FL,
+ID, IA, KS, LA, ME, MD, MA, MN, MT, NE, NV, NH, NM, ND, OK, OR, PA, RI, SD, TX, UT, 
+VT, WA, WY
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+Shipments of any size originating from these states will be routed by Nordstrom’s routing team. Routing will determine the 
+best mode to route your order UPS, LTL or FTL.
+When routing shipments from these states, please email Nordstrom routing at Routing@nordstrom.com using the pickup 
+request form located here Nordstrom Request Form, NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+33
+ARKANSAS (AR)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC 799) on the same day. 
+For DC799 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date 
+(weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com. 
+• All shipments must be sent ‘Collect.’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business days 
+prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in order to
+receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual pickup day.
+o To DC799 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC799 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+799
+1-200 lbs.
+UPS Small Package 
+Ground Service
+201-10,000 lbs.
+Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+34
+CALIFORNIA (CA): Zip Code Prefixes 900-939
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• Suppliers must call carrier 24 hours prior to shipment for pickup and PO verification. Same day pickup requests will 
+not be accepted.
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, 
+contact the Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com, at least 3 business days prior 
+to the requested ship date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect.’ 
+• See Section 6: Carrier Pages for carrier-specific shipping instructions.
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-100 lbs.
+(10 cartons or less)
+UPS Small Package 
+Ground Service
+101-10,000 lbs.
+or
+11+ cartons
+CTENORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+35
+CALIFORNIA (CA): Zip Code Prefixes 940-969
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DCs on the same day.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• See Section 6: Carrier Pages for carrier-specific shipping instructions
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Special Note for LTL shipments:
+o DO NOT ship more than 14 pallet positions per BOL destination per day
+o For shipments of 14 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Ship To DC
+PO Specifies SURFACE
+Ship To DC PO Specifies SURFACE
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-100 lbs. UPS Small Package 
+Ground Service
+101-22,000 lbs. Contact Routing@nordstrom.com
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+36
+CONNECTICUT (CT)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• Suppliers must call carrier 24 hours prior to shipment for pickup and PO verification. Same day pickup requests will not be 
+accepted.
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s 
+• For DC569/562 POs listed as ‘Air’, see separate ‘Air’ routing for that DC below. Note that shipments for DC 569/562 will move via
+ground due to proximity of shipping location to DC 569/562.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com, at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• See Section 6: Carrier Pages for carrier-specific shipping instructions.
+• All shipments must be sent ‘Collect’ or ‘Bill Third Party’. 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. GilbertNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+37
+GEORGIA (GA)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC569/DC699/DC799) on 
+the same day. For DC569/DC699/DC799 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to 
+your requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the 
+following business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business days 
+prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in order to 
+receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual pickup day.
+o To DC569/DC699/DC799 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC569/DC699/DC799 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+584/5629
+599
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+569/562
+699
+799
+1-200 lbs.
+UPS Small Package 
+Ground Service
+201-10,000 lbs.
+Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+38
+HAWAII (HI)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• Suppliers must call carrier 24 hours prior to shipment for pickup and PO verification. Same day pickup requests will not be 
+accepted.
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to the same DC on the same day.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE Shipments, greater than 1,000 lbs. per DC contact Routing@nordstrom.com for Routing Instructions
+• For AIR shipments, Routing@nordstrom.com for routing instructions.
+• All shipments must be sent ‘Collect’ or ‘Bill Third Party’. 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+Special Note for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-2,000 lbs.
+UPS Small Package 
+Ground ServiceNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+39
+ILLINOIS (IL)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC299/DC599) on the 
+same day. For DC299/DC599 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your 
+requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following 
+business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual pickup day.
+o To DC299/DC599 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC299/DC599 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+399
+499
+569/562
+584/5629
+699
+799
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+299
+599
+1-200 lbs. UPS Small Package 
+Ground Service
+201-10,000 lbs. Contact Routing@nordstrom.com
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+40
+INDIANA (IN)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for NorCon pickups:
+o NorCon pickup: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 
+business days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 
+2pm EST in order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual 
+pickup day.
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+41
+KENTUCKY (KY)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for NorCon pickups:
+o NorCon pickup: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 
+business days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 
+2pm EST in order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual 
+pickup day. DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+42
+MICHIGAN (MI)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for NorCon pickups:
+o NorCon pickup: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 
+business days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 
+2pm EST in order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual 
+pickup day. DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorConNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+43
+MISSISSIPPI (MS)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC 799) on the same day. 
+For DC799 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date 
+(weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect.’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page).POs must be valid on actual pickup day.
+o To DC799 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC799 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+799
+1-200 lbs.
+UPS Small Package 
+Ground Service
+201-10,000 
+lbs.
+Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+44
+MISSOURI (MO)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC299/DC599) on the 
+same day. For DC299/DC599 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your 
+requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following 
+business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page).POs must be valid on actual pickup day.
+o To DC299/DC599 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC299/DC599 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+399
+499
+569/562
+584/5629
+699
+799
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+299
+599
+1-200 lbs.
+UPS Small Package 
+Ground Service
+201-10,000 lbs. Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+45
+NEW JERSEY (NJ)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• Suppliers must contact carrier at least 24 hours prior (weekends excluded) to ship date for pickup and PO verification. Same 
+day pickup requests will not be accepted.
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-20 lbs UPS Small Package 
+Ground Service
+21-10,000 lbs Gilbert
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+46
+NEW YORK (NY): Zip Codes Prefixes 100-119
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• Suppliers must contact carrier at least 24 hours prior (weekends excluded) to ship date for pickup and PO verification. Same 
+day pickup requests will not be accepted.
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-20 lbs.
+UPS Small Package 
+Ground Service
+21-10,000 lbs. GilbertNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+47
+NEW YORK (NY): Zip Code Prefixes 120-149
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DCs, except DC569/562 on the same
+day. For shipments to DC569/562, combine the weight of all POs shipping on the same day, and refer to the table below.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Chargebacks will result for failing to follow these instructions
+Special Notes for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Special Notes for LTL shipments:
+o DO NOT ship more than 7 pallet positions per day
+o For shipments of 8 pallets or more contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+584/5629
+599
+699
+799
+1-50 lbs. UPS Small Package
+Ground Service
+51-10,000 lbs. Contact Routing@nordstrom.com 
+569/562
+1-100 lbs. UPS Small Package
+Ground Service
+100 -10,000 lbs. Contact Routing@nordstrom.com NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+48
+NORTH CAROLINA (NC)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC569/DC699/DC799) on 
+the same day. For DC569/DC699/DC799 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to 
+your requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the 
+following business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business days 
+prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in order to 
+receive your pickup confirmation by 3pm EST (see NorCon carrier page).POs must be valid on actual pickup day.
+o To DC569/DC699/DC799 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC569/DC699/DC799 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+584/5629
+599
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+569/562
+699
+799
+1-200 lbs.
+UPS Small Package 
+Ground Service
+201-10,000 lbs. Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+49
+OHIO (OH)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for NorCon pickups:
+o NorCon pickup: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 
+business days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 
+2pm EST in order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual 
+pickup day. DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+599
+569/562
+584/5629
+699
+799
+1-50 lbs. UPS Small Package
+Ground Service
+51-10,000 
+lbs. NorConNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+50
+SOUTH CAROLINA (SC)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC 799) on the same day. 
+For DC799 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your requested ship date 
+(weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect.’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact
+Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business days 
+prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in order to 
+receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual pickup day.
+o To DC799 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC799 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.comDO NOT ship 
+pallets higher than 84” maximum
+Ship To 
+DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+1-50 lbs UPS Small Package 
+Ground Service
+51-10,000 lbs NorCon
+799
+1-200 lbs UPS Small Package 
+Ground Service
+201-10,000 lbs Contact Routing@nordstrom.com
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+51
+TENNESSEE (TN)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s on the same day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for NorCon pickups:
+o NorCon pickup: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 
+business days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 
+2pm EST in order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual 
+pickup day. DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments:
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+• Chargebacks will result for failing to follow these instructions
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+569/562
+584/5629
+599
+699
+799
+1-50 lbs.
+UPS Small Package 
+Ground Service
+51-10,000 
+lbs.
+NorConNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+52
+VIRGINIA (VA)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC569/DC699) on the 
+same day. For DC569/DC699 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your 
+requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following 
+business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page). POs must be valid on actual pickup day.
+o To DC569/DC699 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC569/DC699 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+584/5629
+599
+799
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+569/562
+699
+1-200 lbs. UPS Small Package 
+Ground Service
+201-10,000 lbs. Contact Routing@nordstrom.com
+ NORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+53
+WEST VIRGINIA (WV)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC569/DC699) on the 
+same day. For DC569/DC699 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your 
+requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following 
+business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page).POs must be valid on actual pickup day.
+o To DC569/DC699 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC569/DC699 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than 84” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+299
+399
+499
+584/5629
+599
+799
+1-50 lbs. UPS Small Package 
+Ground Service
+51-10,000 lbs. NorCon
+569/562
+699
+1-200 lbs. UPS Small Package 
+Ground Service
+201-10,000 lbs. Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE 
+SECTION 7: ORIGIN STATE PAGES
+54
+WISCONSIN (WI)
+See Section 2: Shipment Preparation for detailed instructions on preparing packages for shipment.
+General Rules
+• For SURFACE shipments, combine the weight of all cartons for all POs shipping to all DC’s (except DC299/DC599) on the 
+same day. For DC299/DC599 contact Routing@nordstrom.com for pickup scheduling at least 48 hours prior to your 
+requested ship date (weekends excluded). Any requests sent after 12:00pm (PST) will be considered received on the following 
+business day.
+• Suppliers must contact NorCon at least 1 day prior (weekends excluded) to ship date for pickup and PO verification and 3 days 
+prior if over 8 pallets (see below). Submit your pickup request by 2pm EST in order to receive your pickup confirmation by 3pm 
+EST (see NorCon carrier page) Same day pickup requests will not be accepted.
+• See Section 6: Carrier Pages for carrier-specific shipping instructions. 
+• For SURFACE shipments per or by DC greater than 10,000 lbs. or a cubic measure greater than 1,800 cubic feet, contact the 
+Nordstrom Volume Shipment Routing Desk at Routing@nordstrom.com at least 3 business days prior to the requested ship 
+date. 
+• For AIR shipments, contact Routing@nordstrom.com
+• All shipments must be sent ‘Collect’ 
+• Routing instructions are subject to change. Please consult the Routing Guide prior to each shipment.
+• Chargebacks will result for failing to follow these instructions
+Special Notes for LTL shipments:
+o To NorCon: 1-8 pallets can be next business day pickup. If over 8 pallets/10,000 lbs. contact NorCon at least 3 business 
+days prior to your requested ship/pickup date to arrange for a 53’ pickup trailer. Submit your pickup request by 2pm EST in 
+order to receive your pickup confirmation by 3pm EST (see NorCon carrier page).POs must be valid on actual pickup day.
+o To DC299/DC599 direct: DO NOT ship more than 7 pallet positions per BOL destination per day.
+o To DC299/DC599 direct: For shipments of 8 pallets or more per BOL destination contact Routing@nordstrom.com
+o DO NOT ship pallets higher than ” maximum
+Special Notes for UPS Small Package shipments
+For UPS shipments on Nordstrom Third Party Account:
+• DO NOT ship more than 15 cartons per BOL destination (per Nordstrom DC/FC destination) per calendar week
+• If you have more than 15 carton per calendar week per Nordstrom DC/FC destination, contact Routing@nordstrom.com
+Ship To DC
+PO Specifies SURFACE
+Weight Carrier
+89
+399
+499
+569/562
+584/5629
+699
+799
+1-50 lbs. UPS Small Package 
+Ground Service 
+51-10,000 lbs. NorCon
+299
+599
+1-200 lbs. UPS Small Package 
+Ground Service 
+201-10,000 lbs. Contact Routing@nordstrom.comNORDSTROM ROUTING GUIDE
+SECTION 8: STORE/DC LIST 55
+SECTION 8: STORE/DC LIST
+Store / DC Look-Up Process
+• Nordstrom sends the store ordering locations on the EDI 850 SDQ segment
+• In most cases, you may use the following list to locate the correct Ship-to DC for the store(s) listed on the SDQ 
+segment. However, in some cases we may ask that you ship to a DC other than the one indicated on the 
+Store/DC list. If a DC shipping location appears in the N1 segment that follows the SDQ segment of the EDI 850, 
+you must ship to that DC and not the DC typically associated with the store location
+• Vendors shipping to Nordstrom departments 87 (European Designer Sportswear Collection) and 614 should 
+review the Designer section on page 14 to insure proper routing
+• Vendors shipping to Department 86 (American Designer Sportswear Collection) should follow the standard 
+routing for their State as found in the Store / DC List and State Pages
+Nordstrom Product Group Orders
+• Nordstrom sends the Store/DC combinations in the purchase order
+Manhattan NYC Full Line Stores
+Our Manhattan NYC Full Line Store POs will be set up as store 209 shipping to DC 699. After order processing, DC 699 
+will route to store 209, our Stock Staging Area (SSA), supporting both Full Line Manhattan Stores 210 Women’s Store, 
+opening October 2019 and 212 Men’s Store. Please email Routing@nordstrom.com for shipping and routing questions.
+Pre-Allocation Stores 
+Pre-Allocation Stores will appear with the same value, the DC location, in the Mark For and in the Ship To location. These 
+are not valid stores; they are a unit placeholder prior to store allocation:
+• When a DC appears as a store and a ship to location, never ship until the PO has been store allocated; 
+• If the start ship window of your PO is within two weeks and you have not been notified of the store allocation, 
+please contact the buyer on the PO and request allocation
+Store / DC RelationshipsNORDSTROM ROUTING GUIDE
+SECTION 8: STORE/DC LIST 56NORDSTROM ROUTING GUIDE
+SECTION 8: STORE/DC LIST 57
+NQC (Nordstrom Quality Center) 187
+187 Nordstrom Quality Center Contact routing@nordstrom.com for routing instructions
+Ecommerce Orders
+Ship to Nordstrom.com
+Ship to NordstromRack.comNORDSTROM ROUTING GUIDE
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS 58
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS
+Term Definition
+Airway Bill (AWB) The air industry’s equivalent to the motor carrier’s Bill of Lading. 
+Advanced Ship Notice (ASN) Electronic packing slip or 856.
+Bill of Lading A contract of carriage between shipper and carrier. A Bill of Lading serves three 
+purposes:
+• It sets the terms and conditions of the contract.
+• It acts as the receipt for the goods to be transported.
+• It provides documentary evidence of the party entitled to deliver.
+Cancel Date The Cancel Date shown on the Purchase Order. The Cancel Date is the last day to 
+ship. It is commonly referred to as the “Past Cancel Date”.
+Claim A deduction processed against a vendor’s account for merchandise returns, shortages, 
+cost differences, markdowns, advertising co-op, rebates, etc.
+Cargo Claims Claims written against a carrier for recoupment of merchandise cost and freight charges 
+as a result of damage or shortage of goods delivered or complete non-delivery.
+Carrier Liability A contract carrier is liable for all loss, damage and delay with the exception of act of 
+God, act of a public enemy, act of a public authority, act of the shipper, and the inherent 
+nature of the goods.
+Carton A corrugation packaging type not to exceed 36" x 24" x 24" or 50 pounds.
+Contract Carrier A for-hire carrier who does not serve the general public, but who serves shippers or 
+consignees with whom the carrier has a continuing contract.
+Collect Freight invoice payment terms indicating that charges will be billed to Nordstrom.
+Consignee The receiver of a freight shipment, usually the buyer.
+Consolidation of Shipment A Nordstrom requirement that all purchase orders going to the same DC on the same 
+day must be consolidated onto one Bill of Lading or sub-bill, depending on which carrier 
+is being used.
+Consolidator Assembles interliner or LTL shipments, organizes the freight by DC and purchase 
+order, manifests shipments by DC and transmits to each DC to pre-alert them of the 
+merchandise and delivery date. Releases freight by assembly to the DC.
+Cubic Feet Carton Length by Width by Height; multiplied. Cubic foot measurement. 
+Customer’s Owned Goods Merchandise that has already been sold to a customer. Customer’s Owned Goods are 
+usually Repair Claims being sent back to Nordstrom from the repair vendor.
+DC Nordstrom Distribution Center. See Section 8: Stores/DC List for stores serviced by 
+each DC, and DC addresses and phone and fax numbers. The DC is usually the Ship 
+To point on the Purchase Order.
+Department Number The department number is found on the Purchase Order under "Dept. No." The 
+department number contains a type of merchandise belonging to a group of 
+departments in a merchandise division.
+Dimensional Weight (Dim Wt.) Carton Length x Width x Height; multiplied. Dim Wt. or Cubic Foot measurement. 
+EAN European Article Number. A unique thirteen-digit vendor number, the European 
+equivalent of a UPC code.NORDSTROM ROUTING GUIDE
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS 59
+Term Definition
+Earliest Ship Date The Earliest Ship Date shown on the Purchase Order. The Earliest Ship Date is the first 
+day to ship. It is commonly referred to as the Start Ship Date.
+EDI Electronic Data Interchange. All-inclusive terms for Electronic Data interchange 
+transactions. Ability to transmit EDI transaction types varies with each vendor.
+Electronic Documents The Electronic Documents utilized by Nordstrom include:
+Electronic Invoice EDI810 Version 4010VICS
+UPC Catalog EDI832 Version 4010VICS
+Purchase Order EDI850 Version 4010VICS
+Product Activity Data EDI852 Version 4010VICS
+PO Acknowledgment EDI855 Version 4010VICS
+Advance Shipment EDI856 Version 4010VICS
+PO Buyer Initiated EDI860 Version 4010
+GS1 128 Carton Label Version 4010VICS
+Functional Acknowledgement EDI997 Version 4010VICS
+Floor Ready Term referring to merchandise that is received ready to be transferred directly to the 
+selling floor.
+Freight Allowance Amount of freight the supplier pays per purchase order or signed Corporate Freight 
+Partnership Contract (freight agreement).
+0 Supplier pays no (zero) freight costs.
+1 = 100% Full, Paid: Supplier pays 100% of the freight costs.
+2 = 50% ½, Half: Supplier pays 50% of the freight costs.
+3 = 60% Difference between Air and Surface. On air shipments
+only, supplier pays 60% of the air freight costs.
+4 = 30% Half the difference between Air and Surface. On air
+shipments only, supplier pays 30% of the air freight costs.
+Freight-Only Invoice An invoice for prepaid freight charges sent to the DC Traffic Office. Nordstrom only 
+reimburses for freight charges associated with jewelry, watches, gourmet food 
+shipments and consignment orders.
+Freight Chargeback
+(See Freight Agreement and 
+Freight Violation Chargeback 
+Codes/Descriptions for chargeback 
+reason codes and descriptions)
+Supplier freight deduction document. There are two types of freight chargebacks:
+• Agreement: Supplier agrees to share freight charges.
+• Violation: Supplier is charged full freight charges plus a handling fee of $100. 
+Violation is either of Purchase Order contract or the Carrier Selection and 
+Routing Guide. Nordstrom deducts freight charges owed from the next check 
+remittance.
+FOB Point A term of sale that defines who will incur transportation charges for the shipment, who 
+will control the movement of the shipment, or at which point the title to the goods 
+passes to the buyer. The original meaning was "free on board" ship.
+• FOB Factory: Title of goods passes to the buyer at the factory. Supplier pays 
+no (zero) freight, unless a freight allowance is applicable.
+• FOB Consolidator: Title of goods passes to the buyer at the consolidation point. 
+Supplier pays all freight costs to the point of consolidation, plus any additional 
+freight costs, which are dependent on what is agreed in the freight allowance 
+field on the PO.
+• FOB Store: Title of goods passes to the buyer at the Nordstrom DC or Store. 
+Supplier is liable for the shipment until it reaches Nordstrom. Please note that 
+FOB Store does NOT mean ship Direct to Store. Refer to the “FOB Point” 
+Purchase Order field.
+Full Freight The supplier/shipper agrees to pay 100% of the freight charges. Refer to the "Freight 
+Allowance" Purchase Order field.NORDSTROM ROUTING GUIDE
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS 60
+Term Definition
+Full Load Shipments weighing over 1,000 lbs for Air shipments and 10,000 lbs for Surface 
+shipments. Please contact the Volume Load desk if you have a shipment that fits this 
+criteria—volumeloads@nordstrom.com at least 3 days prior to the requested ship date.
+GOH “Garment on Hanger”, a hanging packaging shipping type. 
+Gourmet Foods Perishable merchandise such as candy, or other food items.
+Hazardous Materials A hazardous material is a substance that poses more than a reasonable risk to the 
+health and safety of individuals and includes products such as explosives, flammables, 
+corrosives, oxidizers, and radioactive materials. Includes perfumes and other contents
+packaged under pressure being shipped via Air and Air shipments that contain Dry Ice 
+cold pack.
+Importer of Record The company or individual who is listed as the importer with U.S. Customs at the time 
+the goods enter the U.S. The Tax ID# or social security number of the "Importer of 
+Record" must also be submitted to Customs. The Importer of Record bears all 
+responsibility and liability for the imported merchandise.
+Inbound Freight Freight in route to a Nordstrom facility (usually a Distribution Center).
+Interliner The pickup carrier, usually for an LTL shipment. The carrier transports merchandise 
+from the vendor to a consolidator.
+Jewelry Jewelry and watch shipments are shipments for specific departments. See Jewelry and 
+Watch Shipping Procedures (Section 3).
+Landed Duty Paid The total cost of a product delivered to a given location, i.e., the cost of production plus 
+the transportation cost to the customer’s location. U.S. Customs Clearance is the 
+responsibility of the seller. The seller or agent of the seller is the "Importer of Record". 
+All U.S. Customs duties and applicable taxes are for the account of the seller. Delivery 
+to the named place of destination is for the account of the seller.
+LTL “Less than truckload”, a shipment weighing less than the minimum weight required to 
+use the lower truckload rate. A pickup/interliner carrier direct to the DC’s or into a 
+consolidation. Usually shipments over 70 lbs and under 10,000 lbs.
+Lumper A term applied to a person who assists a motor carrier in the loading and unloading of 
+property.
+Manufacturer ID The first six digits of the UPC number. This ID may be used to identify the 
+manufacturer. A single manufacturer may have multiple manufacturer IDs.
+Master Bill of Lading A uniquely numbered contract of carriage document that summarizes more than one 
+DC shipment or sub-bills of lading. The Master Bill of Lading is the document that is 
+signed by the carrier driver.
+Mode Method of transportation (service) used for shipments, usually Surface and sometimes 
+Air. Refer to the "Ship Via Routing Guide or shipping method" Purchase Order field. 
+Outbound Freight A shipment shipped from a Nordstrom facility to another Nordstrom facility or a vendor.
+Order Date The date the order was placed with the vendor. This is not the Earliest Ship Date.
+Pickup Carrier The interliner carrier, usually for an LTL shipment. The carrier transports merchandise 
+from the supplier to a consolidator.
+PID Product Information number or vendor style number. Also known as vendor product 
+number or VPN.NORDSTROM ROUTING GUIDE
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS 61
+Term Definition
+POD Proof of Delivery.
+PO Verification Purchase Order Verification is a service provided by our consolidators. It confirms that 
+the Purchase Order is active and is ready to ship. PO Verification may also be 
+performed via email to Nordstrom. See Section 2: Shipment Preparation for further 
+information. Exceptions: Consignment and UPS Small Package shipments.
+Prepaid Freight invoice payment term indicating that charges are billed to the shipper or 
+supplier.
+Purchase Order A legal, binding contract between the Nordstrom buyer and the supplier. The Purchase 
+Order number is an 8-digit identifier and is required on all packaging and 
+documentation.
+QR Quick Response. The capability to send sales information to a vendor and have 
+merchandise replenished immediately via EDI transactions.
+Refusal A refusal occurs when a Purchase Order delivered to a consolidator or Nordstrom 
+facility is in violation of the Purchase Order contract. Refusals are put On Hand and all 
+expenses are borne by the seller. The seller has 30 days to give disposition to the 
+agent in possession of the shipment. After 30 days, the shipment may be salvaged to 
+recover expenses.
+Return Authorization An authorization number which is obtained from the supplier prior to the shipping return 
+vendor claim.
+Samples Merchandise not for resale. Samples usually have no cost.
+Shipper The sender of the freight shipment, usually the seller or seller’s warehouse.
+Shipping Window The period of time between (and inclusive of) the PO Earliest Ship Date and Cancel 
+Date.
+Short Shipments Shipment contents which are less than the packing slip count or a carrier shipment 
+which has delivered less than the carton count on a Bill of Lading or freight delivery 
+receipt.
+SKU Stock Keeping Unit. A SKU refers to a specific style, color and size of an item. 
+Store Pack Packing by style, color and size (SKU) for a store.
+Sub-Bill A Bill of Lading always used in conjunction with a Master Bill of Lading. A sub-bill lists 
+the detail information for a DC shipment, including PO’s and department number, 
+itemized by number of cartons and weight, etc.
+Supplier Number Identifying number for the ‘ordered from’ company in the Nordstrom Merchandising 
+System.
+GS1-128 Scannable bar-coded label located on the outside of a shipping carton.
+UPC Universal Product Code. A unique twelve digit vendor number. The first six digits are a 
+supplier’s UC Block ID; the next five digits are a specific product identifier (SKU); and 
+the last digit is a check digit.
+VAN Value Added Network. The designated communication network used to transmit and 
+receive EDI transactions.
+Vendor Number The Vendor Number is found on the Purchase Order “Pay To Vendor”NORDSTROM ROUTING GUIDE
+APPENDIX A: GLOSSARY OF TERMS AND DEFINITIONS 62
+Term Definition
+VICS Voluntary Inter-industry Commerce Standards for EDI transactions, established by the 
+Uniform Code Council (UCC).
+VMR Vendor Managed Replenishment. Vendor “Basic Stock” system that automatically 
+creates Purchase Orders and replenishes merchandise based on sales and model 
+information via EDI 852 sales and 855 Reverse Purchase Order.
+Volume Shipments A Full Load that exceeds the standard size/weight guidelines.
+• Surface: 10,000 pounds or more, or over 1,800 cubic feet, per consolidated 
+shipment. 
+• Air: 1,000 pounds or more per consolidated shipment.
+Volume Shipments are considered by the DC for possible Full Load shipment routing.
+Weight Break The weight at which carrier determination is made.NORDSTROM ROUTING GUIDE
+APPENDIX B: SAMPLE NORDSTROM FREIGHT PARTNERSHIP
+63
+APPENDIX B: SAMPLE NORDSTROM FREIGHT PARTNERSHIPAPPENDIX C: SAMPLE BILL OF LADING
+64
+APPENDIX C: SAMPLE BILL OF LADING

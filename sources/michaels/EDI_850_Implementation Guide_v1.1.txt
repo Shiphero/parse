@@ -1,0 +1,573 @@
+Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+EDI Implementation Guide
+850 Purchase Orders (Non Merch)
+Version 4010
+Effective Date: 22 August 2018 
+Michaels Stores, Inc. 
+and Subsidiaries and Affiliates 
+8000 Bent Branch Dr. 
+Irving, TX 75063 
+ (972) 409-1300Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+850 Purchase Order 4010 
+Functional Group ID = PO 
+Use: Michaels Purchase 
+Orders
+Contents Page 
+Introduction 1 
+Implementation Notes 1 
+EDI Contacts 2 
+Implementation Guidance 3 
+Data Segment Sequence Chart 4 
+Data Segment Descriptions 5 
+Introduction 
+This document defines the EDI format for the purchase order transaction set (850) used by 
+Michaels Stores, Inc. All purchase orders transmitted by Michaels will be in the format defined 
+in this document. 
+Note: This document defines the 850 purchase order transaction for Standard PO type used by Michaels 
+for Non Merchandise Procurement. 
+Implementation Notes 
+1. The following section descriptions list only those segments used by Michaels. Unused 
+segments are not listed. 
+2. In the segment breakout listings, only those elements used by Michaels are listed. Unused 
+elements are not listed. Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+EDI Contacts 
+General EDI Email: edi@michaels.com
+ 
+Summary of Changes 
+Implementation Guidance 
+ This implementation guide defines the EDI data sent by Michaels for purchase orders. Be 
+sure to review and understand this guidance before developing EDI maps for Michaels purchase 
+orders. 
+ISA/GS Sender ID 
+ Michaels sends all EDI transactions using the ISA Sender Qualifier and ID (ISA05 and 
+ISA06) of “01” and “054402896” respectively. 
+Michaels sends all X.12 850 transactions using the GS Sender IDs (GS02) “054402896.” 
+997 Required 
+ All EDI transactions sent by Michaels are expected to have a 997 returned. It is important 
+that the ISA and GS Receiver IDs on the 997 match the ISA and GS Sender IDs on the 850 it is 
+acknowledging. Michaels expects vendors to return the 997s within three business day of 
+transmission. 
+Ship To
+ In Case of Multiple Ship To, Header level Ship to will be “SEE LINE DETAILS”. If case of 
+Single Ship To location, Ship To details will be printed in header only. Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Data Segment Sequence Chart 
+Header Section
+Pos.No. Seg ID Name Req Des Max use Loop Repeat
+010 ST Transaction Set Header M 1 
+020 BEG Beginning Segment for Purchase Order M 1 
+040 CUR Currency O 1 
+080 FOB FOB Related Instructions O 1 
+130 ITD Terms of Sale/Deferred Terms of Sale O 1 
+240 TD5 Carrier Details (Routing Sequence) O 1 
+285 N9 Reference Identification O 1 
+290 MSG Message Text O 1 
+N1 Loop 4
+300 N1 Name M 1 
+320 N3 Address M 1 
+330 N4 Geographic Location O 1 
+350 PER Communications contact O 1 
+Line Detail Section
+Pos.No. Seg ID Name Req Des Max use Loop Repeat
+   PO1 Loop >1
+10 PO1 Line Item Change M 1   
+50 PID Product/Item Description M 1   
+210 DTM Date/Time C 1   
+                                   N1 (Only for Multiple Ship To)
+300 N1 Name C 1   
+320 N3 Address C 1   
+330 N4 Geographic Location C 1   
+350 PER Communications contact C 1   
+Summary Section
+Pos.No. Seg ID Name Req Des Max use Loop Repeat
+010 CTT Transaction Totals M 1 
+020 AMT Monetory Amount C 1 
+030 SE Transaction Set Trailer M 1 Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Data Segment Descriptions
+Segment ST ( Transaction Set Header ) 
+Position 010
+Loop   
+Level Header 
+Usage Mandatory 
+Max Use 1 
+Purpose To indicate the start of a transaction set and to assign a control number.
+Notes 
+  
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+ST01 
+143
+Transaction Set Identifier 
+Code 
+850 Purchase Order M ID 3/3
+ST02 329 Transaction Set Control Number M AN 4/9
+Sample Segment :   ST*850*0001Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment BEG (Beginning Segment for Purchase Order) 
+Position 020 
+Loop 
+Level Header 
+Usage Mandatory 
+Max Use 1 
+Purpose 
+To indicate the beginning of the Purchase Order Transaction Set and to transmit identifying numbers 
+and dates.
+Notes 
+  
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+BEG 01 353
+Transaction Set Purpose Code 
+00 Original M ID 2/2
+BEG 02 92
+Purchase Order Type Code 
+SA Standard M ID 2/2
+BEG 03 324 Purchase Order Number M AN 1/22
+BEG 05 373
+Purchase Order Date 
+(CCYYMMDD) M DT 8/8
+Sample Segment :   BEG*00*SA*123456**20180127Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment CUR (Currency)
+Position 040 
+Loop 
+Level Header 
+Usage Optional 
+Max Use 1 
+Purpose To specify the currency used in the transaction. 
+Notes 
+The currency used for the purchase order is determined during the vendor setup process. Only USD 
+(U.S. Dollars) and CAD (Canadian dollars) are in use at this time for Michaels orders. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+CUR 01 
+98
+Entity Identifier Code 
+BY Buying Party 
+(Purchaser) M ID 2/3
+CUR 02 
+100
+Currency Code 
+CAD – Canadian Dollars 
+USD – US Dollars M ID 3/3
+Sample Segment :   CUR*BY*CAD 
+ CUR*BY*USDMichaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment FOB (F.O.B. Related Instructions) 
+Position 080 
+Loop 
+Level Header 
+Usage Optional 
+Max Use 1 
+Purpose To specify transportation instructions related to shipment. 
+Notes 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+FOB 01 
+146
+Shipment Method of Payment 
+0U Collect 
+9U Prepaid M ID 2/2
+FOB 02 
+309
+Location Qualifier 
+DE Destination 
+OR Origin C ID 1/2
+FOB 03 352
+Description 
+ F.O.B Point O  AN 1/80
+Sample Segment 1 :   FOB*CC*OR**
+Sample Segment 2 :   FOB*PDMichaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment ITD (Terms of Sale/Deferred Terms of Sale)
+Position 130 
+Loop 
+Level Header 
+Usage Optional 
+Max Use 1 
+Purpose To specify terms of sale.
+Notes 
+ 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+ITD 02 333
+Terms Basis Date Code 
+3 Invoice Date O ID 1/2
+ITD 12 352
+Description 
+Text description of the terms of sale O AN 1/80
+Sample Segment :   ITD**3**********NET 45 ROG Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment 
+TD5 (Carrier Details (Routing Sequence) )
+Position 240 
+Loop 
+Level Header 
+Usage Optional 
+Max Use 1 
+Purpose To specify the carrier and sequence of routing and to provide transit time. 
+Notes Not all orders carry a ship-via location. Ship-via is primarily, but not exclusively, 
+used for import orders. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+TD5 05 387 
+Routing 
+Ship-via information O AN 1/35
+Sample Segment :   TD5*****UPS Air 2 day~Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment N9 (Reference Identification)
+Position 295 
+Loop 
+Level Header 
+Usage Optional 
+Max Use 1 
+Purpose To transmit identifying information as specified by the Reference Identification Qualifier. 
+Notes 
+ 
+This segment, and the MSG segment accompanying it, is used to convey special instructions or notes 
+for the purchase order. Not all purchase orders will have special instructions. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+N9 01 128
+Reference Identification Qualifier 
+PO Purchase Order M ID 2/3
+N9 02
+127
+Reference Identification 
+This element contains the value “PO 
+NOTES AND INSTRUCTIONS”. O AN 1/30
+Sample Segment :   N9*PO* PO NOTES AND INSTRUCTIONS 
+Segment MSG (Message Text )
+Position 300 
+Loop 
+Level Header 
+Usage Optional 
+Max 
+Use 1 
+Purpose To specify the carrier and sequence of routing and to provide transit time. 
+Notes 
+To provide a free-form format that allows the transmission of text information.
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+MSG 01 933 Free-form Message Text O AN 1/420
+Sample Segment :   MSG*THIS IS A COMMENTMichaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Segment N1 (Name) 
+Position 310 
+Loop N1 
+Level Header 
+Usage Mandatory 
+Max Use 1 per loop
+Purpose To identify a party by type of organization, name, and code. 
+Notes   
+Michaels transmits four iterations of this loop to indicate: (1) bill-to in-formation, (2) buying 
+company, (3) ship-to information, and (4) vendor name and number. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+N1 01 
+98
+Entity Identifier Code 
+ 
+BT Bill-to Party 
+BY Buying Party 
+ST Ship-to Party 
+SU Supplier 
+Name M ID 2/3
+N1 02 
+93
+Name 
+When N101=BT, this element will 
+carry the bill-to name. “THE 
+MICHAELS COMPANIES”
+When N101=BY, this element will 
+carry the value of Buyer Name. 
+When N101=ST, this element will 
+carry the PO HR Location 
+Description, 
+When N101=SU, this element will 
+carry the vendor name. 
+M AN 1/60
+N1 03
+66
+Identification Code Qualifier 
+When N1 01 = SU/ST, 
+This element carries the “92”
+This element is not used when 
+N101=BT or BY. C ID 1/2
+N1 04 
+373
+Identification Code 
+This element is not used when N101=BT 
+or BY. 
+When N101=ST, this element carries the 
+ship to location (location code) where the 
+product is to be shipped. [“00” in case of 
+Multiple ship to location] 
+When N101=SU, this element will carry 
+the Michaels-assigned vendor number for 
+the vendor listed in N102. 
+C AN 2/80
+Sample Segment :    
+N1*ST*00101*92*00101 
+N1*SU*TEST VENDOR*92*99999 
+N1*BY*BUYER Name(LAST NAME, FIRST NAME ) 
+N1*BT* THE MICHAELS COMPANIES
+Segment N3 (Address)Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Position 330 
+Loop N1 
+Level Header 
+Usage Optional 
+Max Use 1 per loop 
+Purpose To specify address information. 
+Notes 
+This segment is only used in the BT, ST and SU iterations of the N1 loop. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+N3 01 166
+Address Information ( Line 1) (When 
+N1 01 = BT, ST and SU) M AN 1/55
+N3 02 166
+Address Information ( Line 2) (When 
+N1 01 = BT, ST and SU) O AN 1/55
+N3 03 166
+Address Information ( Line 3) 
+(When N1 01 = ST and SU) O AN 1/55
+Sample N3 segment for N1*BT     : N3*Email to: invoiceprocessing@michaels.com*P.O. Box 619566
+Sample N3 segment for N1*ST     : N3*3759 William Penn Highway
+Sample N3 segment for N1*SU    : N3*PO BOX 204040
+Segment N4 (Geographic Location)Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+Position 340 
+Loop N1 
+Level Header 
+Usage Optional 
+Max Use 1 per loop 
+Purpose To specify the geographic location of the named party. 
+Notes 
+This segment is only used in the BT, ST and SU iterations of the N1 loop. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+N4 01 19 City Name O AN 2/30 
+N4 02 156 State or Province Code O ID 2/2 
+N4 03 116 Postal Code O ID 3/15 
+N4 04 26 Country Code (When BT and ST) O ID 3 
+Sample N4 segment for N1*BT     : N4*Dallas*TX*75261~N1*BY*PANDU, JANA~PER*OC*PANDU,
+JANA~
+Sample N4 segment for N1*ST     : N4*ROCKFORD*IL*61108‐2540*US~
+Sample N4 segment for N1*SU    : N4*DALLAS**753204040~
+Segment PER (Administrative Communication Contact)
+Position 360 
+Loop N1 
+Level Header 
+Usage Mandatory 
+Max Use 1 per loop 
+Purpose To identify a person or office to whom administrative communications should be directed. 
+Notes 
+This segment is only used when N101=BY, ST and SU. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+PER 01 366 Contact Function Code M ID 2/2Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+OC Order Contact 
+TE Telephone 
+PER 02
+93
+Name 
+When N101=BY, this element carries 
+the Michaels buyer name in the 
+format LastName, FirstName. 
+When N101=ST, this element carries 
+the Michaels buyer name in the 
+format LastName, FirstName. 
+When N101=SU, this element carries 
+the vendor contact name (qualifier 
+OC) and/or the telephone number 
+(qualifier TE). 
+O AN 1/60
+PER 03 366
+Contact Function Code 
+TE Telephone M ID 2/2
+PER 04 
+93
+Contact Information 
+PER03/04 is only used when 
+PER01/02 carries an order contact. O AN 1/80
+PER 07 Contact Function Code 
+EM Electronic Mail M AN 2/2
+PER 08 
+Name 
+PER 07, 08 is used only when N1 01 
+= BY. O AN 1/60
+Sample Segment:    
+   N1*BY*PRIYA, SIVAKUMAR~ 
+ PER*OC*PRIYA, SIVAKUMAR*****EM*vishnupr@michaels.com
+ N1*ST*Michaels Store #00102*92*00102~ 
+ PER*OC*PO Attention To~ 
+ N1*SU*VENDOR NAME*92*12345 
+ PER*OC*Butters, Hilary*****EM*BUTTERSH@MICHAELS.COM or 
+ PER*TE*800-555-1212 
+Segment PO1 Baseline Item Data (Purchase Order) 
+Position 010 
+Loop PO1 
+Level Detail 
+Usage Mandatory 
+Max Use 1 per loop 
+Purpose To specify basic and most frequently used line item data. 
+Notes 
+Note that the qualifier used for the SKU is different from the SKU qualifier used in the invoice (“IN” 
+in purchase order, “CB” in invoice). 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) Michaels EDI 850 Specifications 
+Version 1.1 
+Revised: 22 August 2018 
+PO1 01 350
+Assigned Identification 
+(PO Line Number) M NO 1/20
+PO1 03 330 Quantity Ordered M R2 1/15
+PO1 05 355 Unit or Basis for Measurement Code    C AN 2/2
+PO1 06 212 Unit Price C R4 1/17
+PO1 08 235
+Product/Service ID Qualifier 
+IN “Michaels SKU Number” C ID 2/2
+PO1 09 234 Product/Service ID C AN 1/48
+PO1 12 235 VN Vendor’s Item Number C ID 2/2
+PO1 13 234 Product/Service ID C AN 1/48
+Sample Segment:   PO1*1**2*EA*10**IN*123123***VN*MD46068
+Segment PID (Product/Item Description) 
+Position 050 
+Loop PO1 
+Level Detail 
+Usage Mandatory 
+Max Use 1 per loop 
+Purpose To describe a product or process in coded or free-form format. 
+Notes 
+Michaels uses this segment to carry the product description. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+PID 01 349
+Item Description Type 
+F Free-form M ID 1/1
+PID 05 352 Description C AN 1/80
+Sample Segment:   PID*F****SPCLTY 8X8 MULTIPACK AUTUMNMichaels EDI 850 Specifications 
+Version 1.0 
+Initial: 31 January 2018 
+Segment 
+DTM (Date/Time Reference )
+Position 210 
+Loop 
+Level Line 
+Usage Optional 
+Max Use 1 
+Purpose To specify pertinent dates and times. 
+Notes 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+DTM 01 374
+Date/Time Qualifier 
+001 Need By Date M ID 3/3
+DTM 02 373 Date C DT 8/8
+Sample Segment :   DTM*074*20050915 
+Segment CTT (Transaction Totals) 
+Position 010 
+Loop 
+Level Summary 
+Usage Mandatory 
+Max Use 1 
+Purpose To transmit a hash total for a specific element in the transaction set. 
+Notes 
+CTT01 is the total number of PO1 segments. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+CTT 01 354 Number of Line Items M NO 1/6
+Sample Segment:   CTT*5Michaels EDI 850 Specifications 
+Version 1.0 
+Initial: 31 January 2018 
+Segment AMT (Monetory Totals) 
+Position 020 
+Loop 
+Level Summary 
+Usage Mandatory 
+Max Use 1 
+Purpose To indicate the total monetary amount of the purchase order. 
+Notes 
+This segment indicates the number of eaches per case as defined in the Michaels item master file. 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+AMT 01 522
+Amount Qualifier Code 
+TT Total transaction amount M     ID 1/3
+AMT 02 782 Monetary Amount M      R2 1/18
+Sample Segment:   AMT*TT*52233
+Segment SE (Transaction Set Trailer) 
+Position 030 
+Loop 
+Level Summary 
+Usage Mandatory 
+Max Use 1 
+Purpose 
+To indicate the end of the transaction set and to provide the count of the transmitted segments 
+(including the beginning (ST) and ending (SE) segments). 
+Notes 
+Reference 
+Designator 
+Element 
+Number Name Req. Type Length(Min/Max) 
+SE 01 96 Number of Included Segments M NO 1/10
+SE 02 329 Transaction Set Control Number M AN 4/9
+Sample Segment:   SE*45*0001

@@ -1,0 +1,87 @@
+name: routing-guides
+
+x-backend: &backend
+  image: routing-guides-backend:local
+  build:
+    context: ./backend
+  init: true
+  environment: &backend-environment
+    DATABASE_URL: postgresql+psycopg://routing:${POSTGRES_PASSWORD:?Run python3 scripts/setup.py first}@db:5432/routing
+    STORAGE_ROOT: /data
+    MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-256}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OPENAI_MODEL: ${OPENAI_MODEL:-}
+  volumes:
+    - ./backend/src:/app/src:ro
+    - documents:/data
+
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: routing
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/setup.py first}
+      POSTGRES_DB: routing
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U routing -d routing']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  migrate:
+    <<: *backend
+    command: [python, -m, routing_guides.bootstrap]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    <<: *backend
+    command: [uvicorn, routing_guides.api:app, --host, 0.0.0.0, --port, '8000', --reload, --reload-dir, /app/src]
+    ports:
+      - '127.0.0.1:${API_PORT:-8180}:8000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    <<: *backend
+    command: [python, -m, routing_guides.worker]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  web:
+    build:
+      context: ./frontend
+      target: development
+    init: true
+    environment:
+      API_PROXY_TARGET: http://api:8000
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/index.html:/app/index.html:ro
+    ports:
+      - '127.0.0.1:${WEB_PORT:-5180}:5173'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres:
+  documents:

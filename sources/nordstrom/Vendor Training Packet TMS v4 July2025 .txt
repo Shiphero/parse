@@ -1,0 +1,304 @@
+0
+NORDSTROM TRANSPORTATION 
+VENDOR TMS INTRODUCTION PACKET
+Released 7/21/25
+V41
+TABLE OF CONTENTS
+NORDSTROM TRANSPORTATION ...................................................................................................................... 0
+INTRODUCTION ................................................................................................................................................ 2
+Changes From Previous Workflows.................................................................................................................. 3
+Key Points ................................................................................................................................................... 3
+New Workflows............................................................................................................................................... 4
+Vendor RUNBOOK............................................................................................................................................. 4
+What Vendors Will Do ..................................................................................................................................... 4
+How Vendors Will Use The TMS ....................................................................................................................... 4
+Primary Areas Vendors Will Access .............................................................................................................. 4
+What Vendors Can See And Do In The TMS ................................................................................................... 5
+Primary Tasks, Requirements And Best Practices......................................................................................... 7
+Getting Started .............................................................................................................................................. 7
+Gaining Access............................................................................................................................................ 7
+Logging Into The Vendor Portal..................................................................................................................... 9
+Navigating The Home Page......................................................................................................................... 10
+Customizing Using Favorites...................................................................................................................... 14
+Standard Operating Procedures & Best PracticeS Guidance ...................................................................... 15
+SOP1: How To Receive And Review A PO .................................................................................................... 15
+SOP2: How To Create And Submit A Routing Request ................................................................................. 16
+Best Practice Guidance: How To Create And Submit A Routing Request ...................................................... 17
+SOP3: How To Find Your Shipment Confirmation ........................................................................................ 18
+SOP4: How To View PO Shipment Details ................................................................................................... 18
+SOP5: How To Create A Single DC Routing Request From Multiple Supplier POs .......................................... 19
+SOP6: How To View BOLs In The Vendor Portal ........................................................................................... 20
+Concepts And Definitions ............................................................................................................................... 22
+Facilities....................................................................................................................................................... 22
+Shipment Planning........................................................................................................................................ 22
+Shipment Statuses........................................................................................................................................ 23
+Supplier Purchase Order (SPO)...................................................................................................................... 23
+Tendering ..................................................................................................................................................... 23
+Track And Trace ............................................................................................................................................ 24
+Transportation Management System (TMS) .................................................................................................... 24
+Transportation Orders (TO)............................................................................................................................ 25
+Deep Dive Topic .............................................................................................................................................. 26
+Unified Logistics Control (ULC) Basics ........................................................................................................ 262
+Main Functions Of The ULC........................................................................................................................ 26
+Tasks That Can Be Performed In The ULC ................................................................................................... 26
+Filters ....................................................................................................................................................... 27
+Saved Views.............................................................................................................................................. 29
+Favorites................................................................................................................................................... 29
+Accessing Menu Options From An Object................................................................................................... 30
+Expanding The Details Of An Object ........................................................................................................... 30
+Viewing Object Lines ................................................................................................................................. 31
+Navigating The Map ................................................................................................................................... 31
+FAQs ............................................................................................................................................................... 33
+When do we need to submit a routing request to be considered for next day pick-up? ..................................... 33
+What does Nordstrom recommend for BOL form?.......................................................................................... 33
+What is required data that must be on a BOL?................................................................................................ 33
+When submitting shipment requests, do I need to indicate the destinations?.................................................. 34
+Is Nordstrom asking for us to book the freight two days before shipping? ........................................................ 34
+What happens if there is a problem routing with TMS or the routing? ............................................................... 34
+Help ................................................................................................................................................................ 34
+Effective Date: 07/21/2025
+Replaces all existing information.
+VENDOR TMS INTRODUCTION PACKET (“Training Packet”) for Nordstrom, Inc. or one of its affiliates sets forth procedures 
+for Vendors. 
+Please note that the information in this training packet is updated periodically and can change without notice. We do not 
+recommend that you print any section of this manual. Please refer to the online version of the training packet to make sure 
+you have the most current information available. 
+IMPORTANT NOTE: THIS DOCUMENT CONTAINS DATA CLASSIFIED AS CONFIDENTIAL TO NORDSTROM. ITS 
+CONTENTS MAY NOT BE DISCLOSED TO ANY THIRD PARTY, IN WHOLE OR IN PART, FOR ANY PURPOSE 
+WITHOUT THE EXPRESS WRITTEN PERMISSION OF NORDSTROM
+INTRODUCTION
+Welcome to Nordstrom’s Manhattan TMS training guide prepared for our vendor and supplier partners. 
+The legacy application, Cloud TMS, will no longer be supported in 2026 and can no longer be a part of the shipping solution. 
+With Manhattan TMS’ implementation, Nordstrom is taking the opportunity to improve upon old workflows, to minimize 
+manual tasks and to create better order visibility. 3
+Nordstrom will now use Manhattan Active Transportation Management (or MATM) as its transportation management system 
+(TMS) to plan, execute, and optimize the physical movement of goods, and to ensure shipments are compliant with proper 
+documentation available. MATM is used by Nordstrom Transportation Operations, Vendors, Carriers and 3rd Party Logistics 
+providers. 
+CHANGES FROM PREVIOUS WORKFLOWS
+Vendors will primarily see changes in the routing request process that will be less manual and will be contained primarily in 
+the Manhattan TMS platform (versus NOVS or Outlook).
+KEY POINTS
+Vendors will no longer need to use the manual request forms to email our Transportation Planner and Consolidators for 
+routing requests. Vendors only need to submit their routing request in MATM and don’t need to separate their request 
+between consolidator and DC shipments. Previously, you had to send requests separately depending on what instructions the 
+Nordstrom Routing Guide dictates. The Nordstrom Routing Guide will be replaced by the Nordstrom Shipping Guide.4
+NEW WORKFLOWS
+Vendor workflows now leverage the TMS to provide greater visibility as the order moves through the lifecycle.
+VENDOR RUNBOOK
+This section covers the tasks, requirements, best practices and directions for vendor partners.
+WHAT VENDORS WILL DO 
+Vendors will create Routing Requests in the Vendor Portal (Nordstrom users will have access to the SRR and resulting autocreated Transportation Order).
+Nordstrom will then use that Transportation Order for shipment planning and tendering.
+Once Nordstrom tenders the Shipment and it’s accepted, the vendor will have access to Shipment details in the Vendor 
+Portal.
+HOW VENDORS WILL USE THE TMS
+Vendor Suppliers will access the TMS via the Vendor Portal and will have visibility to Purchase Orders, Routing Requests, and 
+Shipments.
+PRIMARY AREAS VENDORS WILL ACCESS
+Within the portal, the primary sections vendors will use are:
+Routing Request 
+Transportation Order
+Shipment5
+• Shipment Management (Under the ULC)
+o Supplier Purchase Orders (Orders)
+o Vendor Shipments (Shipments)
+• Vendor Shipment Documents
+Shipment Management will be visible on the Home screen under the Transportation Management Tab. Clicking on Unified 
+Logistics Control will take you to your dashboard of shipments.
+WHAT VENDORS CAN SEE AND DO IN THE TMS
+Vendors will only be able to see those Purchase Orders which have their Vendor ID.
+Vendors can view previously created Routing Requests from the Supplier Routing Request or Supplier Routing Request Line 
+screen.6
+Vendors can view Transportation Orders once created and reference the routing requests associated with them.
+Shipments can only be viewed once they are in accepted status.
+Vendors can see a breakdown of stops, SPO’s, resources, dates, etc. on each shipment.
+Vendors can create appointment tracking messages for stops.7
+Vendors can upload BOL files to shipments.
+PRIMARY TASKS, REQUIREMENTS AND BEST PRACTICES
+There are 3 primary tasks performed by the Vendor Supplier:
+1. Receive and review POs
+2. Provide PO shipment details
+3. Create Routing Request
+Nordstrom has the following expectations for Vendors:
+Primary Tasks Requirements Best Practices
+Receive and review 
+POs
+Monitor orders at a regular 
+cadence
+• Communicate changes to 
+routing requests to 
+Nordstrom Transportation 
+Planner
+• Check PO status in 
+Manhattan TMS before 
+requesting updates.
+Provide PO shipment 
+details
+• Provide accurate PO 
+shipment details
+• Provide accurate VASN
+Create Routing 
+Request
+Create accurate Routing 
+requests
+GETTING STARTED
+GAINING ACCESS89
+LOGGING INTO THE VENDOR PORTAL10
+TROUBLESHOOTING LOGIN ISSUES
+NAVIGATING THE HOME PAGE11121314
+CUSTOMIZING USING FAVORITES15
+STANDARD OPERATING PROCEDURES & BEST PRACTICES GUIDANCE
+This section covers instructions and guidance for vendor partners to complete tasks in the TMS.
+SOP1: HOW TO RECEIVE AND REVIEW A PO16
+SOP2: HOW TO CREATE AND SUBMIT A ROUTING REQUEST17
+BEST PRACTICE GUIDANCE: HOW TO CREATE AND SUBMIT A ROUTING REQUEST18
+SOP3: HOW TO FIND YOUR SHIPMENT CONFIRMATION
+SOP4: HOW TO VIEW PO SHIPMENT DETAILS19
+SOP5: HOW TO CREATE A SINGLE DC ROUTING REQUEST FROM MULTIPLE SUPPLIER POS20
+SOP6: HOW TO VIEW BOLS IN THE VENDOR PORTAL2122
+CONCEPTS AND DEFINITIONS
+This section covers terms and concepts that Vendors should become more familiar with as they process shipments.
+FACILITIES
+Facilities define the Origin Ship-From and Destination Ship-To of an Order. Nordstrom will be importing facilities and updating 
+them via integration from their host system. Mismatched facility types and planning types could prevent transportation order 
+creation.
+Nordstrom will be utilizing 3 facility types:
+1. Stores will be used to represent Nordstrom Stores 
+2. Distribution Centers will be used to represent Nordstrom Warehouses and Consolidators (Receiving)
+3. Vendors will be used to represent Vendor Ship From Locations, 3PL’s and Consolidators (Shipping)
+Users should not create or update facilities directly in the UI but rather use them as references only.
+SHIPMENT PLANNING
+The term “Shipment Planning” refers to the process of moving an order (called a TO at this stage) through optimization (based 
+on criteria like weight and count) so it can get assigned to a resource for next steps.23
+SHIPMENT STATUSES
+Within the TMS, there are different statuses that identify what state a tender, broadcast, transit or stop is for a shipment within 
+the system.
+Status Definition
+Not Started Order has not been planned on a shipment
+Planned Order is routed (exists on a shipment)
+Partially Planned At least one leg is planned but one or more legs of 
+an order are still unplanned.
+Unplanned Order has been unplanned from a shipment
+SUPPLIER PURCHASE ORDER (SPO)
+A Supplier Purchase Order is the name given an order before the routing request (after routing it becomes a Transportation 
+Order (or TO).
+TENDERING24
+TRACK AND TRACE
+Tracking is a function beginning after a carrier has been tendered a shipment to notify the shipper of the progress of the freight 
+from its origin to its destination. 
+Tracking records incoming messages from the carrier and allows the shipper to monitor whether the shipment and its 
+supporting orders are on time to handle exceptions to the normal flow. 
+› Tracking messages transition the shipment transit status based on transit status rules.
+› A shipment will transition from Not Started to In Transit once the carriers sends a Departure tracking message from 
+the first stop.
+› A shipment will transition from In Transit to Completed once the carrier sends an Arrival or Departure tracking 
+message from the final stop.
+› Tracking messages can be viewed from the Tracking Messages screen
+› Carriers may send the following 214 tracking message types:
+− ETAs
+− Arrivals
+− Departures
+− Check Calls
+TRANSPORTATION MANAGEMENT SYSTEM (TMS)25
+TRANSPORTATION ORDERS (TO)
+A Transportation Order is the name given to an order after the tender has been accepted.
+› For TO’s in different statuses, you’ll notice menu options will be enabled/disabled. 
+› For example, if a TO is planned, the plan shipment feature will no longer be enabled. 26
+DEEP DIVE TOPIC
+This section covers the basics of using the ULC.
+UNIFIED LOGISTICS CONTROL (ULC) BASICS
+The ULC serves as a central dashboard view.
+MAIN FUNCTIONS OF THE ULC
+1. It provides an overview of real-time order and shipment status (like a control tower), giving users visibility into 
+transportation performance with early warning alerts and other actionable insights.
+2. It enables users to take immediate action (like a command center): The user can respond in real time to trends and 
+problems with orders and/or shipments directly from the ULC.
+TASKS THAT CAN BE PERFORMED IN THE ULC
+❖ Add or remove orders from shipments
+❖ Find existing shipments to match an unplanned order
+❖ Unplan or combine shipments
+❖ View real-time shipment status
+❖ Manage carrier tenders
+❖ Re-sequence stops
+❖ Map orders and/or shipments27
+ULC TABS
+The main tabs include the Orders, Shipments and Trips tabs.
+› In each tab we can minimize it (1), add filters (2), perform actions (3), use related links to other UI’s (4), filter/sort by 
+column (5) and create saved views (6).
+› When the “X” is clicked to minimize tabs they will appear like this with a “+” to be re-opened. 
+› This is helpful for increasing the table view for each individual tab.
+› The filters tab mimics the filters you see in each UI.
+FILTERS
+Different filters have various features including:
+• Open Text Searches
+• Null/Not Null
+• Lookups
+• Boolean Operators
+• Check Boxes
+• Time Ranges
+The column filters button introduces filters and sorting in the table view.
+› These provide the same filtering options with the inclusion of selecting/deselecting values populated in the existing 
+view.28
+› You can also sort ascending and descending with the arrows next to given columns.
+Re-arrange columns can be used to add, remove or change the order of columns. 
+› This can be accessed from the gear icon.29
+SAVED VIEWS
+View can be created and set as defaults, or saved, for a given combination of filters, sorting, etc.
+› These can be shared for other users to select as well.
+› Saved views can be accessed from the filters screen with the drop down.
+FAVORITES
+The star icon is used to set favorites.
+› By clicking the bookmark, we can update a saved view, toggle whether it’s a default or toggle whether it’s shared.30
+ACCESSING MENU OPTIONS FROM AN OBJECT
+When an object is selected, users can click the three-dot button in the bottom right to access the menu.
+› This includes important actions for planning, rating, viewing lines, viewing the change log, deconsolidating, etc.
+› Some options are supported for single object selection, while others are supported for multi-object selection.
+EXPANDING THE DETAILS OF AN OBJECT
+The details of an object can be viewed from the menu or by clicking on the eye icon next to an object.
+› You can expand individual tabs or click expand all when viewing the details of an object.31
+VIEWING OBJECT LINES
+To view object lines:
+1. Select an object.
+2. Select the Menu on the bottom right corner of the tab.
+3. Select View Lines
+NAVIGATING THE MAP
+Use the sliding bars next to objects to see them populate on the map.32
+› Multiple objects can be selected at the same time including TO’s and Shipments.
+When you click on a route, it will show a pop up with the object info.
+You can also click on specific stops to view more details.
+Objects can be selected and de-selected directly from the map as well33
+FAQS
+This section covers several Frequently Asked Questions with answers.
+WHEN DO WE NEED TO SUBMIT A ROUTING REQUEST TO BE CONSIDERED FOR NEXT DAY PICK -UP?
+Submit request by 12pm local standard time to be considered for next day pick up. Routing requests submitted after 12pm 
+local time will be planned for the following business day.
+WHAT DOES NORDSTROM RECOMMEND FOR BOL FORM?
+Nordstrom recommends vendors use the MATM provided BOL for shipping because it includes all the required information.
+If you use your own BOL, you must include required data on the BOL.
+WHAT IS REQUIRED DATA THAT MUST BE ON A BOL?
+Must include:
+1. MATM Shipment number must be used
+2. PO numbers
+3. Accurate carton count34
+4. Accurate weight
+5. Accurate Origin and destination
+WHEN SUBMITTING SHIPMENT REQUESTS, DO I NEED TO INDICATE THE DESTINATIONS?
+No. MATM should take away the guess work that vendors have when submitting their shipment request and determining the 
+destination of their request should go. The POs that vendors receive and import into MATM should indicate the destination. If 
+it is shipping direct to DC, direct to Store or NEJ, the PO should indicate that. 
+The vendor will only need to provide the shipment details for all the POs going to the same destination on their request.
+PO number
+• Ship from City, State, Zip
+• Ship-to: 
+• When ready to ship
+• Total carton and weight of shipment
+IS NORDSTROM ASKING FOR US TO BOOK THE FREIGHT TWO DAYS BEFORE SHIPPING?
+Vendors are already asked to do this, and with our new TMS, we will operate the same way.
+WHAT HAPPENS IF THERE IS A PROBLEM ROUTING WITH TMS OR THE ROUTING?
+If there is an error, please contact Routing@nordstrom.com for assistance.
+HELP
+For questions or issues around Routing and other operational tasks: 
+• Please email the team at Routing@Nordstrom.com
+For questions or issues about the Manhattan Application:
+• Please contact the team at TMSAdmin@Nordstrom.com

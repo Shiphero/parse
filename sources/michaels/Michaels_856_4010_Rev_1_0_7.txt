@@ -1,0 +1,1042 @@
+EDI Implementation Guide
+856 Advance Ship Notice
+Version 4010
+Michaels Stores, Inc. 
+and Subsidiaries and Affiliates
+8000 Bent Branch Dr.
+Irving, TX 75063
+(972) 409-1300Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+1
+856 Ship Notice/Manifest 4010
+Functional Group ID = SH
+Use: Advance Ship Notice
+Contents
+Page
+Introduction 1
+Implementation Notes 1
+ASN Structure 2
+EDI Contacts 2
+Summary of Changes in this Document 3
+Implementation Guidance 5
+UCC-128 Label Requirements 7
+Data Segment Sequence Chart 8
+Data Segment Descriptions 9-33
+Appendix A — Top 20 Countries of Origin 34
+Introduction
+This document defines the EDI format for advance ship notice (856) used by 
+Michaels Stores, Inc. All ship notices transmitted to Michaels must be in the format 
+defined in this document. 
+ASNs sent to Michaels that do not conform to these specs will be rejected in EDI. 
+The sender will be notified of failed ASNs. Valid ASNs must be received by Michaels 
+prior to the arrival of the shipment at the destination, or chargebacks for late ASNs 
+will apply.
+Implementation Notes
+1. The following section descriptions list only those segments used by Michaels. 
+Unused segments are not listed.
+2. In the segment breakout listings, only those elements used by Michaels are 
+listed. Unused elements are not listed.
+3. All segments or elements designated “M” (mandatory) must be provided to 
+Michaels. 
+Make sure you read and understand the Implementation Guidance section of this document before you begin developing 
+your EDI and back-office processes. Also, be sure to read and 
+understand any Implementation Notes listed with each EDI 
+segment.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+2
+ASN Structure
+The structure of the ASN used at Michaels is the “Pick and Pack” structure. This 
+structure accommodates the situation in which different SKUs are packed within 
+the same container.
+Visually, the Pick/Pack ASN has the following structure.
+In this example, the shipment consists of two orders. The first order consists of two 
+cartons (packs); the first pack contains three items, the second pack contains one 
+item. The second order consists of one carton containing six items.
+EDI Contacts
+General EDI Email: edi@michaels.com
+Ivette Ross
+EDI Coordinator
+rossi@michaels.com
+Shipment
+Order Order
+Pack Pack Pack
+Item Item
+ItemMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+3
+Summary of Changes
+Version 1.0 of Document
+Date of Creation: 07 October 2005
+Version 1.0.1 of Document
+Date of Revision: 26 January 2006
+Segment Change
+N/A Added appendix A.
+TD5 Added information about SCAC codes on VendorConnect
+Version 1.0.2 of Document
+Date of Revision: 27 July 2007
+Segment Change
+N/A Updated EDI Contacts
+Version 1.0.3 of Document
+Date of Revision: 17 March 2010
+Segment Change
+N/A Added new information in the Implementation Guidance section.
+REF (Header level) Removed the ‘AO’ qualifier.
+TD1 (Shipment level) – PLT (pallet) packaging code now accepted for 
+TL or LTL shipments only. Small parcel shipments must still use 
+CTN (carton).
+N1 Added information to Implementation Notes section.
+TD1 (Order level) – Added information to the Implementation Notes 
+section.
+REF (Order level) Removed the ‘BM’ requirement and added a new 
+Shipment ID requirement for TL/LTL shipments.
+MAN (Pack level) Added parcel carrier’s tracking number in the ‘04’ and 
+‘05’ elements.
+Version 1.0.4 of Document
+Date of Revision: 06 June 2011
+Segment Change
+TD3 Added segment for use with DC ASNs. Segment will be used to 
+carry the trailer number for TL/LTL shipments.
+N/A Additional information added to Implementation Guidance section relating to pallet-level shipments for DC ASNs.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+4
+Version 1.0.5 of Document
+Date of Revision: 27 July 2007
+Segment Change
+MAN Clarified use of MAN04 and MAN05
+Version 1.0.6 of Document
+Date of Revision: 20 August 2013
+Segment Change
+HL On segment description changed max to 1
+CTT Changed to total number of HL segments
+Version 1.0.7 of Document
+Date of Revision: 30 July 2014
+Segment Change
+None Logo changeMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+5
+Implementation Guidance
+Please read and understand the following guidance for the advance ship notice before you begin developing your EDI maps and back-office processes. If you have any 
+questions, please contact us at EDI@Michaels.com.
+Shipment-Level Guidance
+ All ASN data must be true and correct, and reflect the actual shipment.
+ ASNs should be sent at time of shipment to Michaels. ASNs must arrive at 
+Michaels before the shipment arrives, at least 24 hours prior to shipment arrival (within the 24 hour window includes corrected ASNs).
+ Michaels requires one ASN per ship-to location (store, DC, or cross-dock 
+DC). If a shipment is to be sent to more than one ship-to location, send a 
+separate ASN for each ship-to location.
+ Split shipments require one ASN per shipment.
+ The ASN number (BSN02) is assigned by the vendor. It must be unique and 
+may not be repeated or duplicated unless sending a corrected ASN. Do not 
+use the purchase order number or the bill of lading number as your ASN 
+number. Do not recycle ASN numbers.
+ For pallet-level DC ASNs, the ASN number in BSN02 will be the LPN (license 
+plate number) of the pallet. A separate ASN is required for each pallet 
+shipped.
+ The ASN can only be retransmitted prior to the shipment’s arrival at the 
+ship-to location. If sending a corrected ASN, use the appropriate qualifier in 
+BSN01 and use the original ASN number in BSN02 — do not send a different 
+ASN number on corrected ASNs.
+ For Canada cross-dock orders, the N1*ST will report the cross-dock DC 
+number, and N1*BY will report the store number to receive the shipment.
+ All shipments must contain a master bill of lading number at the shipment 
+level. This number is reported in the REF segment at the header level. See 
+the implementation notes for that segment for additional details.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+6
+Order-Level Guidance
+ The purchase order number reported in the PRF segment must be the 
+Michaels-assigned purchase order number. Incorrect purchase order numbers will constitute a compliance violation and can result in chargebacks for 
+non-compliance.
+ Multiple purchase orders going to the same ship-to location in the same 
+shipment can be reported in the same ASN. In this scenario, use multiple 
+HL order loops to report each purchase order.
+Carton-Level Guidance
+ The contents of a carton may not span multiple purchase orders. If multiple 
+orders are being shipped in the same shipment, each order must be packaged and labeled separately.
+ A scannable UCC-128 barcode must be applied to every carton. The UCC128 carton number must be 20 digits long, unique and may not be reused or 
+recycled. Missing or unscannable barcodes will be considered a compliance 
+violation and can result in chargebacks for non-compliance. If you are using 
+a thermal transfer printer to create labels, take reasonable precautions to 
+ensure that the transfer medium is protected from being rubbed off during 
+transportation. If necessary, you can cover the label with clear plastic tape 
+to protect the label and its contents. 
+Item-Level Guidance
+ Country of Origin is a mandatory data element in the LIN segment. 
+ The country of origin must be the two-character ISO country code. Do 
+not transmit the full country name (“Japan,” “China,” etc.) or threecharacter ISO country codes (“USA,” “CHN,” etc.).
+ ISO country codes are available at numerous sites on the Internet. 
+Search for “iso country code” for additional links. The 20 most commonly reported countries of origin are listed in Appendix A.
+ ASNs that do not have a country of origin (a valid two-character ISO 
+country code) listed for each line item will be rejected. These will be regarded as a compliance violation and can result in chargebacks for noncompliance. 
+ The UPC and the Michaels SKU numbers are mandatory elements in the LIN 
+segments for all orders. Missing UPCs and/or SKUs result in the ASN being 
+rejected back to the vendor.
+Additional Guidance
+ Make sure the number of cartons reported in the ASN equals the carton 
+count for the shipment. 
+ Make sure the sum of the carton weights equals the gross weight reported 
+for the shipment. 
+ Reference Identification codes used in the REF segments:
+o Shipment ID # - from the load report – assigned by Michaels for TL/LTL
+o Load # - from the load report – assigned by Michaels Transportation Dept
+o BOL # - assigned by carrier
+o PRO # - assigned by carrier for TL/LTLMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+7
+UCC-128 Label Requirements
+Michaels requires that each carton be labeled with a UCC-128 (GS1-128) carton label with a 20 digit SSCC-18 barcode unique to every master carton. The requirements for Michaels UCC-128 labels are posted on the Michaels vendor information 
+portal, www.VendorConnect.com. Label information posted on the vendor information portal is to be considered definitive — nothing in these EDI specs supersedes or alters the labeling guidelines posted on the vendor information portal. 
+Please read chapter 6 Pre-Shipment Requirements manual in Vendor Connect for 
+any shipping requirement questions you may have; if you still have questions after 
+reading chapter 6, please contact your Michaels Supply chain analyst. Contact the 
+EDI group if you have EDI 856 questions.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+8
+Data Segment Sequence Chart (Pick/Pack ASN)
+Pos. 
+No.
+Seg. 
+ID
+Name Req. 
+Des.
+Max 
+Use
+Loop
+Repeat
+010 ST Transaction Set Header M 1
+020 BSN Beginning Segment for Ship Notice M 1
+HL Loop (Shipment Level) >1
+010 HL Hierarchical Level M 1
+110 TD1 Carrier Details (Quantity and Weight) M 1
+120 TD5 Carrier Details (Routing Sequence) M 1
+130 TD3 Carrier Details (Equipment) C 1
+150 REF Reference Identification M 3
+200 DTM Date/Time Reference M 1
+N1 Loop 200
+220 N1 Name M 2
+240 N3 Address Information M 1
+250 N4 Geographic Location M 1
+HL Loop (Order Level) >1
+010 HL Hierarchical Level M 1
+050 PRF Purchase Order Reference M 1
+110 TD1 Carrier Details (Quantity and Weight) M 1
+150 REF Reference Identification O 1
+220 N1 Name M 1
+HL Loop (Pack Level) >1
+010 HL Hierarchical Level M 1
+060 PO4 Item Physical Details M 1
+190 MAN Marks and Numbers M 1
+HL Loop (Item Level) >1
+010 HL Hierarchical Level M 1
+020 LIN Item Identification M 1
+040 SN1 Item Detail (Shipment) M 1
+070 PID Product/Item Description M 1
+020 CTT Transaction Totals M 1
+030 SE Transaction Set Trailer M 1Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+9
+Data Segment Descriptions
+Segment: ST Transaction Set Header
+Position: 010
+Loop:
+Level: Heading
+Usage: Mandatory
+Max Use: 1
+Purpose: To indicate the start of a transaction set and to assign a control number.
+Notes: This HL segment begins the shipment level.
+Ref.
+Des.
+Element 
+Number Name
+Req.
+Des. Type
+Length
+Min/Max
+Michaels 
+Usage
+ST 01 143 Transaction Set Identifier Code M ID 3 / 3 M
+856 Advance Ship Notice
+ST 02 329 Transaction Set Control Number M AN 4 / 9 M
+Sample Segment
+ST*856*0001Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+10
+Segment: BSN Beginning Segment for Ship Notice
+Position: 020
+Loop:
+Level: Heading
+Usage: Mandatory 
+Max Use: 1
+Purpose: To transmit identifying numbers, dates, and other basic data relating to 
+the transaction set.
+Notes: This HL segment begins the shipment level.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+BSN 01 353 Transaction Set Purpose Code M ID 2 / 2
+00 Original
+04 Change
+BSN 02 396 Shipment Identification M AN 2 / 30
+Assigned by vendor. Must be unique for each ASN 
+sent to Michaels.
+BSN 03 373 Date M DT 8 / 8
+BSN 04 337 Time M TM 4 / 8
+BSN 05 1005 Hierarchical Structure Code M ID 4 / 4
+0001 Pick and pack structure
+Implementation Notes
+ When BSN01=”04,” the ASN number in BSN02 must be the original ASN number of the ASN being changed. Do not send a new ASN number in BSN02 when 
+sending a corrected ASN as the system will not apply corrections to the original 
+ASN and it will remain in error which could be subject to a chargeback.
+ BSN03 (Date) is the date the shipment transaction is created.
+ BSN04 (Time) is the time the shipment transaction is created.
+ BSN02 (ASN Number): for pallet-level shipments, the ASN number must correspond to the LPN (license plate number) of the pallet.
+Sample Segment
+BSN*00*123456789*20050701*1500*0001Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+11
+Segment: HL Hierarchical Level
+Position: 010
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To identify dependencies among and the content of hierarchically related 
+groups of data segments
+Notes: This HL segment begins the shipment level.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+HL 01 628 Hierarchical ID Number M AN 1 / 12
+The value for this level (shipment) is 1.
+HL 03 735 Hierarchical Level Code M ID 1 / 2
+S Shipment
+Sample Segment
+HL*1**SMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+12
+Segment: TD1 Carrier Details (Quantity and Weight)
+Position: 110
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the transportation details relative to commodity, weight, and 
+quantity.
+Notes: This segment, at the shipment level, is used to specify total containers 
+and gross weight of the shipment.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+TD1 01 103 Packaging Code M AN 3 / 5
+CTN Carton
+PLT Pallet
+TD1 02 80 Lading Quantity M N0 1/ 7
+The number of packages in the shipment as described in TD101
+TD1 06 187 Weight Qualifier M ID 1 / 2
+G Gross weight
+TD1 07 81 Weight M R 1 / 10
+Numeric value of gross weight.
+TD1 08 355 Unit or Basis for Measurement Code M ID 2 / 2
+LB Pounds
+Sample Segment
+TD1*CTN*5****G*50*LB
+Implementation Notes
+ PLT may only be used for TL or LTL shipments. Do not use PLT for parcel 
+shipments. If the quantity of parcels is such that it is more convenient to palletize them for transport, continue to use CTN for the Packaging Code. PLT may 
+only be used for true pallet shipments.
+ The sum of the carton weights reported individually in the PO4 segments at the 
+carton level must equal the total carton weight reported in this TD1 segment.
+ The number of cartons reported at the carton level below must equal the total 
+carton count in this segment.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+13
+Segment: TD5 Carrier Details (Routing Sequence)
+Position: 120
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the carrier and sequence of routing and to provide transit time 
+information.
+Notes: This segment is used to indicate how the shipment was shipped.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+TD5 01 133 Routing Sequence Code M ID 1 / 2
+B Origin/Delivery Carrier (Any Mode)
+TD5 02 66 Identification Code Qualifier M ID 1 / 2
+2 Standard Carrier Alpha Code 
+(SCAC)
+TD5 03 67 Identification Code M AN 4 / 4
+Carrier code
+TD5 05 387 Routing M AN 1 / 35
+Name of carrier
+Implementation Notes
+ Use only standard SCAC codes in TD503. SCAC codes are maintained by the 
+National Motor Freight Traffic Association (NMFTA). 
+Sample Segment
+TD5*B*2*RDWY**ROADWAYMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+14
+Segment: TD3 Carrier Details (Equipment)
+Position: 130
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory when applicable
+Max Use: 1
+Purpose: To specify transportation details relating to the equipment used by the 
+carrier.
+Notes: This segment is used to convey the trailer number for TL/LTL shipments.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+TD3 01 40 Equipment Description Code C ID 2 / 2
+TL Trailer
+TD3 03 207 Equipment Number C AN 1 / 10
+Trailer number
+Implementation Notes
+ This segment is mandatory for TL or LTL shipments.
+ Do not use this segment when reporting parcel shipments (UPS, FedEx, etc.) 
+Sample Segment
+TD3*TL**1234567890Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+15
+Segment: REF Reference Identification
+Position: 150
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory
+Max Use: 3
+Purpose: To specify identifying information.
+Notes: REF01=MB required by Michaels.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+REF 01 128 Reference Identification Code M ID 2 / 3
+MB Master bill of lading number
+CN Carrier reference number
+REF 02 127 Reference Identification M AN 1 / 30
+Implementation Notes
+ “MB” is the master bill of lading number for the shipment. The master bill of 
+lading is assigned by Michaels for truckload (TL) or less-than-truckload (LTL) 
+shipments. For small parcel shipments (e.g. UPS), the master bill of lading 
+number is assigned by the vendor.
+ “CN” is used to report the PRO number for truck-load (TL) or less-thantruckload (LTL) shipments only. Do not use for parcel shipments. For TL vendor can use any number for a PRO number.
+Sample Segment
+REF*MB*12345678901234567
+REF*CN*12345678901234567
+All 856s sent to Michaels must include the REF01=MB.
+Summary
+ For parcel shipments, always provide REF01=MB. No other REF 
+qualifiers are required.
+ For TL/LTL shipments, both REF01 qualifiers are required.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+16
+Segment: DTM Date/Time Reference
+Position: 200
+Loop: HL (Shipment)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify pertinent dates and times.
+Notes: This segment is used to indicate when the shipment was shipped. 
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+DTM 01 374 Date/Time Qualifier M ID 3 / 3
+011 Shipped
+DTM 02 373 Date M DT 8 / 8
+Sample Segment
+DTM*011*20050701Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+17
+Segment: N1 Name
+Position: 220
+Loop: HL (Shipment), N1 loop
+Level: Detail
+Usage: Mandatory
+Max Use: 2
+Purpose: To identify a party by type of organization, name, and code
+Notes: Michaels requires two iterations of the N1 loop, one each for ship-from
+and ship-to location.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+N1 01 98 Entity Identifier Code M ID 2 / 3
+SF Ship from (load-at point)
+ST Ship to
+N1 02 93 Name M AN 1 / 60
+When N101=SF, this element contains the vendor name.
+When N101=ST, this element contains “Michaels” or “Michaels of 
+Canada” (for shipments to Canadian stores).
+N1 03 66 Identification Code Qualifier M ID 1 / 2
+92 Assigned by buyer
+N1 04 67 Identification Code M AN 2 / 80
+When N101=SF, this element contains the Michaels-assigned 
+vendor number.
+When N101=ST, this element contains the Michaels DC 
+or store number.
+Implementation Notes
+ For DC and domestic direct-to-store orders, the ship-to reported in N104 is the final recipient DC or store number.
+ For DC hybrid orders, the ship-to reported in N104 is the cross-dock DC; the destination 
+DC (final recipient) is indicated in the marked-for REF segment at the order level.
+ For a shipment from a U.S. vendor to a Canadian store, the ship-to reported in N104 will 
+always be the cross-dock DC to which the order is initially shipped. The Canada store to 
+receive the shipment is indicated in the marked-for REF segment at the order level.
+ The ship-from location is the load-at point (the point of departure of the truck). This may 
+not be the same location as the vendor offices. 
+Sample Segment
+N1*SF*VENDOR NAME*92*12345
+N1*ST*MICHAELS*92*01 (For a shipment to DC #01)
+N1*ST*MICHAELS OF CANADA*92*01 (For a shipment to a Canadian store being cross-docked 
+though DC #01)Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+18
+Segment: N3 Address Information
+Position: 240
+Loop: HL (Shipment), N1 loop
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the location of the named party
+Notes: Use this segment for both iterations of the N1 loop (ship-from and ship-to 
+locations).
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+N3 01 166 Address Information M AN 1 / 55
+N3 02 166 Address Information O AN 1 / 55
+Implementation Notes
+ When N101=SF (ship-from), the address to be reported in this segment is the 
+load-at address (point of departure of the truck). If your company offices and 
+loading dock are not in the same location (your offices are at one address, your 
+loading dock or warehouse is at another address), report the address of the loading dock or warehouse in this segment.
+ Do not use more than one (1) N3 segment.
+Sample Segment
+N3*1313 MOCKINGBIRD LANEMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+19
+Segment: N4 Geographic Location
+Position: 250
+Loop: HL (Shipment), N1 loop
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the geographic place of the named party.
+Notes: Use this segment for both iterations of the N1 loop (ship-from and ship-to 
+locations).
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+N4 01 19 City Name M AN 2 / 30
+N4 02 156 State or Province Code M ID 2 / 2
+N4 03 116 Postal Code O ID 3 / 15
+Implementation Notes
+ When N101=SF (ship-from), the address to be reported in this segment is the 
+load-at address (point of departure of the truck). If your company offices and 
+loading dock are not in the same location (your offices are at one address, your 
+loading dock or warehouse is at another address), report the address of the loading dock or warehouse in this segment.
+Sample Segment
+N4*DALLAS*TX*75001Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+20
+Segment: HL Hierarchical Level
+Position: 010
+Loop: HL (Order) >1
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To identify dependencies among and the content of hierarchically related 
+groups of data segments
+Notes: This HL segment begins the order level.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+HL 01 628 Hierarchical ID Number M AN 1 / 12
+HL 02 734 Hierarchical Parent ID Number M AN 1 / 12
+HL 03 735 Hierarchical Level Code M ID 1 / 2
+O Order
+Sample Segment
+HL*2*1*OMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+21
+Segment: PRF Purchase Order Reference
+Position: 050
+Loop: HL (Order)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To provide reference to a specific purchase order.
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+PRF 01 324 Purchase Order Number M AN 1 / 22
+Buyer’s original purchase order number.
+Sample Segment
+PRF*1234567Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+22
+Segment: TD1 Carrier Details (Quantity and Weight)
+Position: 110
+Loop: HL (Order)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the transportation details relative to commodity, weight, and 
+quantity.
+Notes: This segment, at the order level, is used to specify the number and type of 
+shipping containers in the order.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+TD1 01 103 Packaging Code M AN 3 / 5
+CTN Carton
+TD1 02 80 Lading Quantity M N0 1/ 7
+The number of packages in the shipment described 
+in TD101
+Sample Segment
+TD1*CTN*5
+Implementation Notes
+ If the shipment is reported as a pallet at the header level, use this segment to 
+report the number of cartons in the order. Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+23
+Segment: REF Reference Identification
+Position: 150
+Loop: HL (Order)
+Level: Detail
+Usage: As indicated (Michaels)
+Max Use: 1
+Purpose: To specify identifying information.
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+REF 01 128 Reference Identification Code M ID 2 / 3
+SI Shipper’s Identifying Number for Shipment (to be underto 
+REF 02 127 Reference Identification M AN 1 / 30
+Implementation Notes
+ Shipper’s Identifying Number for Shipment – to be understood as Shipment ID # assigned 
+by Michaels. This segment is mandatory for TL/LTL shipments.
+ This segment is not required when reporting parcel shipments.
+Sample Segment
+REF*SI*ABCD9876543210
+Note — Change from Previous Versions
+ The ‘BM’, Bill of Lading number has been removed from this 
+segment and is no longer required. Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+24
+Segment: N1 Name
+Position: 220
+Loop: HL (Order), N1 loop
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To identify a party by type of organization, name, and code
+Notes: This segment is used to indicate the ultimate receiver of a package being 
+cross-docked through a DC (“mark-for” identification).
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+N1 01 98 Entity Identifier Code M ID 2 / 3
+BY Buying party (“mark for”)
+N1 03 66 Identification Code Qualifier M ID 1 / 2
+92 Assigned by buyer
+N1 04 67 Identification Code M AN 2 / 80
+This element contains the store or DC number that will ultimately receive the order.
+Implementation Notes
+ For DC and domestic direct-to-store orders, the mark-for number in this segment will be the same as the ship-to DC or store number provided in ship-to 
+N104 at the shipment level.
+ For hybrid DC orders, the mark-for number in this segment indicates the destination DC (the final recipient DC). The cross-dock DC number is provided in 
+the ship-to N104 at the shipment level.
+ For shipments from a US vendor to a Canadian store, the mark-for in this segment indicates the Canadian store to receive the order. The cross-dock DC 
+number to which the order is initially shipped is provided in the ship-to N104 at 
+the shipment level.
+ For Alaska shipments, the mark-for in this segment indicates the Alaska store 
+number; all Alaska shipments are cross-dock shipments from DC 02, which 
+should be noted in the ship-to N104.
+Sample Segment
+N1*BY**92*3900 (Marked for store 3900)
+N1*BY**92*08 (Marked for DC 8)Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+25
+Segment: HL Hierarchical Level
+Position: 010
+Loop: HL (Pack) >1
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To identify dependencies among and the content of hierarchically related 
+groups of data segments
+Notes: This segment begins the pack level.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+HL 01 628 Hierarchical ID Number M AN 1 / 12
+HL 02 734 Hierarchical Parent ID Number M AN 1 / 12
+HL 03 735 Hierarchical Level Code M ID 1 / 2
+P Pack
+Sample Segment
+HL*3*2*PMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+26
+Segment: PO4 Item Physical Details
+Position: 060
+Loop: HL (Pack)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify the physical qualities, packaging, weights, and dimensions relating to the item.
+Notes: This segment is used to convey the gross weight of the carton.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max Usage
+PO4 05 187 Weight Qualifier M ID 1 / 2
+G Gross weight
+PO4 06 384 Gross Weight M R 1 / 9
+PO4 07 355 Unit or Basis of Measurement M ID 2 / 2
+LB Pounds
+Sample Segment
+PO4*****G*100*LBMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+27
+Segment: MAN Marks and Numbers
+Position: 190
+Loop: HL (Pack)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To indicate identifying marks and numbers for shipping containers.
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+MAN 01 88 Marks and Numbers Qualifier M ID 1 /2 
+GM SSCC-18 and Application Identifier
+MAN 02 87 Marks and Numbers M AN 20 / 20
+UCC-128 carton identifier
+MAN 04 88 Marks and Numbers Qualifier O ID 1 / 2
+CP Carrier-Assigned Package ID Number
+MAN 05 87 Marks and Numbers O AN 1 / 20
+Parcel carrier’s tracking number
+Implementation Notes
+ The UCC-128 carton number must be unique for each shipping container (carton, etc.) and 20 digits long. Do not recycle UCC-128 carton numbers.
+ All shipments to Michaels must have a UCC-128 carton label and identifier. The 
+20-digit carton number must be provided in this segment.
+ When reporting a parcel shipment, MAN04 and 05 are required. These elements
+contain the parcel carrier’s tracking number for the carton. Each carton tracking number must be unique. 
+ MAN04 and MAN05 elements are not used for TL/LTL shipments. 
+Sample Segment
+MAN*GM*12345678901234567801**CP*12345678901234567890 (Parcel)
+MAN*GM*12345678901234567801 (TL/LTL)Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+28
+Segment: HL Hierarchical Level
+Position: 010
+Loop: HL (Item) >1
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To identify dependencies among and the content of hierarchically related 
+groups of data segments
+Notes: This segment begins the item level.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+HL 01 628 Hierarchical ID Number M AN 1 / 12
+HL 02 734 Hierarchical Parent ID Number M AN 1 / 12
+HL 03 735 Hierarchical Level Code M ID 1 / 2
+I Item
+Sample Segment
+HL*5*4*IMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+29
+Segment: LIN Item Identification
+Position: 020
+Loop: HL (Item)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify basic item identification data.
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+LIN 02 235 Product/Service ID Qualifier M ID 2 / 2
+CB Buyer’s catalog number
+LIN 03 234 Product/Service ID M AN 1 / 48
+Michaels SKU number
+LIN 04 235 Product/Service ID Qualifier M ID 2 / 2
+UK Vendor’s UPC number
+LIN 05 234 Product/Service ID M AN 1 / 48
+LIN 06 235 Product/Service ID Qualifier M ID 2 / 2
+VN Vendor’s item number
+LIN 07 234 Product/Service ID M AN 1 / 48
+LIN 08 235 Product/Service Qualifier M AN 2 / 2
+ CH Country of origin
+LIN 09 234 Product/Service ID M AN 2 / 2
+Implementation Notes
+ “CB” indicates the six-digit Michaels SKU number. All SKUs must be six digits 
+long. Use leading zeros as necessary.
+ UPCs are 13 digits long. Use leading zeros as necessary.
+ See the “Implementation Guidance” for details on using the CH qualifier and data when reporting the country of origin.
+Sample Segment
+LIN**CB*123458*UK*0123456789012*VN*ABC-123*CH*JPMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+30
+Segment: SN1 Item Detail (Shipment)
+Position: 040
+Loop: HL (Item)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To specify line-item detail relative to shipment.
+Notes: This segment is used to specify the quantities associated with the item 
+identified in the LIN at the item level.
+Ref. 
+Des.
+Elem. 
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+SN1 02 382 Number of Units Shipped M R 1 / 10
+Numeric value of units shipped in the carton.
+SN1 03 355 Unit or Basis of Measurement Code M ID 2 / 2
+EA Eaches
+Implementation Notes
+ This segment is not used to indicate the total number of units shipped. It is 
+used to indicate the number of eaches in the carton referenced in the pack-level 
+HL segment.
+Sample Segment
+SN1**100*EAMichaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+31
+Segment: PID Product/Item Description
+Position: 070
+Loop: HL (Item)
+Level: Detail
+Usage: Mandatory
+Max Use: 1
+Purpose: To describe a product or process in coded or free-form format.
+Notes: PID05 carries the item description as indicated on the Michaels item master file.
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+PID 01 349 Item Description Type M ID 1 / 1
+F Free-form
+PID 05 352 Description M AN 1 / 80
+Sample Segment
+PID*F****PAINT, FIRE ENGINE RED, 2-OZ.Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+32
+Segment: CTT Transaction Totals
+Position: 020
+Loop:
+Level: Summary
+Usage: Mandatory
+Max Use: 1
+Purpose: To transmit a hash total for a specific element in the transaction set.
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+CTT 01 354 Number of HL segments M N0 1 / 6
+Sample Segment
+CTT*10Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+33
+Segment: SE Transaction Set Trailer
+Position: 030
+Loop:
+Level: Summary
+Usage: Mandatory
+Max Use: 1
+Purpose: To indicate the end of the transaction set and to provide the count of the 
+transmitted segments (including the beginning (ST) and ending (SE) segments).
+Notes:
+Ref.
+Des.
+Elem.
+Num. Name
+Req.
+Des. Type
+Length
+Min/Max
+SE 01 96 Number of Included Segments M N0 1 / 10
+SE 02 329 Transaction Set Control Number M AN 4 / 9
+Sample Segment
+SE*1*0001Michaels EDI 856 Specifications 
+Version 1.0.7
+Revised: 30 July 2014
+34
+Appendix A — Top 20 Countries of Origin
+Based on a review of recent Michaels import orders, the 20 most commonly reported countries of origin 
+and their ISO country codes are listed below. Country codes for other countries are available from numerous sources on the internet.
+Country Code Country Name
+AT Austria
+CA Canada
+CN China, People’s Republic of
+CZ Czech Republic
+DE Germany
+FR France
+GB United Kingdom
+HK Hong Kong
+ID Indonesia
+IN India
+IT Italy
+JP Japan
+KR Korea, Republic of
+MX Mexico
+MY Malaysia
+PH Philippines
+PK Pakistan
+TH Thailand
+TR Turkey
+TW China, Republic of (Taiwan)
+US United States

@@ -1,0 +1,1665 @@
+01/2025 Ship Notice/Manifest - 856
+856 - 4010 1 Nordstrom
+856 Ship Notice/Manifest
+Functional Group=SH
+Purpose: This Draft Standard for Trial Use contains the format and establishes the data contents of the Ship Notice/Manifest 
+Transaction Set (856) for use within the context of an Electronic Data Interchange (EDI) environment. The transaction set can be used 
+to list the contents of a shipment of goods as well as additional information relating to the shipment, such as order information, product 
+description, physical characteristics, type of packaging, marking, carrier information, and configuration of goods within the
+transportation equipment. The transaction set enables the sender to describe the contents and configuration of a shipment in various 
+levels of detail and provides an ordered flexibility to convey information. The sender of this transaction is the organization responsible 
+for detailing and communicating the contents of a shipment, or shipments, to one or more receivers of the transaction set. The receiver 
+of this transaction set can be any organization having an interest in the contents of a shipment or information about the contents of a 
+shipment.
+Heading:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+ISA Interchange Control Header M 1 Must use
+GS Functional Group Header M 1 Must use
+010 ST Transaction Set Header M 1 Must use
+020 BSN Beginning Segment for Ship 
+Notice
+M 1 Must use
+Detail:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+LOOP ID - HL 200000 C2/010L
+010 HL Hierarchical Level M 1 C2/010 Must use
+110 TD1 Carrier Details (Quantity and 
+Weight)
+M 20 Must use
+120 TD5 Carrier Details (Routing 
+Sequence/Transit Time)
+M 12 Must use
+150 REF Reference Identification M >1 Must use
+151 PER Administrative Communications 
+Contact
+O 3 Used
+200 DTM Date/Time Reference M 10 Must use
+LOOP ID - N1 200
+220 N1 Name M 1 Must use
+240 N3 Address Information C 2 Used
+250 N4 Geographic Location O 1 Must use
+LOOP ID - HL 200000 C2/010L
+010 HL Hierarchical Level M 1 C2/010 Must use
+050 PRF Purchase Order Reference M 1 Must use
+110 TD1 Carrier Details (Quantity and 
+Weight)
+M 20 Must use
+150 REF Reference Identification M >1 Must use
+LOOP ID - N1 200
+220 N1 Name M 1 Must use
+LOOP ID - HL 200000 C2/010L
+010 HL Hierarchical Level M 1 C2/010 Must use
+190 MAN Marks and Numbers M >1 Must use
+LOOP ID - HL 200000 C2/010L
+010 HL Hierarchical Level M 1 C2/010 Must use
+020 LIN Item Identification M 1 Must use
+030 SN1 Item Detail (Shipment) M 1 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 2 Nordstrom
+Summary:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+010 CTT Transaction Totals M 1 N3/010 Must use
+020 SE Transaction Set Trailer M 1 Must use
+GE Functional Group Trailer M 1 Must use
+IEA Interchange Control Trailer M 1 Must use
+Note:
+Nordstrom will be using a separate partner number for the 856 of 12 / 2062336664. Nordstrom downloads data from this ID every 30 
+minutes during the day in order to provide our distribution centers with timely information.
+Case Pack UPC’s – Please note that if Nordstrom sends your company a case pack UPC (unit of measure of ‘CA’ in PO103), we 
+require the 856 back at the individual component level (an individual UPC for each item).
+ASN Requirements – Advance Ship Notice Compliance
+Non-compliance of the ASN guidelines here may result in expense offset fees. These requirements apply to the Nordstrom Full Line,
+Nordstrom Rack stores, Nordstrom Direct and NPG Domestic (for more information regarding NPG refer to the NPG Compliance 
+Manual). 
+Consolidated ASN Requirements
+For consolidated shipments Nordstrom requires that there is one VICS 856 ASN with carton level information per shipment, per 
+ship-to location (distribution center), and each ship notice must contain its own unique sub-bill of lading number. Nordstrom also 
+requires that the ASN is transmitted and received by Nordstrom’s warehouse management system prior to the shipment’s arrival in 
+the distribution center. A chargeback will be applied if this requirement is not met. 
+UPS ASN Requirements
+For shipments sent via UPS, Nordstrom requires that there is one ASN transmitted per case and the tracking number provided by 
+UPS must populate the sub-bill of lading field (REF*BM segment) and the PRO number field (REF*CN segment). Nordstrom also 
+requires that the ASN is transmitted and received by Nordstrom’s warehouse management system prior to the shipment’s arrival in 
+the distribution center.
+Bulk Pack ASN
+If asked to bulk pack a PO by receiving a code of "BULK" in the REF*QC segment, the 856/ASN should contain the DC number in 
+both the ship-to (N1*ST) and mark-for (N1*BY) segments.
+Masterpack ASN requirementsIn the event that small individual store cartons for multiple stores (going to the same DC) are combined for one purchase order into a 
+masterpack. Nordstrom maintains two masterpack ASN requirements depending on the mode of transportation used:
+The ASN requirement for shipping consolidated master-packed cases is that there is one ASN transmitted where the REF*BM 
+segment reflects the unique sub-bill of lading number, the N1*ST segment reflects the correct ship-to location (distribution center), 
+the N1*BY segment indicates the appropriate store destination and the MAN segments reflect the correct GS1-128 case IDs for all 
+the cases within each master case. The outer (master) carton must be clearly identified as a masterpack by writing or labeling the 
+word “masterpack” on the outside of the case.
+The ASN requirement for shipping UPS master-packed cases is that there is one ASN per master case and that the REF*BM 
+segment (sub-bill of lading) reflects UPS’s tracking number and there must be a GS1-128 label affixed to each inner carton that is 
+accounted for in the MAN segments of the ASN. (e.g. If shipping 2 cases containing 5 boxes each to DC 299 then two ASNs must be 
+transmitted – 1 ASN for each master case.) The outer (master) carton must be clearly identified as a masterpack by writing or 
+labeling the word “masterpack” on the outside of the case.
+ASNs for “No Charge” Merchandise
+Shipments containing “no charge” merchandise (i.e. testers, samples) must be packed in separate case(s) from the retail 
+merchandise and clearly marked as “no charge”. Separate inner carton (s) of “no charge” merchandise (i.e. testers, samples) may be 
+packed within large case (s) of retail merchandise but must be clearly marked as “no charge” and maintain separation from retail 
+merchandise. ASNs are not required for “no charge” merchandise shipped in this manner.
+“No charge” merchandise shipped in any other manner, including loose within case(s) containing retail merchandise must have valid 
+UPCs with the Nordstrom Inventory system and accurately represented within the ASN for that shipment. Expense offset 
+chargebacks will be accessed for inaccurate ASNs containing “no charge” merchandise that do not meet these requirements.01/2025 Ship Notice/Manifest - 856
+856 - 4010 3 Nordstrom
+Vendor Accuracy Audit Program
+Nordstrom uses warehouse management technology to receive merchandise using the ASN and pay vendors with EDI invoices. 
+Therefore, vendors must make every effort to ensure that shipments are 100% accurate. Nordstrom’s audit program samples a 
+percentage of all shipments received against the corresponding ASN to monitor accuracy. If the sample does not match what was
+indicated per the ASN an inaccurate chargeback will be applied.
+"Nordstrom requires that all vendor ASNs are 100% accurate. Nordstrom has implemented an accuracy audit program to ensure 
+compliance and accuracy. This audit program compares the UPC/EANs physically contained within the carton to the UPC/EANs on 
+the corresponding ASN as well as a review of the vendor’s floor ready compliance. When audit results indicate errors, Nordstrom will 
+discontinue the use of the ASN when processing the shipment and a chargeback will be applied for each shipment processed 
+manually until accuracy is attained."
+Re-transmitting ASN Data
+ASN data can be retransmitted to Nordstrom at any time prior to the shipment’s arrival in the distribution center. When retransmitting 
+data, please be sure to update the BSN01 to ‘07’ for duplicate/replacement.
+Also, to ensure correct retransmission, the new or corrected ASN must maintain the same sub-bill of lading value PO/DC 
+combination as the original. This is the value sent in the REF/BM. This will allow the “new” ASN to overwrite the original ASN in our 
+warehouse management system. If the ‘new‘ data reaches our warehouse management system before the warehouse personnel 
+begin to process the shipment and all other information within the transmission is accurate, no charge backs should be incurred. 
+However, if the shipment arrives before the “new” ASN is received then the shipment will be received with the original ASN data. 
+Please note, to avoid duplication errors, we advise waiting 60 minutes before re-transmitting the correct EDI 856.
+997/Functional Acknowledgments
+Nordstrom sends a 997 (functional acknowledgment) back within 24 hours for any inbound file we receive. Please be aware a 997 
+indicates receipt of a file only. A 997 does not indicate the data was processed through Nordstrom’s warehouse management system 
+successfully. To ensure Nordstrom is receiving any 856 files from your company, please be sure to monitor your 997’s.
+NOTE – To avoid formatting errors, please do not include special characters in any field including but not limited to -- any European 
+accents ~ ! @ # $ % ^ & * ( ) + / ? > < ^ `.01/2025 Ship Notice/Manifest - 856
+856 - 4010 4 Nordstrom
+ISA Interchange Control Header Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 16
+User Option (Usage): Must use
+Purpose: To start and identify an interchange of zero or more functional groups and interchange-related control segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+ISA01 I01 Authorization Information Qualifier
+ 
+Description: Code to identify the type of 
+information in the Authorization Information
+M ID 2/2 Must use
+Code Name
+00 No Authorization Information Present (No Meaningful Information in I02)
+ISA02 I02 Authorization Information
+ 
+Description: Information used for additional 
+identification or authorization of the interchange 
+sender or the data in the interchange; the type of 
+information is set by the Authorization Information 
+Qualifier (I01)
+Note: Spaces
+M AN 10/10 Must use
+ISA03 I03 Security Information Qualifier
+ 
+Description: Code to identify the type of 
+information in the Security Information
+M ID 2/2 Must use
+Code Name
+00 No Security Information Present (No Meaningful Information in I04)
+ISA04 I04 Security Information
+ 
+Description: This is used for identifying the 
+security information about the interchange sender 
+or the data in the interchange; the type of 
+information is set by the Security Information 
+Qualifier (I03)
+Note: Spaces
+M AN 10/10 Must use
+ISA05 I05 Interchange ID Qualifier
+ 
+Description: Qualifier to designate the 
+system/method of code structure used to 
+designate the sender or receiver ID element 
+being qualified
+Note: Qualifier Selected by Receiver
+M ID 2/2 Must use
+Code Name
+01 Duns (Dun & Bradstreet)
+08 UCC EDI Communications ID (Comm ID)
+12 Phone (Telephone Companies)
+ISA06 I06 Interchange Sender ID
+ 
+Description: Identification code published by the 
+sender for other parties to use as the receiver ID 
+to route data to them; the sender always codes 
+this value in the sender ID element
+Note: Sender ID Selected by Receiver
+M AN 15/15 Must use
+ISA07 I05 Interchange ID Qualifier
+ 
+Description: Qualifier to designate the 
+M ID 2/2 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 5 Nordstrom
+system/method of code structure used to 
+designate the sender or receiver ID element 
+being qualified
+Note: Nordstrom's Qualifier is '12'
+Code Name
+12 Phone (Telephone Companies)
+ISA08 I07 Interchange Receiver ID
+ 
+Description: Identification code published by the 
+receiver of the data; When sending, it is used by 
+the sender as their sending ID, thus other parties 
+sending to them will use this as a receiving ID to 
+route data to them
+Note: Nordstrom's Receiver ID is 2062336664
+M AN 15/15 Must use
+ISA09 I08 Interchange Date
+ 
+Description: Date of the interchange
+Note: Date ISA was generated - YYMMDD
+M DT 6/6 Must use
+ISA10 I09 Interchange Time
+ 
+Description: Time of the interchange
+Note: Time ISA was generated - HHMM
+M TM 4/4 Must use
+ISA11 I10 Interchange Control Standards Identifier
+ 
+Description: Code to identify the agency 
+responsible for the control standard used by the 
+message that is enclosed by the interchange 
+header and trailer
+M ID 1/1 Must use
+ISA12 I11 Interchange Control Version Number
+ 
+Description: Code specifying the version number 
+of the interchange control segments
+M ID 5/5 Must use
+Code Name
+00401 Standards for Use Approved for Publication by ASC X12 Procedures Review Board 
+ISA13 I12 Interchange Control Number
+ 
+Description: A control number assigned by the 
+interchange sender
+Note: Sender assigned sequential number 
+starting with 1 incremented by 1 for each 
+transmission.
+M N0 9/9 Must use
+ISA14 I13 Acknowledgment Requested
+ 
+Description: Code sent by the sender to request 
+an interchange acknowledgment (TA1)
+M ID 1/1 Must use
+Code Name
+0 No Acknowledgment Requested
+ISA15 I14 Usage Indicator
+ 
+Description: Code to indicate whether data 
+enclosed by this interchange envelope is test, 
+production or information
+M ID 1/1 Must use
+Code Name
+P Production Data01/2025 Ship Notice/Manifest - 856
+856 - 4010 6 Nordstrom
+ISA16 I15 Component Element Separator
+ 
+Description: Type is not applicable; the 
+component element separator is a delimiter and 
+not a data element; this field provides the 
+delimiter used to separate component data 
+elements within a composite data structure; this 
+value must be different than the data element 
+separator and the segment terminator
+Note: '>'
+M 1/1 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 7 Nordstrom
+GS Functional Group Header Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 8
+User Option (Usage): Must use
+Purpose: To indicate the beginning of a functional group and to provide control information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+GS01 479 Functional Identifier Code
+ 
+Description: Code identifying a group of 
+application related transaction sets
+M ID 2/2 Must use
+Code Name
+SH Ship Notice/Manifest (856)
+GS02 142 Application Sender's Code
+ 
+Description: Code identifying party sending 
+transmission; codes agreed to by trading partners
+Note: Sender ID selected by Sender
+M AN 2/15 Must use
+GS03 124 Application Receiver's Code
+ 
+Description: Code identifying party receiving 
+transmission; codes agreed to by trading partners
+Note: Nordstrom's Receiver ID is 2062336664
+M AN 2/15 Must use
+GS04 373 Date
+ 
+Description: Date expressed as CCYYMMDD
+Note: Date GS was generated - CCYYMMDD
+M DT 8/8 Must use
+GS05 337 Time
+ 
+Description: Time expressed in 24-hour clock 
+time as follows: HHMM, or HHMMSS, or 
+HHMMSSD, or HHMMSSDD, where H = hours 
+(00-23), M = minutes (00-59), S = integer 
+seconds (00-59) and DD = decimal seconds; 
+decimal seconds are expressed as follows: D = 
+tenths (0-9) and DD = hundredths (00-99)
+Note: Time GS was generated - HHMM
+M TM 4/8 Must use
+GS06 28 Group Control Number
+ 
+Description: Assigned number originated and 
+maintained by the sender
+Note: Sender assigned sequential number 
+starting with 1 incremented by 1 for each 
+transmission.
+M N0 1/9 Must use
+GS07 455 Responsible Agency Code
+ 
+Description: Code identifying the issuer of the 
+standard; this code is used in conjunction with 
+Data Element 480
+M ID 1/2 Must use
+Code Name
+X Accredited Standards Committee X12
+GS08 480 Version / Release / Industry Identifier Code
+ 
+Description: Code indicating the version, 
+release, subrelease, and industry identifier of the 
+EDI standard being used, including the GS and 
+GE segments. 
+M AN 1/12 Must use
+Code Name
+004010VICS Standards Approved for Publication by ASC X12 Procedures Review Board 01/2025 Ship Notice/Manifest - 856
+856 - 4010 8 Nordstrom
+ST Transaction Set Header Pos: 010 Max: 1
+Heading - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the start of a transaction set and to assign a control number
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+ST01 143 Transaction Set Identifier Code
+ 
+Description: Code uniquely identifying a 
+Transaction Set
+M ID 3/3 Must use
+Code Name
+856 Ship Notice/Manifest
+ST02 329 Transaction Set Control Number
+ 
+Description: Identifying control number that must 
+be unique within the transaction set functional 
+group assigned by the originator for a transaction 
+set
+Note: The number is sequentially assigned by the 
+sender, starting with one within each functional 
+group. For each functional group, the first 
+transaction set control number will be 0001 and 
+incremented by one for each additional 
+transaction set within the group.
+M AN 4/9 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 9 Nordstrom
+BSN Beginning Segment for Ship 
+Notice
+Pos: 020 Max: 1
+Heading - Mandatory
+Loop: N/A Elements: 5
+User Option (Usage): Must use
+Purpose: To transmit identifying numbers, dates, and other basic data relating to the transaction set
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+BSN01 353 Transaction Set Purpose Code
+ 
+Description: Code identifying purpose of 
+transaction set
+M ID 2/2 Must use
+Code Name
+00 Original
+07 Duplicate (used for retransmissions)
+BSN02 396 Shipment Identification
+ 
+Description: A unique control number assigned 
+by the original shipper to identify a specific 
+shipment
+Note: When applicable, the BSN02 should be the 
+Nordstrom TMS Shipment ID.
+M AN 2/30 Must use
+BSN03 373 Date
+ 
+Description: Date expressed as CCYYMMDD
+Note: CCYYMMDD
+M DT 8/8 Must use
+BSN04 337 Time
+ 
+Description: Time expressed in 24-hour clock 
+time as follows: HHMM, or HHMMSS, or 
+HHMMSSD, or HHMMSSDD, where H = hours 
+(00-23), M = minutes (00-59), S = integer 
+seconds (00-59) and DD = decimal seconds; 
+decimal seconds are expressed as follows: D = 
+tenths (0-9) and DD = hundredths (00-99)
+Note: HHMM or HHMMSS acceptable
+M TM 4/8 Must use
+BSN05 1005 Hierarchical Structure Code
+ 
+Description: Code indicating the hierarchical 
+application structure of a transaction set that 
+utilizes the HL segment to define the structure of 
+the transaction set
+O ID 4/4 Must use
+Code Name
+0001 Shipment, Order, Packaging, Item 
+Note:
+Pick and Pack Structure01/2025 Ship Notice/Manifest - 856
+856 - 4010 10 Nordstrom
+HL Hierarchical Level Pos: 010 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups/ of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned by the 
+sender to identify a particular data segment in a 
+hierarchical structure
+Note: The Value for this level (shipment) is 1.
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the next 
+higher hierarchical data segment that the data 
+segment being described is subordinate to
+O AN 1/12 Not used
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the characteristic of a 
+level in a hierarchical structure
+M ID 1/2 Must use
+Code Name
+S Shipment
+Note:
+The HL segment is used to identify levels of detail information using a hierarchical structure.
+HL01 shall contain a unique number for each occurrence of the HL segment within the transaction set. The value assigned to the first 
+HL segment will be 1 and is incremented by one for each subsequent HL segment within the transaction set.
+HL02 identifies the hierarchical ID of the HL segment to which it is subordinate (child of). HL02 will be omitted for the first occurrence 
+of the HL segment in the transaction set, since it has no parent. HL03 identifies the application content of the series of segments 
+following the current HL segment up to the next occurrence of an HL segment, or the CTT or SE segment, e.g., Shipment, Unit Load, 
+Order, Tare, Pack and Item.01/2025 Ship Notice/Manifest - 856
+856 - 4010 11 Nordstrom
+TD1 Carrier Details (Quantity and 
+Weight)
+Pos: 110 Max: 20
+Detail - Mandatory
+Loop: HL Elements: 8
+User Option (Usage): Must use
+Purpose: To specify the transportation details relative to commodity, weight, and quantity
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD101 103 Packaging Code
+ 
+Description: Code identifying the type of 
+packaging; Part 1: Packaging Form, Part 2: 
+Packaging Material; if the Data Element is used, 
+then Part 1 is always required
+Note: Code identifying the type of packaging.
+Part 1: Packaging Form,
+Part 2: Packaging Material; if the Data Element is 
+used, then Part 1 is always required.
+Nordstrom is only concerned with Part 1 codes. 
+Any legal code or spaces
+can be used for Part 2.
+O AN 3/5 Must use
+Code Name
+CTN Carton
+HRB On Hanger or Rack in Boxes 
+Note:
+Code used for GOH. HRB code is used ONLY when goods are shipped as a hanging 
+packaging type. Use CTN code when goods are shipped on a hanger within a carton.
+TD102 80 Lading Quantity
+ 
+Description: Number of units (pieces) of the 
+lading commodity
+Note: The number of packages in the shipment 
+as described in TD101
+C N0 1/7 Must use
+TD103 23 Commodity Code Qualifier
+ 
+Description: Code identifying the commodity 
+coding system used for Commodity Code
+Note: Not Used by Nordstrom
+O ID 1/1 Not used
+TD104 22 Commodity Code
+ 
+Description: Code describing a commodity or 
+group of commodities
+Note: Not used by Nordstrom
+C AN 1/30 Not used
+TD105 79 Lading Description
+ 
+Description: Description of an item as required 
+for rating and billing purposes
+Note: Not used by Nordstrom
+O AN 1/50 Not used
+TD106 187 Weight Qualifier
+ 
+Description: Code defining the type of weight
+O ID 1/2 Must use
+Code Name
+G Gross Weight01/2025 Ship Notice/Manifest - 856
+856 - 4010 12 Nordstrom
+TD107 81 Weight
+ 
+Description: Numeric value of weight
+Note: Total weight of shipment
+C R 1/10 Must use
+TD108 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in which a 
+value is being expressed, or manner in which a 
+measurement has been taken
+C ID 2/2 Must use
+Code Name
+LB Pound
+Syntax Rules: 
+1. If TD101 is present, then TD102 is required.
+2. If TD103 is present, then TD104 is required.
+3. If TD106 is present, then TD107 is required.
+4. If either TD107 or TD108 is present, then the other is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 13 Nordstrom
+TD5 Carrier Details (Routing 
+Sequence/Transit Time)
+Pos: 120 Max: 12
+Detail - Mandatory
+Loop: HL Elements: 12
+User Option (Usage): Must use
+Purpose: To specify the carrier and sequence of routing and provide transit time information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD501 133 Routing Sequence Code
+ 
+Description: Code describing the relationship of 
+a carrier to a specific shipment movement
+O ID 1/2 Used
+Code Name
+1 1st Carrier after Origin Carrier
+2 2nd Carrier after Origin Carrier
+3 3rd Carrier after Origin Carrier
+4 4th Carrier after Origin Carrier
+5 5th Carrier after Origin Carrier
+6 6th Carrier after Origin Carrier
+7 7th Carrier after Origin Carrier
+8 8th Carrier after Origin Carrier
+9 9th Carrier after Origin Carrier
+A Origin Carrier, Agent's Routing (Rail)
+B Origin/Delivery Carrier (Any Mode)
+O Origin Carrier (Air, Motor, or Ocean)
+S Origin Carrier, Shipper's Routing (Rail)
+TD502 66 Identification Code Qualifier
+ 
+Description: Code designating the 
+system/method of code structure used for 
+Identification Code (67)
+C ID 1/2 Must use
+Code Name
+2 Standard Carrier Alpha Code (SCAC)
+TD503 67 Identification Code
+ 
+Description: Code identifying a party or other 
+code
+Note: Please use a valid carrier assigned SCAC.
+When a Nordstrom authorized carrier dispatches 
+an agent or joint-line carrier to pick up your 
+Nordstrom shipment(s), use the dispatching 
+carrier’s SCAC.
+Common Nordstrom SCAC codes are as follows:
+CARRIER SCAC
+BTX GLOBAL LOGISTICS BTXA
+COLONIAL CLNK
+CTE CAIE
+ESTES EXPRESS EXLA
+GILBERT GBEA
+NORCON NCON
+OAK HARBOR FREIGHT OAKH
+C AN 2/80 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 14 Nordstrom
+UPS small package UPSN
+UPS FREIGHT UPGF
+XPO LOGISTICS CNWY
+TD504 91 Transportation Method/Type Code
+ 
+Description: Code specifying the method or type 
+of transportation for the shipment
+O ID 1/2 Used
+Code Name
+A Air
+C Consolidation
+D Parcel Post
+E Expedited Truck
+H Customer Pickup
+L Contract Carrier
+M Motor (Common Carrier)
+R Rail
+S Ocean
+T Best Way (Shippers Option)
+U Private Parcel Service
+AE Air Express
+TD505 387 Routing
+ 
+Description: Free-form description of the routing 
+or requested routing for shipment, or the 
+originating carrier's identity
+Note: Not used by Nordstrom
+C AN 1/35 Not used
+TD506 368 Shipment/Order Status Code
+ 
+Description: Code indicating the status of an 
+order or shipment or the disposition of any 
+difference between the quantity ordered and the 
+quantity shipped for a line item or transaction
+O ID 2/2 Used
+Code Name
+BK Back Ordered from Previous Order
+BP Shipment Partial, Back Order to Ship on (Date)
+CC Shipment Complete on (Date)
+CM Shipment Complete with Additional Quantity
+CP Partial Shipment on (Date), Considered No Backorder
+CS Shipment Complete with Substitution
+DE Deleted Order
+IC Item Canceled
+IS Item Represents Substitution from Original Order
+PR Partial Shipment
+SS Split Shipment
+TD507 309 Location Qualifier
+ 
+Description: Code identifying type of location
+Note: Not used by Nordstrom
+O ID 1/2 Not used
+TD508 310 Location Identifier
+ 
+Description: Code which identifies a specific 
+location
+Note: Not used by Nordstrom
+C AN 1/30 Not used
+TD509 731 Transit Direction Code
+ 
+O ID 2/2 Not used01/2025 Ship Notice/Manifest - 856
+856 - 4010 15 Nordstrom
+Description: The point of origin and point of 
+direction
+Note: Not used by Nordstrom
+TD510 732 Transit Time Direction Qualifier
+ 
+Description: Code specifying the value of time 
+used to measure the transit time
+Note: Not used by Nordstrom
+O ID 2/2 Not used
+TD511 733 Transit Time
+ 
+Description: The numeric amount of transit time
+Note: Not used by Nordstrom
+C R 1/4 Not used
+TD512 284 Service Level Code
+ 
+Description: Code indicating the level of 
+transportation service or the billing service offered 
+by the transportation carrier
+C ID 2/2 Used
+Code Name
+DS Door Service
+ND Next Day Air
+PB Priority Mail
+PI Priority Mail Insured
+SC Second Day Air
+Syntax Rules: 
+1. At least one of TD502, TD504, TD505, TD506 or TD512 is required.
+2. If TD502 is present, then TD503 is required.
+3. If TD507 is present, then TD508 is required.
+4. If TD510 is present, then TD511 is required.
+5. If TD513 is present, then TD512 is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 16 Nordstrom
+REF Reference Identification Pos: 150 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify identifying information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+REF01 128 Reference Identification Qualifier
+ 
+Description: Code qualifying the Reference 
+Identification
+M ID 2/3 Must use
+Code Name
+BM Bill of Lading Number
+CN Carrier's Reference Number (PRO/Invoice)
+IA Internal Vendor Number
+MB Master Bill of Lading
+REF02 127 Reference Identification
+ 
+Description: Reference information as defined 
+for a particular Transaction Set or as specified by 
+the Reference Identification Qualifier
+C AN 1/30 Must use
+Syntax Rules: 
+1. At least one of REF02 or REF03 is required.
+Note:
+In some cases, individual shipments with bill of lading may be grouped under a Master Bill of Lading. Under this circumstance, 
+specifying both the bill of lading and the associated Master Bill of Lading Number will facilitate tracking.
+The Internal Vendor Number (IA) is the Nordstrom assigned Supplier Number or AP assigned Vendor Number. This information 
+may be sent in either the REF/IA or N1/SF.
+Nordstrom requires the following ASN shipment reference fields be populated per shipment (and in the case of UPS, per package):
+Segment Qualifier Required Description Length
+REF BM Required Shippers Bill of Lading (VICS**) 30
+or Small Package Tracking ID number
+REF CN Required Carrier Pro Number/Airway Bill Number 30
+(Heavyweight Air)
+TD5 2 Required Standard Carrier Alpha Code (SCAC) 4
+See Section 7 of Routing Guide for list
+REF MB Required Master Bill of Lading (VICS) 30
+**Please refer to www.gs1us.org for complete VICS BOL Guidelines, including definition of Master Bill of Lading and how to generate 
+unique Shippers Bill of Lading and Master Bill of Lading Numbers. NOTE: Do not use special characters.01/2025 Ship Notice/Manifest - 856
+856 - 4010 17 Nordstrom
+* * * Important Rules: * * *
+Mandatory Fields:
+Nordstrom must have the BM, MB and PO fields populated with unique and accurate data. If the SCAC and CN fields (see next 
+section, CN Pro Numbers) are not possible to populate with accurate data, please take immediate action to get this information, as 
+Nordstrom will issue chargebacks in the future for quality of the data.
+CN Pro Numbers:
+Carrier Pro Number or Airway Bill No. (Heavyweight Air) or UPS/ Small Package Tracking ID number or Pickup Request Number 
+{can be used when a consolidator (Norcon, Gilbert East, or CTE) is your pickup carrier}. The CN Pro Number type choice is driven 
+by the shipping scenario for your shipment. See Shipping Scenario’s # 2 and #3.
+Your EDI 856 transmission should only be transmitted AFTER you have shipped your shipment or after the pickup carrier has signed 
+for your shipment. Therefore, you should always have the Pickup Carrier’s SCAC and Carrier Pro Bill Number or UPS/ Small 
+Package Tracking ID Number.
+A SCAC code list for Nordstrom authorized pickup carriers can be found on the www.nordstromsupplier.com Supplier Compliance 
+Manual in the Appendices section, titled “EDI 856 - SCAC CODES for Nordstrom Authorized Pickup Carriers”.
+Bill of Lading Numbers:
+If individual shipments are grouped (aggregated shipments) together under a Master Bill of Lading, as the Gilbert East and Norcon 
+consolidations require; then under this circumstance, populate both the individual shippers Bill of Lading and the associated Master 
+Bill of Lading. If only one of the Bill of Lading numbers is available, populate this same number in both fields.
+This step will facilitate tracking.
+For Example: 
+REF01 = BM and REF02 = Bill of Lading 
+REF01 = MB and REF02 = Master Bill of Lading
+If only an individual Bill of Lading is used, populate both the Master Bill of Lading and the individual shippers Bill of Lading fields with 
+the individual shippers Bill of Lading number.
+For Example: 
+REF01 = BM and REF02 = Bill of Lading 
+REF01 = MB and REF02 = Bill of Lading
+If an individual shippers Bill of Lading is not used, populate the Pickup Carrier’s Pro number/ Airway Bill Number or if the shipment is 
+a UPS/ Small Package shipment, the Package Tracking ID number, in both the Master Bill of Lading (MB) and individual shippers Bill 
+of Lading (BM) fields and CN field.
+For Example: 
+REF01 = BM and REF02 = Carrier Pro Number or UPS/ Small Package Carrier package tracking number
+REF01 = MB and REF02 = Carrier Pro Number or UPS/ Small Package Carrier package tracking number
+REF01 = CN and REF02 = Carrier Pro Number or UPS/ Small Package Carrier package tracking number
+Scenario 1:
+Shipment from vendor warehouse direct to Nordstrom DC, via LTL CARRIER: Vendor must provide the:
+ •Individual shippers Bill of Lading (REF01 = BM and REF02= Bill of Lading)
+ •Pickup Carrier’s Name (SCAC) (TD502= 2 and TD503 = SCAC)
+ •Carrier Pro Number (REF01 = CN and REF02= Carrier Pro Number).
+Scenario 2:
+Shipment from vendor warehouse to Nordstrom CONSOLIDATOR, single shipment. Vendor must provide the:
+ •Individual shippers Bill of Lading (REF01 = BM and REF02= Bill of Lading)
+ •Pickup Carrier’s Name (SCAC) (TD502= 2 and TD503 = SCAC)
+ •Carrier Pro Number (REF01 = CN and REF02= Carrier Pro Number)
+(In this scenario the Carrier Pro Number represents the number assigned by the carrier that transports the freight from the vendor 
+warehouse to the consolidator). If a House Carrier or Prepaid Carrier is used to transport the freight to the consolidator, the Bill of 
+Lading, Carrier Pro Number and SCAC fields still must be populated. 
+The Pickup Request Number – can be used in the CN Pro Number field when a consolidator (Norcon, Gilbert East or CTE) is your 
+pick up carrier.01/2025 Ship Notice/Manifest - 856
+856 - 4010 18 Nordstrom
+Scenario 3:
+Aggregated shipment from vendor warehouse to Nordstrom CONSOLIDATOR, using master bill of lading with underlying DC specific 
+sub-bills of lading. Vendor must provide the:
+ •Master Bill of Lading (REF01 = MB and REF02 = Master Bill of Lading)
+ •Individual shippers Bill of Lading (sub BOL per DC) (REF01 = BM and REF02= Bill of Lading)
+ •Pickup Carrier’s Name (SCAC) (TD502= 2 and TD503 = SCAC)
+ •Pickup Carrier’s Pro Number (REF01 = CN and REF02= Carrier Pro Number)
+(In this scenario the Carrier Pro Number represents the single pro number assigned by the pickup carrier for the Master Bill of Lading 
+to transport the freight from the vendor warehouse to the consolidator). If a House Carrier or Prepaid Carrier is used to transport the 
+freight to the consolidator, the Master Bill of Lading, Bill of Lading, Carrier Pro Number and SCAC fields still must be populated.
+The Pickup Request Number – can be used in the CN Pro Number field when a consolidator (Norcon, Gilbert East or CTE) is your 
+pick up carrier.
+Scenario 4:
+Shipment from vendor warehouse direct to Nordstrom DC, via UPS/ Small Package Carrier. Vendor must provide one ASN per 
+package. Vendor must provide the:
+ •UPS/ Small Package Carrier’s package tracking ID number (REF01 = BM, MB, CN and REF02= UPS/ Small Package Carrier 
+package tracking number)
+ •UPS/ Small Package Carrier’s Name (SCAC) (TD502= 2 and TD503 = SCAC)
+Scenario 5:
+Shipment from vendor warehouse direct to Nordstrom DC, via HEAVYWEIGHT AIR CARRIER. Vendor must provide the:
+ •Pickup Carrier’s Name (SCAC) (TD502= 2 and TD503 = SCAC)
+ •Airway Bill Number (REF01 = CN and REF02= Airway Bill Number)
+ •Individual shippers Bill of Lading (REF01 = BM and REF02= Bill of Lading).
+Masterpack ASN requirementsIn the event that small individual store cartons for multiple stores (going to the same DC) are combined for one purchase order into a 
+masterpack. Nordstrom maintains two masterpack ASN requirements depending on the mode of transportation used:
+The ASN requirement for shipping consolidated master-packed cases is that there is one ASN transmitted where the REF*BM 
+segment reflects the unique sub-bill of lading number, the N1*ST segment reflects the correct ship-to location (distribution center), 
+the N1*BY segment indicates the appropriate store destination and the MAN segments reflect the correct GS1-128 case IDs for all 
+the cases within each master case. The outer (master) carton must be clearly identified as a masterpack by writing or labeling the 
+word “masterpack” on the outside of the case.
+The ASN requirement for shipping UPS/ master-packed cases is that there is one ASN per master case and that the REF*BM 
+segment (sub-bill of lading) reflects UPS/ tracking number and there must be a GS1-128 label affixed to each inner carton that is 
+accounted for in the MAN segments of the ASN. (e.g. If shipping 2 cases containing 5 boxes each to DC 299 then two ASNs must be 
+transmitted – 1 ASN for each master case.) The outer (master) carton must be clearly identified as a masterpack by writing or 
+labeling the word “masterpack” on the outside of the case.
+ASNs for “No Charge” Merchandise
+Shipments containing “no charge” merchandise (i.e. testers, samples) must be packed in separate case(s) from the retail 
+merchandise and clearly marked as “no charge”. Separate inner carton (s) of “no charge” merchandise (i.e. testers, samples) may be 
+packed within large case (s) of retail merchandise but must be clearly marked as “no charge” and maintain separation from retail 
+merchandise. ASNs are not required for “no charge” merchandise shipped in this manner.
+“No charge” merchandise shipped in any other manner, including loose within case(s) containing retail merchandise must have valid 
+UPCs with the Nordstrom Inventory system and accurately represented within the ASN for that shipment. Expense offset 
+chargebacks will be accessed for inaccurate ASNs containing “no charge” merchandise that do not meet these requirements.01/2025 Ship Notice/Manifest - 856
+856 - 4010 19 Nordstrom
+PER Administrative Communications 
+Contact
+Pos: 151 Max: 3
+Detail - Optional
+Loop: HL Elements: 4
+User Option (Usage): Used
+Purpose: To identify a person or office to whom administrative communications should be directed
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PER01 366 Contact Function Code
+ 
+Description: Code identifying the major duty or 
+responsibility of the person or group named
+M ID 2/2 Used
+Code Name
+DI Delivery Instructions Contact
+PER02 93 Name
+ 
+Description: Free-form name
+Note: Contact Name
+O AN 1/60 Used
+PER03 365 Communication Number Qualifier
+ 
+Description: Code identifying the type of 
+communication number
+C ID 2/2 Used
+Code Name
+TE Telephone
+PER04 364 Communication Number
+ 
+Description: Complete communications number 
+including country or area code when applicable
+C AN 1/80 Used
+Syntax Rules: 
+1. If either PER03 or PER04 is present, then the other is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 20 Nordstrom
+DTM Date/Time Reference Pos: 200 Max: 10
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To specify pertinent dates and times
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+DTM01 374 Date/Time Qualifier
+ 
+Description: Code specifying type of date or 
+time, or both date and time
+M ID 3/3 Must use
+Code Name
+011 Shipped
+DTM02 373 Date
+ 
+Description: Date expressed as CCYYMMDD
+Note: CCYYMMDD
+C DT 8/8 Must use
+DTM03 337 Time
+ 
+Description: Time expressed in 24-hour clock 
+time as follows: HHMM, or HHMMSS, or 
+HHMMSSD, or HHMMSSDD, where H = hours 
+(00-23), M = minutes (00-59), S = integer 
+seconds (00-59) and DD = decimal seconds; 
+decimal seconds are expressed as follows: D = 
+tenths (0-9) and DD = hundredths (00-99)
+Note: HHMM or HHMMSS acceptable
+C TM 4/8 Used
+Syntax Rules: 
+1. At least one of DTM02, DTM03 or DTM05 is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 21 Nordstrom
+N1 Name Pos: 220 Max: 1
+Detail - Mandatory
+Loop: N1 Elements: 4
+User Option (Usage): Must use
+Purpose: To identify a party by type of organization, name, and code
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+N101 98 Entity Identifier Code
+ 
+Description: Code identifying an organizational 
+entity, a physical location, property or an 
+individual
+M ID 2/3 Must use
+Code Name
+CS Consolidator 
+Note: This is the consolidation point for the order and must be used in the event goods 
+are shipped to a consolidation point.
+SF Ship From
+ST Ship To
+N102 93 Name
+ 
+Description: Free-form name
+Note: Element is used to provide Consolidator 
+SCAC in the CS (Consolidator) loop – 4/4 AN.
+Element is used to provide Supplier Name in the 
+SF (Ship From) loop – 1/35 AN.
+Element is not used in the ST (Ship To) loop
+C AN 4/35 Used
+N103 66 Identification Code Qualifier
+ 
+Description: Code designating the 
+system/method of code structure used for 
+Identification Code (67)
+Note: Element not used CS (Consolidator) loop.
+C ID 1/2 Used
+Code Name
+92 Assigned by Buyer or Buyer's Agent
+N104 67 Identification Code
+ 
+Description: Code identifying a party or other 
+code
+Note: Element is not used for the CS 
+(Consolidator) loop.
+Element used to provide the 10-digit Nordstrom 
+assigned Supplier Number or AP assigned 
+Vendor Number in the SF (Ship From) loop –
+Nordstrom Supplier Numbers are 10-digits with 
+leading 0’s (10/10 N0). This information may be 
+sent in either the REF/IA or N1/SF.
+Element is used to provide the 4-digit Nordstrom 
+Ship To location in the ST (Ship To) loop –
+Nordstrom ship to locations are 4-digits with 
+leading 0’s (4/4 N0).
+C AN 4/10 Must use
+Syntax Rules: 
+1. At least one of N102 or N103 is required.
+2. If either N103 or N104 is present, then the other is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 22 Nordstrom
+Note:
+Nordstrom requires at least 1 occurrence of the N1 segment. Nordstrom requires the ST (Ship To) loop. Nordstrom requires the CS
+(Consolidator) loop in the event goods are shipped to a consolidator.01/2025 Ship Notice/Manifest - 856
+856 - 4010 23 Nordstrom
+N3 Address Information Pos: 240 Max: 2
+Detail - Conditional
+Loop: N1 Elements: 2
+User Option (Usage): Used
+Purpose: To specify the location of the named party
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+N301 166 Address Information
+ 
+Description: Address information
+M AN 1/55 Used
+N302 166 Address Information
+ 
+Description: Address information
+O AN 1/55 Used
+Note:
+The N3 loop may be repeated once in the event of a third address line. 
+If sent, the N3 and N4 segments should only be included in conjunction with the Ship From (SF) loop.01/2025 Ship Notice/Manifest - 856
+856 - 4010 24 Nordstrom
+N4 Geographic Location Pos: 250 Max: 1
+Detail - Optional
+Loop: N1 Elements: 3
+User Option (Usage): Must use
+Purpose: To specify the geographic place of the named party
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+N401 19 City Name
+ 
+Description: Free-form text for city name
+O AN 2/30 Used
+N402 156 State or Province Code
+ 
+Description: Code (Standard State/Province) as 
+defined by appropriate government agency
+O ID 2/2 Used
+N403 116 Postal Code
+ 
+Description: Code defining international postal 
+zone code excluding punctuation and blanks (zip 
+code for United States)
+O ID 3/15 Used01/2025 Ship Notice/Manifest - 856
+856 - 4010 25 Nordstrom
+HL Hierarchical Level Pos: 010 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups/ of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned by the 
+sender to identify a particular data segment in a 
+hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the next 
+higher hierarchical data segment that the data 
+segment being described is subordinate to
+O AN 1/12 Must use
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the characteristic of a 
+level in a hierarchical structure
+M ID 1/2 Must use
+Code Name
+O Order
+Note:
+The HL segment is used to identify levels of detail information using a hierarchical structure.
+HL01 shall contain a unique number for each occurrence of the HL segment within the transaction set. The value assigned to the first 
+HL segment will be 1, and is incremented by one for each subsequent HL segment within the transaction set.
+HL02 identifies the hierarchical ID of the HL segment to which it is subordinate (child of). HL02 will be omitted for the first occurrence 
+of the HL segment in the transaction set, since it has no parent. HL03 identifies the application content of the series of segments 
+following the current HL segment up to the next occurrence of an HL segment, or the CTT or SE segment, e.g., Shipment, Unit Load, 
+Order, Tare, Pack and Item.01/2025 Ship Notice/Manifest - 856
+856 - 4010 26 Nordstrom
+PRF Purchase Order Reference Pos: 050 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 4
+User Option (Usage): Must use
+Purpose: To provide reference to a specific purchase order
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PRF01 324 Purchase Order Number
+ 
+Description: Identifying number for Purchase 
+Order assigned by the orderer/purchaser
+Note: Nordstrom's original 8-digit purchase order 
+number. Please do not include dashes or any 
+other special characters.
+M AN 8/8 Must use
+PRF02 328 Release Number
+ 
+Description: Number identifying a release 
+against a Purchase Order previously placed by 
+the parties involved in the transaction
+Note: Not used by Nordstrom
+O AN 1/30 Not used
+PRF03 327 Change Order Sequence Number
+ 
+Description: Number assigned by the orderer 
+identifying a specific change or revision to a 
+previously transmitted transaction set
+Note: Not used by Nordstrom
+O AN 1/8 Not used
+PRF04 373 Date
+ 
+Description: Date expressed as CCYYMMDD
+Note: Nordstrom's original purchase order date 
+(CCYYMMDD)
+O DT 8/8 Used01/2025 Ship Notice/Manifest - 856
+856 - 4010 27 Nordstrom
+TD1 Carrier Details (Quantity and 
+Weight)
+Pos: 110 Max: 20
+Detail - Mandatory
+Loop: HL Elements: 8
+User Option (Usage): Must use
+Purpose: To specify the transportation details relative to commodity, weight, and quantity
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD101 103 Packaging Code
+ 
+Description: Code identifying the type of 
+packaging; Part 1: Packaging Form, Part 2: 
+Packaging Material; if the Data Element is used, 
+then Part 1 is always required
+Note: Code identifying the type of packaging; 
+Part 1: Packaging Form, 
+Part 2: Packaging Material; if the Data Element is 
+used, then Part 1 is always required.
+Nordstrom is only concerned with Part 1 codes. 
+Any legal code or spaces
+can be used for Part 2.
+O AN 3/5 Must use
+Code Name
+CTN Carton
+HRB On Hanger or Rack in Boxes 
+Note:
+Code used for GOH. HRB code is used ONLY when goods are shipped as a hanging 
+packaging type. Use CTN code when goods are shipped on a hanger within a carton.
+TD102 80 Lading Quantity
+ 
+Description: Number of units (pieces) of the 
+lading commodity
+Note: Total cartons per store.
+C N0 1/7 Must use
+TD103 23 Commodity Code Qualifier
+ 
+Description: Code identifying the commodity 
+coding system used for Commodity Code
+Note: Not used by Nordstrom
+O ID 1/1 Not used
+TD104 22 Commodity Code
+ 
+Description: Code describing a commodity or 
+group of commodities
+Note: Not used by Nordstrom
+C AN 1/30 Not used
+TD105 79 Lading Description
+ 
+Description: Description of an item as required 
+for rating and billing purposes
+Note: Not used by Nordstrom
+O AN 1/50 Not used
+TD106 187 Weight Qualifier
+ 
+Description: Code defining the type of weight
+O ID 1/2 Used
+Code Name
+G Gross Weight01/2025 Ship Notice/Manifest - 856
+856 - 4010 28 Nordstrom
+TD107 81 Weight
+ 
+Description: Numeric value of weight
+Note: Total weight per store.
+C R 1/10 Must use
+TD108 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in which a 
+value is being expressed, or manner in which a 
+measurement has been taken
+C ID 2/2 Used
+Code Name
+LB Pound
+Syntax Rules: 
+1. If TD101 is present, then TD102 is required.
+2. If TD103 is present, then TD104 is required.
+3. If TD106 is present, then TD107 is required.
+4. If either TD107 or TD108 is present, then the other is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 29 Nordstrom
+REF Reference Identification Pos: 150 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify identifying information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+REF01 128 Reference Identification Qualifier
+ 
+Description: Code qualifying the Reference 
+Identification
+M ID 2/3 Must use
+Code Name
+DP Department Number
+REF02 127 Reference Identification
+ 
+Description: Reference information as defined 
+for a particular Transaction Set or as specified by 
+the Reference Identification Qualifier
+Note: Nordstrom's 4-digit department number. 
+Nordstrom department numbers should be 4-
+digits with leading 0’s. For example, department 
+28 would be sent as 0028.
+C AN 4/4 Must use
+Syntax Rules: 
+1. At least one of REF02 or REF03 is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 30 Nordstrom
+N1 Name Pos: 220 Max: 1
+Detail - Mandatory
+Loop: N1 Elements: 4
+User Option (Usage): Must use
+Purpose: To identify a party by type of organization, name, and code
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+N101 98 Entity Identifier Code
+ 
+Description: Code identifying an organizational 
+entity, a physical location, property or an 
+individual
+M ID 2/3 Must use
+Code Name
+BY Buying Party (Purchaser)
+N102 93 Name
+ 
+Description: Free-form name
+Note: Not used by Nordstrom
+C AN 1/60 Not used
+N103 66 Identification Code Qualifier
+ 
+Description: Code designating the 
+system/method of code structure used for 
+Identification Code (67)
+C ID 1/2 Used
+Code Name
+92 Assigned by Buyer or Buyer's Agent
+N104 67 Identification Code
+ 
+Description: Code identifying a party or other 
+code
+Note: This is the mark-for location. Nordstrom's 
+4-digit store number. Nordstrom store numbers 
+should be 4-digits with leading 0’s. For example, 
+store 1 would be sent as 0001.
+C AN 4/4 Must use
+Syntax Rules: 
+1. At least one of N102 or N103 is required.
+2. If either N103 or N104 is present, then the other is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 31 Nordstrom
+HL Hierarchical Level Pos: 010 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups/ of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned by the 
+sender to identify a particular data segment in a 
+hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the next 
+higher hierarchical data segment that the data 
+segment being described is subordinate to
+M AN 1/12 Must use
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the characteristic of a 
+level in a hierarchical structure
+M ID 1/2 Must use
+Code Name
+P Pack
+Note:
+The HL segment is used to identify levels of detail information using a hierarchical structure.
+HL01 shall contain a unique number for each occurrence of the HL segment within the transaction set. The value assigned to the first 
+HL segment will be 1, and is incremented by one for each subsequent HL segment within the transaction set.
+HL02 identifies the hierarchical ID of the HL segment to which it is subordinate (child of). HL02 will be omitted for the first occurrence 
+of the HL segment in the transaction set, since it has no parent. HL03 identifies the application content of the series of segments 
+following the current HL segment up to the next occurrence of an HL segment, or the CTT or SE segment, e.g., Shipment, Unit Load, 
+Order, Tare, Pack and Item.01/2025 Ship Notice/Manifest - 856
+856 - 4010 32 Nordstrom
+MAN Marks and Numbers Pos: 190 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate identifying marks and numbers for shipping containers
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+MAN01 88 Marks and Numbers Qualifier
+ 
+Description: Code specifying the application or 
+source of Marks and Numbers (87)
+M ID 1/2 Must use
+Code Name
+GM SSCC-18 and Application Identifier 
+Note:
+This is a 20-character GS1-128 Serial Shipping Container Code (SSCC-18) that 
+includes the two-digit application identifier. The symbology code and the modulo 103 
+check digit are not included. 
+The GS1-128 Serial Shipping Container Code (SSCC-18) must be a unique number 
+and cannot be duplicated.
+MAN02 87 Marks and Numbers
+ 
+Description: Marks and numbers used to identify 
+a shipment or parts of a shipment
+M AN 20/20 Must use
+Note:
+If the MAN segment is present, the LIN segment is required.
+If the LIN segment is present, the SN1 segment is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 33 Nordstrom
+HL Hierarchical Level Pos: 010 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups/ of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned by the 
+sender to identify a particular data segment in a 
+hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the next 
+higher hierarchical data segment that the data 
+segment being described is subordinate to
+M AN 1/12 Must use
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the characteristic of a 
+level in a hierarchical structure
+M ID 1/2 Must use
+Code Name
+I Item
+Note:
+The HL segment is used to identify levels of detail information using a hierarchical structure.
+HL01 shall contain a unique number for each occurrence of the HL segment within the transaction set. The value assigned to the first 
+HL segment will be 1, and is incremented by one for each subsequent HL segment within the transaction set.
+HL02 identifies the hierarchical ID of the HL segment to which it is subordinate (child of). HL02 will be omitted for the first occurrence 
+of the HL segment in the transaction set, since it has no parent. HL03 identifies the application content of the series of segments 
+following the current HL segment up to the next occurrence of an HL segment, or the CTT or SE segment, e.g., Shipment, Unit Load, 
+Order, Tare, Pack and Item.01/2025 Ship Notice/Manifest - 856
+856 - 4010 34 Nordstrom
+LIN Item Identification Pos: 020 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To specify basic item identification data
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+LIN01 350 Assigned Identification
+ 
+Description: Alphanumeric characters assigned 
+for differentiation within a transaction set
+Note: Not used by Nordstrom
+O AN 1/20 Not used
+LIN02 235 Product/Service ID Qualifier
+ 
+Description: Code identifying the type/source of 
+the descriptive number used in Product/Service 
+ID (234)
+M ID 2/2 Must use
+Code Name
+EN European Article Number (EAN) (2-5-5-1)
+UP U.P.C. Consumer Package Code (1-5-5-1)
+LIN03 234 Product/Service ID
+ 
+Description: Identifying number for a product or 
+service
+Note: 12-digit UPC or 13-digit EAN
+M AN 1/48 Must use
+Note:
+If the MAN segment is present, the LIN segment is required.
+If the LIN segment is present, the SN1 segment is required.01/2025 Ship Notice/Manifest - 856
+856 - 4010 35 Nordstrom
+SN1 Item Detail (Shipment) Pos: 030 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To specify line-item detail relative to shipment
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+SN101 350 Assigned Identification
+ 
+Description: Alphanumeric characters assigned 
+for differentiation within a transaction set
+Note: Not used by Nordstrom
+O AN 1/20 Not used
+SN102 382 Number of Units Shipped
+ 
+Description: Numeric value of units shipped in 
+manufacturer's shipping units for a line item or 
+transaction set
+Note: A numerical value greater than 0 is 
+required. Do not send 0 or negative quantities.
+M R 1/10 Must use
+SN103 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in which a 
+value is being expressed, or manner in which a 
+measurement has been taken
+M ID 2/2 Must use
+Code Name
+EA Each
+Note:
+This segment is used to specify the quantities associated with the item identified in the LIN at the item level.
+If the MAN segment is present, the LIN segment is required.
+If the LIN segment is present, the SN1 segment is required.
+Case Pack UPC’s – Please note that if Nordstrom sends your company a case pack UPC (unit of measure of ‘CA’ in PO103), we 
+require the 856 back at the individual component level (an individual UPC for each item).01/2025 Ship Notice/Manifest - 856
+856 - 4010 36 Nordstrom
+CTT Transaction Totals Pos: 010 Max: 1
+Summary - Mandatory
+Loop: N/A Elements: 1
+User Option (Usage): Must use
+Purpose: To transmit a hash total for a specific element in the transaction set
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+CTT01 354 Number of Line Items
+ 
+Description: Total number of line items in the 
+transaction set
+Note: The number of HL segments present in the 
+transaction set
+M N0 1/6 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 37 Nordstrom
+SE Transaction Set Trailer Pos: 020 Max: 1
+Summary - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the end of the transaction set and provide the count of the transmitted segments (including the beginning (ST) 
+and ending (SE) segments)
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+SE01 96 Number of Included Segments
+ 
+Description: Total number of segments included 
+in a transaction set including ST and SE 
+segments
+M N0 1/10 Must use
+SE02 329 Transaction Set Control Number
+ 
+Description: Identifying control number that must 
+be unique within the transaction set functional 
+group assigned by the originator for a transaction 
+set
+Note: This must be the same number as is in the 
+ST segment (ST02) for the transaction set.
+M AN 4/9 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 38 Nordstrom
+GE Functional Group Trailer Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the end of a functional group and to provide control information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+GE01 97 Number of Transaction Sets Included
+ 
+Description: Total number of transaction sets 
+included in the functional group or interchange 
+(transmission) group terminated by the trailer 
+containing this data element
+M N0 1/6 Must use
+GE02 28 Group Control Number
+ 
+Description: Assigned number originated and 
+maintained by the sender
+M N0 1/9 Must use01/2025 Ship Notice/Manifest - 856
+856 - 4010 39 Nordstrom
+IEA Interchange Control Trailer Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To define the end of an interchange of zero or more functional groups/ and interchange-related control segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+IEA01 I16 Number of Included Functional Groups/
+ 
+Description: A count of the number of functional 
+groups/ included in an interchange
+M N0 1/5 Must use
+IEA02 I12 Interchange Control Number
+ 
+Description: A control number assigned by the 
+interchange sender
+M N0 9/9 Must use
+Note:
+EXAMPLES
+UPS/ SMALL PACKAGE ASN EXAMPLE
+ISA*00* *00* *12*9999999999 *12*2062336664 *250402*0110*U*00401*100004475*0*P*>~
+GS*SH*999999999999*2062336664*20250402*0110*200004475*X*004010VICS~
+ST*856*300032643~
+BSN*00*P286113*20250402*0110*0001~
+HL*1**S~
+TD1*CTN25*1****G*1*LB~
+TD5**2*UPSN~
+REF*BM*1Z3909820314009185~
+REF*CN*1Z3909820314009185~
+REF*MB*1Z3909820314009185~
+PER*DI*ANN SMITH*TE*2062335525~
+DTM*011*20250402~
+N1*SF*APPLES*92*0000999999~
+N3*1234 MAIN ST.~
+N4*SEATTLE*WA*98111~
+N1*ST**92*0399~
+HL*2*1*O~
+PRF*13222222***20250331~
+TD1*CTN25*1****G*1*LB~
+REF*DP*0180~
+N1*BY**92*0342~
+HL*3*2*P~
+MAN*GM*00007471220030172642~
+HL*4*3*I~
+LIN**EN*1233333333333~
+SN1**1*EA~
+CTT*4~
+SE*25*300032643~
+GE*1*200004475~
+IEA*1*100004475~
+ISA*00* *00* *12*9999999999 *12*2062336664 *250402*0110*U*00401*100004476*0*P*>~
+GS*SH*9999999999*2062336664*20250402*0110*200004476*X*004010VICS~
+ST*856*300032644~
+BSN*00*P286116*20250402*0110*0001~
+HL*1**S~
+TD1*CTN25*1****G*7*LB~
+TD5**2*UPSN~01/2025 Ship Notice/Manifest - 856
+856 - 4010 40 Nordstrom
+REF*BM*1Z3909820314009247~
+REF*CN*1Z3909820314009247~
+REF*MB*1Z3909820314009247~
+PER*DI*ANN SMITH*TE*2062335525~
+DTM*011*20250402~
+N1*SF*APPLES*92*0000999999~
+N3*1234 MAIN ST.~
+N4*SEATTLE*WA*98111~
+N1*ST**92*0399~
+HL*2*1*O~
+PRF*13222222***20250331~
+TD1*CTN25*1****G*7*LB~
+REF*DP*0180~
+N1*BY**92*0323~
+HL*3*2*P~
+MAN*GM*00007471220030172659~
+HL*4*3*I~
+LIN**EN*4022222222222~
+SN1**2*EA~
+CTT*4~
+SE*25*300032644~
+GE*1*200004476~
+IEA*1*100004476~
+CONSOLIDATED ASN EXAMPLE
+ISA*00* *00* *12*999999999 *12*2062336664 *250401*2039*U*00401*000000180*0*P*>~
+GS*SH*999999999*2062336664*20250401*2039*180*X*004010VICS~
+ST*856*0001~
+BSN*00*040120252036*20250401*2036*0001~
+HL*1**S~
+TD1*CTN*21****G*105.00*LB~
+TD5**2*CAIE*M~
+REF*BM*CTEP7590662356124~
+REF*CN*CTEP7590662356124~
+REF*MB*CTEP7590662356124~
+PER*DI*ANN SMITH*TE*2062335525~
+DTM*011*20250405~
+N1*ST**92*0089~
+N1*SF*APPLES*92*0002222222~
+N3*444 MAIN DRIVE~
+N4*FREMONT*CA*11111~
+HL*2*1*O~
+PRF*11133333***20250330~
+TD1*CTN*6****G*30*LB~
+REF*DP*0276~
+N1*BY**92*0002~
+HL*3*2*P~
+MAN*GM*00089175300100067087~
+HL*4*3*I~
+LIN**UP*891111111111~
+SN1**1*EA~
+HL*5*2*P~
+MAN*GM*00089175300100067094~
+HL*6*5*I~
+LIN**UP*891111111112~
+SN1**1*EA~
+HL*7*2*P~
+MAN*GM*00089175300100067100~
+HL*8*7*I~
+LIN**UP*891111111113~
+SN1**1*EA~01/2025 Ship Notice/Manifest 
+- 856
+856 - 4010 41 Nordstrom
+HL*9*2*P~
+MAN*GM*00089175300100067117~
+HL*10*9*I~
+LIN**UP*891111111114~
+SN1**1*EA~
+HL*11*2*P~
+MAN*GM*00089175300100067124~
+HL*12*11*I~
+LIN**UP*891111111115~
+SN1**1*EA~
+HL*13*2*P~
+MAN*GM*00089175300100067131~
+HL*14*13*I~
+LIN**UP*891111111116~
+SN1**1*EA~
+HL*15*1*O~
+PRF*13621032***20250330~
+TD1*CTN*9****G*45*LB~
+REF*DP*0276~
+N1*BY**92*0005~
+HL*16*15*P~
+MAN*GM*00089175300100067148~
+HL*17*16*I~
+LIN**UP*891111111111~
+SN1**1*EA~
+HL*18*15*P~
+MAN*GM*00089175300100067155~
+HL*19*18*I~
+LIN**UP*891111111112~
+SN1**1*EA~
+HL*20*15*P~
+MAN*GM*00089175300100067162~
+HL*21*20*I~
+LIN**UP*891111111113~
+SN1**1*EA~
+HL*22*15*P~
+MAN*GM*00089175300100067179~
+HL*23*22*I~
+LIN**UP*891111111114~
+SN1**1*EA~
+HL*24*15*P~
+MAN*GM*00089175300100067186~
+HL*25*24*I~
+LIN**UP*891111111115~
+SN1**1*EA~
+HL*26*15*P~
+MAN*GM*00089175300100067193~
+HL*27*26*I~
+LIN**UP*891111111116~
+SN1**1*EA~
+HL*28*15*P~
+MAN*GM*00089175300100067209~
+HL*29*28*I~
+LIN**UP*891111111117~
+SN1**1*EA~
+HL*30*15*P~
+MAN*GM*00089175300100067216~
+HL*31*30*I~
+LIN**UP*891111111118~
+SN1**1*EA~
+HL*32*15*P~
+MAN*GM*00089175300100067223~01/2025 Ship Notice/Manifest - 856
+856 - 4010 42 Nordstrom
+HL*33*32*I~
+LIN**UP*891111111119~
+SN1**1*EA~
+HL*34*1*O~
+PRF*13621032***20250330~
+TD1*CTN*6****G*30*LB~
+REF*DP*0276~
+N1*BY**92*0024~
+HL*35*34*P~
+MAN*GM*00089175300100067230~
+HL*36*35*I~
+LIN**UP*891111111111~
+SN1**1*EA~
+HL*37*34*P~
+MAN*GM*00089175300100067247~
+HL*38*37*I~
+LIN**UP*891111111112~
+SN1**1*EA~
+HL*39*34*P~
+MAN*GM*00089175300100067254~
+HL*40*39*I~
+LIN**UP*891111111113~
+SN1**1*EA~
+HL*41*34*P~
+MAN*GM*00089175300100067261~
+HL*42*41*I~
+LIN**UP*891111111114~
+SN1**1*EA~
+HL*43*34*P~
+MAN*GM*00089175300100067278~
+HL*44*43*I~
+LIN**UP*891111111115~
+SN1**1*EA~
+HL*45*34*P~
+MAN*GM*00089175300100067285~
+HL*46*45*I~
+LIN**UP*891111111116~
+SN1**1*EA~
+CTT*46~
+SE*135*0001~
+GE*1*180~
+IEA*1*000000180~

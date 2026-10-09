@@ -1,0 +1,59 @@
+NORDSTROM TRANSPORTATION
+How To Create A Supplier Routing Request Best Practices Guidance
+Step 1:
+From the Home page: Navigate to Supplier 
+Purchase Order and click.
+✓ You will see your orders.
+Step 2:
+Click on the gray extended menu tab and Create 
+Supplier Routing Request button. 
+✓ This will take you to the Routing Request 
+page
+Step 3:
+Complete the Required Fields.
+Required Fields:
+• Units
+• Weight
+• Volume
+• Cartons
+• Pallets
+Step 4:
+Click Submit when complete.
+Input the actual Amount shipped
+✓ A PO can be partially shipped (click on 
+the items you fill).
+✓ Remaining Items not grayed out would 
+be available for another facility to route.
+✓ You can update pick up dates and change 
+Origin Facility to correct shipping location
+✓ Submit routing requests for multiple POs 
+when applicable
+✓ Submit Shipment details for every PO on 
+the routing request.
+Submit a routing request when full shipment is 
+ready. 
+✓ If not shipping PO in full, update Supplier 
+Routing Request Quantity by PO line
+CAUTION: Default is total units.
+➔You need to adjust the amount if you ship 
+partial
+Submit PO shipment details at the PO Header 
+Level and this can either one PO at a time or 
+Multiple POs at a time.
+✓ Enter Carton count by each PO using 
+whole numbers. No decimal point value 
+for carton count
+✓ Enter Pallet count by each PO using 
+whole numbers. No decimal point value 
+for pallet count
+✓ Floor load shipments should have a pallet 
+value of “0” for all PO lines. Carton and 
+volume must be accurate for floor loaded 
+routing requests.
+✓ If multiple POs on routing request is only 
+1 pallet, enter a “0” value for all the POs 
+except for last PO on the routing request, 
+enter a value of “1” to indicate the 
+routing request is 1 pallet total for your 
+routing request.
+Avoid using the Override option

@@ -1,0 +1,3 @@
+# Preserve formatting in imported evidence and its embedded report excerpts.
+sources/** -whitespace
+analysis/rule-discovery.html -whitespace

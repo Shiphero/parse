@@ -1,0 +1,2371 @@
+Ulta Beauty Supply Chain Guide – Published March 2025
+2
+updated
+Brand partners are required to comply with the Ulta Vendor Standards (“Standards”) 
+set forth at http://www.ulta.com/ultavendorstandards which are expressly 
+incorporated herein by reference. The Standards may be amended from time to time 
+by Ulta. By doing business with Ulta, brand partners acknowledge and agree to the 
+terms and conditions of the Standards.
+The Ulta Beauty Supply Chain Guide documents current processes and procedures 
+annually. The Supply Chain Guide is posted on the Ulta Beauty Supplier Portal. 
+https://supplierportal.ultabeauty.com
+This revision supersedes all previous Ulta Beauty Supply Chain Guides, routing guides 
+and addendums. Any legal documentation or agreements referenced within the 
+Supply Chain Guide may be found by communicating with your Ulta Beauty 
+Merchandising contact.
+This Supply Chain Guide contains Ulta Beauty confidential and proprietary 
+information. Brand Partners are authorized to disclose this guide only to individuals 
+within your organization who have a need to know this information to provide goods 
+or services to Ulta Beauty.
+ Copyright © 2025 ULTA Salon, Cosmetics & Fragrances, Inc.
+Ulta Beauty Supply Chain Guide | Issued March 2025
+1000 Remington Blvd., Suite 120 | Bolingbrook, IL 60440 | SupplierOps@Ulta.com Ulta Beauty Supply Chain Guide – Published March 2025
+3
+Valued Brand Partner,
+Ulta Beauty is committed to provide our guests with best-in-class product and 
+service. With your cooperation we will achieve greatness and have a successful 
+relationship. This guide contains operational standards, logistical requirements, and 
+routing instructions for all Brand Partners with a Vendor Purchasing Agreement 
+(VPA) or Commercial Terms document. 
+The Supply Chain Guide is intended for all shipments going into Ulta Beauty 
+Distribution Centers. Addresses and phone numbers are located in Section 20: Ulta 
+Beauty Distribution Centers. All saleable and non-saleable merchandise must be 
+shipped to the designated Distribution Center. 
+Please read the Ulta Beauty Supply Chain Guide carefully. If you have any questions, 
+you may contact SupplierOps@Ulta.com. All exceptions to the standards or 
+requirements not mentioned within the Supply Chain Guide must be pre-approved in 
+writing by an authorized Ulta Beauty associate or shall be considered noncompliant.
+Ulta Beauty shipments must arrive at our Distribution Centers in excellent quality, 
+on-time and with proper documentation. Compliance with the Supply Chain Guide 
+will enable efficient processing to provide our guests with best-in-class product and 
+service. Any non-compliance to the Supply Chain Guide may result in monetary 
+penalties to offset the additional cost Ulta Beauty incurs.
+Brand Partners are required to maintain current contact information with us. This 
+allows Ulta Beauty to contact you in the most efficient manner. For more 
+information, contact SupplierOps@Ulta.com. 
+Ulta Beauty Corporate Offices
+1000 Remington Boulevard
+Suite 120
+Bolingbrook, Illinois 60440Ulta Beauty Supply Chain Guide – Published March 2025
+4
+Table of Contents
+SECTION 1: UPDATES TO THE SUPPLY CHAIN GUIDE .......................................................7
+SECTION 2: SUPPLIER PORTAL...................................................................................................8
+SECTION 3: ULTA BEAUTY & C2FO PARTNERSHIP ............................................................9
+SECTION 4: EDI (ELECTRONIC DATA INTERCHANGE) ...................................................10
+4.1 EDI Requirements...................................................................................................................10
+4.2 Required EDI Transactions.................................................................................................10
+4.3 EDI Transaction Methods.....................................................................................................11
+4.4 Purchase Order Transaction Methods ............................................................................11
+4.5 OpenText Fee Structure ......................................................................................................11
+SECTION 5: OPENTEXT INFORMATION & RESOURCES.................................................... 12
+SECTION 6: EDI 852 POINT OF SALE (POS) TRANSACTIONS ...................................... 13
+6.1 EDI 852 POS Transactions (Optional).............................................................................13
+SECTION 7: EDI/OPENTEXT FREQUENTLY ASKED QUESTIONS................................. 13
+SECTION 8: NEW ITEM/PRODUCT INFORMATION MANAGEMENT (PIM) .................14
+8.1 Product Information Management ...................................................................................14
+SECTION 9: SAFETY DATA SHEETS ......................................................................................... 15
+9.1 SDS Requirement ...................................................................................................................15
+9.2 UL WERCSmart......................................................................................................................15
+SECTION 10: PURCHASE ORDER REQUIREMENTS.............................................................16
+10.1 Purchase Order Requirement ...........................................................................................16
+10.2 Purchase Order Dates and Definitions .........................................................................16
+10.3 Purchase Order Lead-Time ..............................................................................................17
+10.4 Purchase Order Management Process.........................................................................17
+SECTION 11: ULTA.COM DIGITAL PHOTOGRAPHY & CONTENT GUIDELINES..........18
+11.1 Images........................................................................................................................................18
+11.2 Videos........................................................................................................................................18
+11.3 Copy Requirements for PIM ..............................................................................................18
+11.4 ECOM Category Specific (metadata) section within PIM.......................................19
+SECTION 12: MERCHANDISE TRANSITIONS..........................................................................20Ulta Beauty Supply Chain Guide – Published March 2025
+5
+12.1 Types of Merchandise Transitions..................................................................................20
+12.2 Merchandise Transition Back-out Calendar ...............................................................20
+SECTION 13: SHIPMENT DOCUMENTATION........................................................................... 21
+13.1 Bill of Lading (BOL).............................................................................................................. 21
+13.2 Packing List ........................................................................................................................... 22
+SECTION 14: PACKING & LABEL REQUIREMENTS ............................................................. 23
+14.1 Minimum Packaging Requirements ............................................................................... 23
+14.2. Labeling Requirements – General ................................................................................26
+14.3 Label Content Requirements.......................................................................................... 27
+14.4 Carton Label Placement ...................................................................................................30
+14.5 Pallet Label Requirements................................................................................................ 31
+SECTION 15: PALLET STANDARDS & TRAILER LOADING............................................... 33
+15.1 Pallet Types............................................................................................................................ 33
+15.2 Pallet Loading and Wrapping.........................................................................................34
+15.3 Trailer Loading for Collect and Prepaid Shipments................................................36
+SECTION 16: PREPAID SHIPMENT REQUIREMENTS........................................................... 37
+SECTION 17: COLLECT SHIPMENT REQUIREMENTS.......................................................... 38
+17.1 E2OPEN - Transportation Management System (TMS)..........................................38
+17.2 General Shipping Requirements for Collect Shipments ........................................38
+17.3 Transportation Management System.......................................................................... 40
+17.4 Less Than Truckload (LTL) Shipping Instructions - TMS .......................................41
+17.5 Truckload (TL) Shipping Instructions - TMS..............................................................42
+17.6 Small Parcel Shipping Requirements ...........................................................................43
+17.7 Resources & Contact Information .................................................................................44
+SECTION 18: DELIVERY APPOINTMENT PROCESS ............................................................45
+18.1 Delivery Appointments ......................................................................................................45
+18.2 Ulta Beauty DC Appointment Process ........................................................................45
+SECTION 19: ULTA BEAUTY RECEIVING HOURS................................................................47
+19.1 Receiving Hours....................................................................................................................47
+SECTION 20: ULTA BEAUTY DISTRIBUTION CENTERS ...................................................48
+20.1 Ulta Beauty DC Information............................................................................................48
+SECTION 21: INVOICE DISCREPANCY .....................................................................................49Ulta Beauty Supply Chain Guide – Published March 2025
+6
+21.1 Invoice Discrepancy ............................................................................................................49
+21.2 Invoice Discrepancy Process...........................................................................................49
+SECTION 22: CHARGEBACK PROGRAM.................................................................................50
+22.1 Chargeback Program.........................................................................................................50
+SECTION 24: RETURNS (RTV).................................................................................................... 56
+24.1 Pre-Receipt RTV..................................................................................................................56
+24.2 Post-Receipt RTV...............................................................................................................56
+24.3 Return Address...................................................................................................................56
+SECTION 25: ADDITIONAL INFO, CALENDARS & DEFINITIONS................................... 57
+25.1 Supply Chain Transparency Statement ....................................................................... 57
+25.2 Fiscal Week Comparison.................................................................................................59
+25.3 Fiscal Calendars..................................................................................................................60
+25.4 Quarter End Guidance Calendar....................................................................................61
+25.5 2024 POS Data Confidentiality Agreement..............................................................62
+25.6 Master Bill of Lading Template .....................................................................................63
+25.7 Packing List Example........................................................................................................64
+25.8 Pallet Examples...................................................................................................................65
+25.9 High Level Shipment Preparation Checklist .............................................................67
+25.10 EAS Security Tagging Program ..................................................................................68
+25.11 Definitions.............................................................................................................................70Ulta Beauty Supply Chain Guide – Published March 2025
+7
+SECTION 1: UPDATES TO THE SUPPLY CHAIN GUIDE
+1.1 New Features and Sections in the Guide
+New or updated aspects to the guide will be characterized with a or icon.
+Section 6: EDI 852 Point of Sale (POS) Transactions
+ 6.1 EDI 852 POS Transactions (Optional)
+Section 12: Merchandise Transitions
+• 12.1 Types of Merchandise Transitions
+Section 13: Shipment Documentation
+• 13.2 Packing List
+Section 17: Collect Shipment Requirements
+• 17.2 General Shipping Requirements for Collect Shipments
+• 17.3 Transportation Management System
+• 17.4 Less Than Truckload (LTL) Shipping Instructions – TMS
+• 17.5 Truckload (TL) Shipping Instructions - TMS
+• 17.6 Small Parcel Shipping Requirements
+Section 18: Delivery Appointment Process
+• Table 18.2.1: Ulta Beauty DC Receiving Offices
+Section 19: Ulta Beauty Receiving Hours
+• Table 19.1.1: Ulta Beauty Receiving Hours 
+Section 20: Ulta Beauty Distribution Centers
+• 20.1 Ulta Beauty DC Information
+• 21.2 Invoice Discrepancy Process
+Section 22: Chargeback Program
+• Performance Tiering
+• 22.2 Chargeback Program Dispute Process & Best Practices
+Section 23: Shipment Non-Compliance Fee’s
+ Collect Vendors
+Section 25: Appendix
+ 25.2 Fiscal Week Comparison 
+ 25.3 Fiscal Calendars 
+ 25.4 2025 Quarter End Guidance Calendar 
+ 25.5 2025 Chargeback Calendar 
+ 25.5 2025 POS Agreement 
+ 25.11 DefinitionsUlta Beauty Supply Chain Guide – Published March 2025
+8
+SECTION 2: SUPPLIER PORTAL 
+Your Go-To Source for All Things Supply Chain!
+The Supplier Portal is your primary communication hub for everything related to Ulta 
+Beauty Supply Chain and our Brand Partners.
+This portal is updated frequently with:
+• Important messages
+• Key reminders
+• Reporting tools
+• Requirement updates
+Log in to the Supplier Portal daily to stay informed and ensure you're always up to date on 
+the latest developments!
+https://supplierportal.ultabeauty.com
+Access to the Supplier Portal
+Navigate to https://supplierportal.ultabeauty.com
+• If your company already has a username, click on ‘Login’, enter your username and 
+password.
+• If your company does NOT already have a username, click on ‘Need to Register’, fill 
+out required information and click ‘Submit’ to initiate the onboarding process.
+• If you are unsure if your company has a username set up, reach out to Supplier 
+Operations, SupplierOps@Ulta.com and be sure to include your vendor number.
+Documents Accessible on the Portal
+Interactive Scorecard thru Tableau (Updated weekly on Monday)
+Key performance metrics such as Original & Revised Fill Rate %, Shortages/Overages, On 
+Time %, ASN Compliance, GS1 Label Compliance, Lead Time as well as PO level detail for 
+deep dive analysis.
+Weekly Sales 
+Reports
+Interactive 
+Scorecard thru 
+Tableau
+Supply Chain 
+Guide
+Ulta Fiscal 
+Calendars
+Supply Chain 
+News & 
+Announcements
+EDI Reference 
+Documents
+Training 
+Documents
+Ulta Beauty 
+Supply Chain 
+Processes
+Chargeback 
+InformationUlta Beauty Supply Chain Guide – Published March 2025
+9
+SECTION 3: ULTA BEAUTY & C2FO PARTNERSHIP
+Valued Brand Partner,
+ULTA Beauty appreciates the relationships we have with our brand partners, and we are always looking for 
+ways to strengthen our important business partnerships. For this reason, I ask that you give our ULTA 
+Beauty Early Payment Program in partnership with C2FO your full consideration.
+The ULTA Beauty Early Payment Program has been available since February 2013. We partnered with C2FO 
+to facilitate accelerated payment of approved vendor Invoices via their secure C2FO marketplace. 
+With C2FO Name Your Rate Technology TM, you can customize your discount rate for early payment on 
+your approved invoices. For a small discount, you can receive early payment directly from ULTA Beauty to 
+improve your cash flow at rates that are often less than the cost of borrowing short-term working capital.
+The best part about C2FO is that you determine your early payment offer, so you’re in control. When your 
+offer is accepted, ULTA Beauty will initiate early payment within 48 hours of market clearing.
+C2FO is rapidly expanding as suppliers realize its money-saving advantages and simplicity: 
+• LOW COST: Creates a new working capital option at a rate you choose
+• FLEXIBLE: Eliminates paperwork and contracts with on demand access
+• USEFUL: Lowers your days sales outstanding (DSO) an average of 22 days paid early
+• SECURE: Provides secure access to view your approved invoices
+• HELPFUL: Gives you world-class support M-F, 7am-7pm CT
+• SIMPLE: Offers easy account activation and your payment process doesn’t change
+While we believe ULTA C2FO is the most-supplier friendly option for improving your working capital 
+efficiency, the final decision to use C2FO is yours.
+While we believe ULTA Early Payment Program is the most-supplier friendly option for improving your
+working capital efficiency, the final decision to use C2FO is yours.
+To activate your C2FO visit https://ulta.c2fo.com at your convenience. If you have questions, our support 
+team is ready to help you. Call 866.463.6565 or email ulta@c2fo.com with any questions you may have. 
+Activating your C2FO account has no cost or obligation. It simply gives you the opportunity to see how 
+C2FO could improve your company’s cash flow and save you money.
+Thank you for your continued partnership with ULTA Beauty.
+Sincerely, 
+Chris Lialios
+ULTA Beauty Senior Vice President, ControllerUlta Beauty Supply Chain Guide – Published March 2025
+10
+SECTION 4: EDI (ELECTRONIC DATA INTERCHANGE) 
+Ulta Beauty requires all Brand Partners to be EDI compliant within 30 days after executing 
+the Vendor Purchasing Agreement (VPA) or Commercial Terms document, unless 
+otherwise noted in the Vendor Purchasing Agreement (VPA) or Commercial Terms 
+document by an authorized Ulta Beauty associate. Ulta Beauty utilizes OpenText as the 
+technology platform to enable EDI processes. 
+4.1 EDI Requirements 
+ All Brand Partners must complete the Trading Partner Profile survey and accept the 
+Pricing Agreement with OpenText.
+ There is a one-time EDI testing fee associated with OpenText. If you need to use the 
+OpenText web portal to share EDI documents, different fees apply. Refer to Section 4.5 
+OpenText Fee Structure for details.
+ New Brand Partners must respond to the Onboarding email invitation sent by the 
+OpenText Compliance Service team to begin the EDI enablement process.
+ All Brand Partners must register with FIS Integrated Payables (Ulta Beauty’s 3rd party 
+provider for ACH pay method). Contact agp.jax.vendorenrollment@fisglobal.com or 
+call 877-330-4950 to begin registration. It’s fast, easy and no cost to you. After 
+registration is complete with FIS Integrated Payables, Brand Partners must contact 
+FIS@ulta.com to finalize the ACH set up with Ulta Beauty.
+New Brand Partners pending enablement onto the OpenText network must submit Invoices 
+through the USPS mail to the following address:
+Ulta Beauty, Inc. 
+Attention: Accounts Payable 
+1000 Remington Blvd., Suite 120 
+Bolingbrook, IL 60440 
+4.2 Required EDI Transactions
+The following EDI transactions will enable both parties to conduct business with a minimum 
+of manual intervention:
+ 850 Purchase Order
+ 855 Purchase Order Acknowledgement 
+ 860 Purchase Order Change Request
+ 856 ASN - Advanced Shipping Notification
+o One ASN per PO, per delivery is required regardless of shipment method 
+(TL/LTL/Parcel)
+o For Blanket or Mega POs that do not fit on one truck, each truck/shipment 
+against the PO, is required to have its own unique ASN submitted
+o When shipping more than one PO on a pallet, each PO will need to have its own 
+ASN but reference the shipment ID. Refer to section 15.2 Pallet Loading and 
+Wrapping.
+o Multiple Ulta Beauty vendor numbers to one ASN are not accepted
+o ASN must be sent prior to shipment arrival at Ulta Beauty DC
+ 810 Invoice
+ GSI-128 Labels with proper SSCC-18 codes are required for pallet and carton labels. 
+Refer to Section 14: Packing & Label Requirements for GS1-128 label standards.
+o Carton & Pallet GS1-128 SSCC 18-digit serial shipping container codes cannot be 
+reused for a period of 3 years.Ulta Beauty Supply Chain Guide – Published March 2025
+11
+Refer to the Ulta Beauty Supplier Portal / EDI Documentation for comprehensive 
+transactional guidelines, EDI requirements and helpful documents: 
+https://supplierportal.ultabeauty.com
+4.3 EDI Transaction Methods
+Brand Partners may select from two EDI methods for data exchange through OpenText: 
+OpenText EDI Integrated:
+The EDI Integrated method allows Brand Partners the ability to configure, integrate and 
+transact all of Ulta’s required EDI transactions electronically.
+o This method is recommended for mid-sized and large businesses that need to 
+receive data to integrate into their ERP system and have established EDI 
+capabilities and support.
+OpenText Freeway web portal:
+The Freeway web portal allows Brand Partners the ability to receive notifications, 
+access POs, submit ASN’s and invoices, and print Ulta compliant GS1-128 shipping 
+labels.
+o This method is recommended for small and mid-sized businesses that may not 
+have established EDI capabilities and resources.
+4.4 Purchase Order Transaction Methods
+o Standard EDI format ANSI X12 4030 version 
+o Email or fax (temporary until testing is completed)
+4.5 OpenText Fee Structure
+The OpenText fee structure is based upon which EDI method you choose to exchange 
+business documents electronically with Ulta Beauty. It is important to note that Ulta 
+Beauty also pays a fee for the OpenText services. ULTA Beauty is confident the process 
+improvements and efficiencies with OpenText will benefit both parties and warrant the 
+associated fees. 
+OpenText EDI Integrated
+• One-time testing fee of $450.00 / No transactional fees
+OpenText ‘Freeway’ web portal
+• One-time set-up fee of $199.00 / Additional transactional fees based on document 
+count:
+o $41/month (Avg. 25 documents) 
+o $1,028/month (Avg. 1,000 documents) 
+Questions: Ulta Beauty EDI: EDIsupport@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+12
+SECTION 5: OPENTEXT INFORMATION & RESOURCES
+5.1 General Information 
+Ulta Beauty partners with OpenText as an EDI provider, who has developed the necessary 
+system capabilities to ensure a smooth onboarding process with new brand partners. Please 
+share this information with your relevant team(s) for review to get started as soon as possible.
+EDI Sender/ Receiver ID is:
+Environment Qualifier Interchange
+Production ZZ ULTABEAUTY
+Test ZZ ULTABEAUTYT
+Further Information and Resources:
+Additional information on EDI setup and requirements can be found on the Ulta Beauty Supplier 
+Portal https://supplierportal.ultabeauty.com 
+• EDI Documentation > Implementation Guides
+• EDI Documentation > User Guides & Resources
+Questions: Ulta Beauty EDI: EDIsupport@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+13
+SECTION 6: EDI 852 POINT OF SALE (POS) TRANSACTIONS
+6.1 EDI 852 POS Transactions (Optional)
+EDI 852 POS data is available at the Brand Partner’s request. Weekly data files are sent 
+from Ulta Beauty and routed through Open Text.
+ There is an annual fee for this data (per EDI transmission destination/ID). The fee 
+will be deducted from your next payment with Ulta Beauty upon execution of the 
+POS Confidentiality Agreement. The fee is based on Ulta Beauty’s fiscal calendar 
+beginning February 1st - January 31st. The fee may be prorated based on your start 
+date.
+ To receive the weekly EDI 852 data, send an email to edisupport@ulta.com.You will 
+need to complete the Confidentiality Agreement and Trading Partner Profile.
+SECTION 7: EDI/OPENTEXT FREQUENTLY ASKED QUESTIONS 
+1. If I am a new Brand Partner and have not completed the EDI set-up process with OpenText yet, 
+how will I receive Purchase Orders? 
+• PO’s will be emailed from your designated Ulta Beauty Inventory Analyst until you are 
+transacting through OpenText.
+• Brand Partners will submit Invoices to the address listed in Section 4.1 until you are able to 
+send them electronically.
+2. Can I use an EDI 3rd Party Provider?
+• Yes. Note: there may be fees associated with a 3rd party provider. 
+3. What are the dates being sent on the Purchase Order?
+Ulta Beauty exchanges the following dates on Purchase Orders: 
+• Requested Ship Date: The date the shipment must be ready for Carrier pick up. 
+This date applies for Collect Freight terms. Requested Ship Date = PO Submission 
+date + pick/pack/ship calendar days. 
+• Requested Delivery Date (RDD): The date the shipment must be delivered to the 
+designated Ulta Beauty Distribution Center. This date applies for Prepaid Freight 
+terms. RDD = Ship Date + Pre-set transit time in calendar days unless that day falls 
+on a weekend or holiday. 
+Questions: EDIsupport@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+14
+SECTION 8: NEW ITEM/PRODUCT INFORMATION MANAGEMENT (PIM)
+8.1 Product Information Management
+Access to PIM Portal via: https://ulta.onelogin.com/login. The PIM Portal OneLogin link 
+is also on the Ulta Beauty Supplier Portal: https://supplierportal.ultabeauty.com
+Ulta Beauty utilizes Product Information Management (PIM) system for item setup/creation, 
+item updates, and web enrichment. PIM is a central repository of item data that uses 
+business rules and workflows to provide consistent, accurate information across the entire 
+Ulta Beauty enterprise.
+All of our Brand Partners are required to use the PIM Portal for the below processes:
+PIM is used to manage the following item types: 
+ Saleable Merchandise
+ Testers
+ Samples
+ Gift With Purchase (GWP) Items
+ Ensembles 
+There are a few item types that are not currently managed in PIM: 
+Fixtures Salon Supplies Marketing Collateral
+Empty Display Pieces/Trays Store Supplies
+To set up new items that are managed in PIM, please utilize the PIM Portal. To set up new 
+items that are not managed in PIM, please request the New Item Set-up Form: 
+MDSM@Ulta.com.
+PIM Portal
+Ulta Beauty utilizes a web-based PIM Portal that allows brand partners to log into a website to 
+create new items, update existing items, and provide web enrichment data. 
+If you have not been already, you will be contacted by Ulta Beauty’s Item Master Data team 
+regarding your log-in information for the Ulta Beauty PIM Portal.
+Questions: MDSM@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+15
+SECTION 9: SAFETY DATA SHEETS 
+9.1 SDS Requirement
+Ulta Beauty requires all formulated products to be registered with UL WERCSmart
+ULTA Beauty has selected UL WERCSmart to manage the secure collection and evaluation 
+of critical data for the safe shipping, storage, and disposal of hazardous or potentially 
+hazardous goods. Your organization's partnership is crucial, and we appreciate your 
+support in helping ULTA Beauty maintain a compliant and safe environment for both 
+employees and consumers.
+9.2 UL WERCSmart
+Brand Partner’s Responsibility
+ULTA Beauty requires all formulated products to be registered in the WERCSmart platform 
+along with the corresponding Safety Data Sheet. While the registration process is 
+customized for each product type, information typically required includes the formulation, 
+product-level attributes, UPC information, and compliance documentation (SDS, Label, 38.3 
+Test Summary).
+The WERCSmart Process
+Once submitted, your data and compliance documentation will be evaluated 
+securely by the WERCSmart Assessment Team. Any discrepancies found through 
+human review or WERCSmart’s automated rule steam will be addressed with your 
+support.
+Next Steps
+If your organization does not have a WERCSmart account, you will be prompted to 
+create one. Existing WERCSmart suppliers should make sure that all formulated 
+products sold at ULTA Beauty are properly registered by adding UPCs to new or 
+existing product registrations. https://ulwercsmart.com/
+Support Options
+UL Onboarding Specialists will reach out to new suppliers upon account creation to 
+introduce you to WERCSmart and guide you through next steps. For ongoing 
+WERCSmart support, UL offers two options: 
+• General Customer Support: FreshDesk tickets, phone calls and chat
+• Agency Support Services: a premium service offering registration support and 
+an assigned agent.
+Additional Links
+Self-paced, Interactive Webinar
+WERCSmart Knowledge Base Resource Library (Global Support in multiple languages)
+WERCSmart Introductory Video
+Questions: Tracey Anzar / tanzar@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+16
+SECTION 10: PURCHASE ORDER REQUIREMENTS
+10.1 Purchase Order Requirement
+Ulta Beauty requires all line items on the Purchase Order fulfill 100% and deliver to the 
+designated Distribution Center on the ‘Requested Delivery date’ (RDD) for Prepaid freight 
+or be ready for Carrier pick-up on the ‘Requested Ship Date’ for Collect freight. 
+Overages Policy
+Ulta Beauty reserves the right to execute on one or more of the following actions, per 
+receiving an unauthorized overage and/or item(s) not listed on the Purchase Order:
+ Accept merchandise shipped in excess of the purchase order quantity. Ulta Beauty 
+reserves the right to keep the goods at no charge. 
+ Request disposition (RA#, destroy in field, etc.). Disposition is required within 2 
+business days of notification. Refer to Section 23: Shipment Non-Compliance Fees
+for associated fees. If disposition is not received within 2 business days or if 
+merchandise cannot be returned for any reason merchandise will be disposed of at 
+the discretion of Ulta Beauty and any disposal cost charged back to the Brand 
+Partner.
+ Assess Overage Chargeback fee per Purchase Order, per Brand Partner tier, at a 
+variable rate. Refer to Section 22: Chargeback Program.
+10.2 Purchase Order Dates and Definitions
+Ulta Beauty exchanges 2 dates on all our Purchase Orders: 
+• Requested Ship Date: Date the shipment must be ready for Carrier pick up. This 
+date is applicable on Purchase Orders with Collect freight terms. 
+Requested Ship Date = PO Submission date + pick/pack calendar days. 
+• Requested Delivery Date (RDD): Date the shipment must be delivered to the 
+designated Ulta Beauty Distribution Center. This date is applicable on Purchase 
+Orders with Prepaid freight terms. 
+RDD = Ship Date + Pre-set transit time in calendar days unless that day falls on a 
+weekend or holiday. 
+At the discretion of the Ulta Beauty Buying and Inventory teams, the Cancel Date may also 
+be exchanged:
+• Cancel Date: The last day the PO can be shipped before it is considered canceled. 
+Cancel Date = RDD + # of days chosen by Ulta Beauty Inventory and Buying 
+teams. 
+ 
+ Ulta Beauty Supply Chain Guide – Published March 2025
+17
+10.3 Purchase Order Lead-Time
+The Purchase Order lead-time is agreed upon and documented on the Vendor Purchasing 
+Agreement (VPA) or Commercial Terms document.
+ If a Brand Partner is receiving PO(s) without adequate pick, pack and ship days to 
+meet the ship by date and/or RDD, contact your designated Inventory Analyst and 
+copy SupplierOps@Ulta.com.
+ PO’s may be issued with extended lead-time at the sole discretion of the Ulta 
+Beauty Inventory Analyst and/or Merchant (example: Promotions, Ad’s, GWP).
+10.4 Purchase Order Management Process
+If a Brand Partner cannot fulfill the original Purchase Order line item quantity 100%, you are 
+required to notify Ulta Beauty within 2 business days of PO transmission utilizing the EDI 
+855 PO Acknowledgement transaction. 
+This includes all items on allocation and any long term out of stocks. 
+Requirements:
+ EDI 855 PO Acknowledgment on all live PO 850s
+If NO PO Change request is submitted or submitted >2 business days, Fill Rate Compliance
+is calculated from the Original PO line quantity.
+New Brand Partners who have not completed the EDI set-up process or existing Brand 
+Partners with prior Ulta Beauty authorization may submit PO changes by communicating 
+with their Inventory Analyst.
+Questions:
+Purchase Order: Ulta Beauty Inventory Analyst
+Lead-Time: SupplierOps@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+18
+SECTION 11: ULTA.COM DIGITAL PHOTOGRAPHY & CONTENT
+GUIDELINES
+To request a copy of all guidelines, please reach out to your digital product specialist, or email 
+digitalproductmerch@ulta.com 
+ 
+11.1 Images
+Standards for Images – Must meet the following site & app PDP standards: 
+o Main must be on a transparent background with no shadow or reflection. 
+o Main (image shown on product listing pages and first image on PDP) must 
+not contain additional text, graphics, or inset images. 
+o Most Main are displayed out of package with exceptions for some nail, lashes, 
+and accessories. Package may be shown next to the product so long as there 
+is no overlapping. Front of package can be used an alternate. 
+o Main should contain only what will be shipped to the guest. 
+o All must be professional photographs. Must be in focus, professionally lit and 
+photographed with consistent angles, realistic color, and smooth edges. 
+o Drawings, illustrations or user generated content of the product are not 
+allowed. 
+o Refrain from dynamic angles. Tools like hair dryers, curling irons, etc. are an 
+exception and can be angled. 
+o Full product for Main must be in frame. 
+o All must not contain gratuitous or confusing additional objects. 
+11.2 Videos
+• The video should be of professional quality, not blurry and with professional lighting.
+• Accepted video content:
+o Tutorials and how-to’s of the specific product
+o Informative of what the product is and does
+o Ideas on use of the specific product
+o Educational about how the product is made, health facts, etc., if product has 
+certain health/ingredient claims
+o Collection videos so long as all items featured in the video are sold on 
+Ulta.com.
+o See brand primer for additional video file & asset requirements: allowed 
+number, sizing, file types, naming, and upload requirements.
+ 
+11.3 Copy Requirements for PIM
+• Web Product Name: Product name displays online exactly as entered.
+• Value (USD): This is the value of the kit or set, not the retail price. This should only 
+be populated when the value of the kit exceeds the retail price.
+• Variant Type & Variant Sku Attribute Value: Used to differentiate like items by 
+shade, size, scent or other. 
+• Shade Description: When Variant Type is Color, provide a brief description of the 
+shade: finish, color, sheen, etc.Ulta Beauty Supply Chain Guide – Published March 2025
+19
+• Item Size & Item Size UOM: Use when all skus in the product family are the same 
+size, as well as single product family skus.
+• Short Web Copy: Used within the Details section on the PDP along with Headers & 
+Descriptions, and used for Ulta Beauty's web search, and external search.
+o Must include Brand Name (same as how it is displayed on Ulta.com)
+o Must include Product Name (same as it was provided for Web Product 
+Name)
+o Maximum character count is 156 characters and spaces.
+• Headers & Descriptions: A Header is selected from a pre-defined list and a 
+corresponding Description will include a list of applicable copy.
+• Ingredients: Complete ingredient list that is on product packaging. Products with 
+ingredient list on the packaging is mandatory to add to PIM. Any reference to key 
+ingredients, or what the product is formulated with or without should be included 
+within the Description attribute under the Header of Benefits, Formulated Without 
+and/or Features. You may add a disclaimer for the guest to verify ingredients on 
+the packaging prior to use.
+• How to Use: Give the guest a brief description on the best way to use the product. 
+All products with directions on the packaging is mandatory to add to PIM.
+• Warnings: This should include any warnings that are on the product packaging.
+• Hex Code: Mandatory for all single-color cosmetic shades.
+11.4 ECOM Category Specific (metadata) section within PIM
+• The refinement section within PIM is MANADATORY. These filters are what appear 
+on Ulta.com when the guest is on a category page. These filters allow the guests to 
+narrow their choices when purchasing. Our guests use these filters and if you do 
+not fill out the refinements, your item will not appear when the guest filters down 
+their choices.
+Questions:
+Ulta Beauty digital product specialist or digitalproductmerch@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+20
+SECTION 12: MERCHANDISE TRANSITIONS 
+12.1 Types of Merchandise Transitions
+Ulta Beauty has four types of Transitions (planogram changes):
+Realignment
+ Strategic reallocation of space & location movement of Planogram Categories on a 
+floorplan within a specific department in a store
+ Assortment and product placement within planograms may change 
+ Planogram changes will cause updates to graphics, signs & pricing strips 
+ Fixtures may also change
+Reset
+ Planogram Category changes (over 5 SKU’s) made within a single planogram 
+ POG Category Location & size in store remains the same; changes are made to 
+assortment and product location within the planogram
+ Based on scope of changes, graphics, signs & pricing strips need to be updated to 
+reflect the updated planogram
+ Fixtures may also change
+Update
+ Planogram Category changes (less than 5 SKUs) within a single planogram
+o SKU in & out or plug reveal
+ Graphics, signs & pricing strips update based on SKU updates only
+ No fixture changes
+Graphic Update
+ Shelf strips or inline signs will be updated
+ No fixture, assortment, or product placement changes
+Retail Update
+• Shelf strips or inline signs will be updated with retail changes, impact to guest 
+facing strips only
+• No fixture, assortment, or product placement changes
+12.2 Merchandise Transition Back-out Calendar
+The Merchandise Transition Back-out Calendars are available on the Ulta Beauty Supplier 
+Portal: https://supplierportal.ultabeauty.com
+ Questions: Ulta Beauty MerchantUlta Beauty Supply Chain Guide – Published March 2025
+21
+SECTION 13: SHIPMENT DOCUMENTATION 
+13.1 Bill of Lading (BOL)
+When tendering a shipment to a Carrier bound for any Ulta Beauty DC, the information 
+below must be clearly detailed in the BOL (refer to Section 25.7: Master BOL Template).
+Requirements
+ The original BOL, provided by the shipper, is required for deliveries.
+ BOL must show all PO numbers being delivered.
+ On collect shipments, neither Ulta Beauty nor the carrier shall be liable for missing
+product on shipments where:
+o BOL only shows the number of pallets and is marked STC (said to 
+contain) X cartons.
+o Freight on board origin shipment, but loaded SLC (shipper load and 
+count)
+ The driver must verify and count the number of cases on all shipments and sign as 
+both cases and pallets at the time of pick up. 
+ If the carrier notates on the BOL that shipment is STC (said to contain) or SWS 
+(shrink wrapped skid) the shipper will be held responsible for any missing product.
+Unacceptable
+ Do not include shipment declared value data
+ Do not enter a declared value or limit of liability on the BOL
+Shipper BOL Contents
+ Unique BOL number 
+ Carrier name and trailer number
+ Seal number verified by shipper (Full Truckload only)
+ Ship from address (origin)
+ Ship to address (destination)
+ All shipments should be clearly marked “Prepaid,” “Collect,” or “3rd Party Billing”
+ Ulta Beauty verified PO number 
+o Each PO must include: 1. PO#; 2. Number of cartons by PO#; and 3. Weight by PO#
+ Total pallet, carton count, and total weight of the shipment (including pallet weight)
+ Pallet weight listed separately on the BOL
+ Shipment date 
+ Accurate merchandise description and NMFC freight class
+ Shipper signature
+ Time and date tendered
+ Driver name and signature
+ State that delivery appointments are required for all PREPAID shipments.
+ Be sure to include any other information that you are legally required to disclose
+ E2OPEN load ID number
+Billing address for Collect LTL and TL Shipments
+Ulta Beauty
+C/O Transportation
+1000 Remington Blvd Ste 120
+Bolingbrook, IL 60440-4708 Ulta Beauty Supply Chain Guide – Published March 2025
+22
+13.2 Packing List 
+Requirements
+ A Packing List is required for all PO(s) delivered to an Ulta Beauty DC. If there are 
+multiple POs in a shipment, each PO must have a separate Packing List. 
+ Packing Lists must be machine printed and legible. 
+ The Packing List must be in a plastic “Packing List Enclosed” 
+pouch on the exterior of the first carton of each PO.
+ The Packing List should be in a visible location on the last 
+pallet loaded on the truck.
+ Attach an additional copy of the Packing List to the freight 
+bill for each PO. 
+ When shipping small parcel, the Packing List must be placed in an envelope 
+attached to the outside of the designated lead carton. The Packing List must clearly 
+state how many cartons are in the small parcel shipment (example: “1 of 3”).
+Unacceptable
+ Do not put the Packing List inside a carton.
+Packing List Contents
+ All shipments arriving at the Ulta 
+Beauty DC must contain a Packing 
+list with the following information 
+(Packing List example can be found 
+in Section 25.8):Ulta Beauty DC 
+number & address
+ Vendor name & ID number
+ Ulta Beauty PO number
+ Ulta Beauty SKU number
+ Vendor style number
+ Item Description
+ UPC # for each item
+ Unit quantity by item/style/article number
+ Total number of cartons & weight by item
+ Master & inner pack quantity (if applicable)
+ Ship date
+ Invoice number (if available)
+Packing List Process
+Brand Partners are required to email the Packing list to the designated Ulta Beauty DC. 
+Please include your company name and PO number(s) in the subject line.
+**Violations in Section 13 are subject to a compliance charge** Ulta Beauty Supply Chain Guide – Published March 2025
+23
+SECTION 14: PACKING & LABEL REQUIREMENTS 
+14.1 Minimum Packaging Requirements
+Ulta Beauty requires all Brand Partners to follow proper shipping requirements to ensure 
+product remains in saleable condition and limits safety hazards and damages.
+Case Pack 
+• All Brand Partners must ensure vendor case packs are properly packaged to 
+withstand normal shipping conditions for safe transport, including any regional 
+climatic specifications. 
+• All items must be packed in sealed fully enclosed corrugated cartons with a minimum 
+rating of 200-pound test or ECT 32, to ensure cartons can be stacked and palletized 
+without jeopardizing product integrity.
+• Glass items, including candles, must be properly secured to 
+avoid damage. Each glass item should be properly packaged 
+inside an individual carton at the each level (see Unit Pack).
+• Delicate items including but not limited to bottles, liquids, 
+hairsprays, and mousse should be equipped with proper 
+packaging material such as dividers, shipping paper, and/or 
+air pillows.
+• Case pack must include an additional layer of protection to 
+account for prepping the carton by Ulta associates, via a 
+box cutter. This protection can include an extra piece of 
+cardboard or dunnage. 
+Unit Pack 
+• All units should be packaged in a way that allows for product and product contents 
+to withstand normal retail handling.
+• Each sellable unit must have one scannable UPC barcode present. Do not 
+include multiple barcodes (e.g. United States and Canada), even if the 
+product is sold in multiple countries.
+• If the sellable unit contains multiple products under a single UPC barcode, 
+labeling should include verbiage, “Single sellable unit. Do not break apart,” 
+to avoid product separation during receipt and mitigate shrink.
+• Glass items, including candles, must be properly secured to avoid damage. 
+Each glass item should be properly packaged inside an individual carton at 
+the each level. A scannable UPC must also be present on the outside of 
+the individual carton.
+• Secondary packaging must be durable enough to withstand normal handling in the 
+warehouse. This packaging should not easily tear or break apart and should ensure the 
+integrity of the contents during transportation and storage. Approaches to accomplish 
+this durability include adding security stickers to corners, ensuring a snug fit within the 
+packaging to deter the product from shifting and opening the case, and employing Ulta Beauty Supply Chain Guide – Published March 2025
+24
+sturdier flaps (see Image 14.1.1 Unit Packaging Do’s and Don’ts – Field 
+A). Caps and lids must be firmly attached to the product, ensuring 
+they stay secured throughout standard retail handling procedures 
+(see Image 14.1.1 Secondary Packaging Do’s and Don’ts – Field B).
+ Leaking items or items with missing caps and lids are 
+unsaleable and will be processed as damage.
+ Pumps must be kept closed with additional safeguards such as 
+clip lock, stretch wrap, and/or full turn lock, to guarantee they remain unopened and 
+leak-free (see Image 14.1.1 Secondary Packaging Do’s and Don’ts – Field C).
+ Liquids should be sealed securely to prevent spills and leaks, including induction 
+seals directly securing the liquid or an exterior seal on the outer unit or cap. Other 
+alternatives include shrink bands, perforated shrink wrap, or tamper resistant tape 
+to secure caps, pumps, and lids in place.
+ Delicate items, including powders, eyeshadows, and compacts, must have sufficient 
+packaging at the unit level to withstand normal handling. Packaging should include, for 
+example, cardboard unit cases or sleeves with proper padding as needed. A scannable 
+UPC must also be present on the outside of the individual cardboard unit.
+Image 14.1.1 Unit Packaging Do’s and Don’tsUlta Beauty Supply Chain Guide – Published March 2025
+25
+Case Dimension Recommendation 
+The following table outlines the maximum and minimum dimensions for cartons to fit on the 
+Ulta Beauty DC conveyer system. We recommend that your carton dimensions are within 
+the dimensions listed in Table 14.1.1 to ensure: 
+• Your product flows easily and efficiently through our distribution centers 
+• Maximize product availability by minimizing exception processing 
+Table 14.1.1: Case Dimension Recommendation 
+Conveyable 
+Dimensions Any Side Any Two Sides
+All Three 
+Sides Case Weight
+Maximum Case 
+length can be no 
+larger than:
+> 24” > 20” > 17” 40 lbs.
+Minimum Case 
+length can be no 
+smaller than:
+< 6” < 7” < 9” 0.4 lbs.
+Unit Dimension Recommendation 
+The following table outlines the maximum dimensions for units (saleable SKU’s) to fit in our 
+outbound Ecommerce order processing bins. We recommend that your unit dimensions are 
+at or below the maximum dimensions listed in Table 14.1.2 to ensure: 
+• Your product flows easily and efficiently through our distribution centers
+• Maximize product availability by minimizing exceptions processing.
+Table 14.1.2: Unit Dimension Recommendation 
+Ecommerce Maximum 
+Unit Dimensions Unit Length Unit Width Unit Height
+Maximum unit size: 15.5” 9.5” 7.5”
+ 
+Sellable Unit Labeling Requirements
+ Each sellable unit must have one scannable UPC barcode present. Do not include 
+multiple barcodes (e.g. United States and Canada), even if the product is sold in 
+multiple countries.
+ UPC barcodes should be in black print with a white (not clear) background.
+ UPC barcodes should be placed on a flat surface. In instances with no flat 
+surface available, please place UPC barcode vertically.
+ Ulta Beauty prefers Code 128 barcodes and UPC barcode must be a 1D barcode 
+(see image 14.1.2).Ulta Beauty Supply Chain Guide – Published March 2025
+26
+Image 14.1.2: UPC Barcode Decode Distances
+14.2. Labeling Requirements – General
+General Labeling Requirements
+ Dimensions for Master Carton Labels should be 4” x 6” and clearly legible 
+ Cartons should not contain more than one visible Master Carton Label (GS1-128) (see 
+Image 14.3.1 GS1-128 Master Pack Label Contents). All Master Carton Labels must include 
+required information as explained in this section. 
+ The example given in Image 14.3.1 shows the required layout of the information. 
+ For pallets with multiple SKUs, ALL Master Cases must be labeled following the 
+requirements of this section (see Image 14.3.2 Full Case Requirements Example)Ulta Beauty Supply Chain Guide – Published March 2025
+27
+Partial Case Packing Requirements
+A PARTIAL CASE is when a carton contains less than a full case quantity and is shipped 
+with all the same SKU in the master case:
+ The master case must be clearly marked “PARTIAL” 
+ The master case should display the less-than-case quantity
+ For example: If full case = 24, use “PARTIAL” when QTY = 18 (see Image 14.3.2 
+Partial Case Requirements Example)
+Mixed Case Packing Requirements
+A MIXED CASE is when orders contain items that are less than full case quantity and is 
+shipped with more than one SKU in the master case:
+ All Mixed cases should be clearly marked "MIXED" or “MIXED SKUs”.
+ SKUs inside a mixed case should be clearly segregated (i.e. rubber bands, layer 
+separation, bags in boxes etc.).
+ There can be no more than one inner pack per SKU inside a mixed case 
+ Use an Inner Pack Label (when necessary) for SKU identification/differentiation (see 
+Image 14.3.3).
+ The master case must include the full SKU quantity shipped.
+ If multiple SKUs will not fit in the space provided on the Master Carton Label, then 
+the label must still be marked “MIXED” and then provide SKU detail on a separate 
+document/label. (see Image 14.3.2 Mixed Case Requirements Examples).
+Unacceptable 
+ No cartons may contain multiple PO’s.
+ No carton weight should exceed 40 pounds (except for display materials).
+ Do not ship SKUs in MIXED cartons if the SKU quantity shipped is in more than one 
+master case.
+ Full case quantities should not be packaged inside a master carton. 
+14.3 Label Content Requirements
+GS1-128 Master Pack Label
+ All Shipments to Ulta Beauty Distribution centers require GS1-128 Shipping 
+Container labels, including a scannable barcode. 
+ All GS1-128 Master Pack Labels must follow all format and content requirements 
+outlined in Image 14.3.1
+ Master Pack Labels must be adhered to each individual carton (see 14.4 Carton 
+Label Placement)
+o Inserting unapplied labels inside the pallet wrap or in an envelope is noncompliant
+ Carton & Pallet GS1-128 SSCC 18-digit serial shipping container codes cannot be 
+reused for a period of 3 years (see images 14.3.1 - field H).
+ You should have an ongoing GS1-128 bar code quality control program in place that 
+ensures ANSI A or B print quality when scanning with a 10-mil aperture. Ulta Beauty Supply Chain Guide – Published March 2025
+28
+ Be sure to use “smudge-proof” labeling / ink and high-quality paper products. Do 
+not use colored paper for GS1-128 labels, use non-reflective label stock and ink.
+ Create GS1-128 Shipping Container label based on the GS1 specifications: 
+o 4” by 6” label format 
+o SSCC-18 bar code should be 3.02” in length, 1.25” in height 
+o .25” quiet zone on each side. 
+o Only use GS1-128, subset C bar code symbology with the nominal X 
+dimension of 20 mil 
+ 
+*Additional information for GS1-128 labels is available https://www.gs1us.org/
+ 
+ 
+GS1-128 Master Pack Label Contents 
+(Use Image 14.3.1 as a guide)
+A: Supplier’s Name and Address
+B: Destination – Where merchandise is being shipped to
+C: Barcode (zip-code for ship-to address) – for carrier’s 
+benefit, as specified by transportation company moving the 
+shipment
+D: Carrier Name or SCAC, Tracking Numbers (Pro#, B/L, 
+AWB, etc.) if available at the time of label creation
+E: PO#, SKU#, SKU Count (per carton), Total Carton Count 
+(per SKU), Item Description and Supplier Style # (see Image 
+14.3.2 for more examples based on case type)
+F: Receiving Facility Number – Barcode form
+G: Receiving Facility Number – Numeric form
+H: SSCC 18-digit serial shipping container code, with 
+application ID “00”
+Image 14.3.1: Example Master 
+Pack Label (GS1-
+128)Ulta Beauty Supply Chain Guide – Published March 2025
+29
+Image 14.3.3: Example
+Inner Carton Label for 
+Mixed Cases
+Image 14.3.2: Segment E Examples, Based on Case Label Types
+Include information depending on the label types in the following table 
+(Refer to Image 14.3.1 for the entire label) 
+Full Case Requirements Example:
+E*: Everything in the example must be included:
+ 
+Partial Case Requirements Example:
+E*: Same as ‘Full Case’, and add “PARTIAL”:
+ 
+ 
+Mixed Case Requirements Examples:
+E*: Same as ‘Full Case’, and add “MIXED”… choose 1 of 2 options:
+Option 1: List everything needed for Full Cases 
+above with “MIXED” or “MIXED SKUS”, if it will fit 
+on the label:
+Option 2: If all SKU detail will not fit in the space, 
+show PO and “MIXED”, then include separate 
+documentation with the remaining requirements:
+Inner Pack Carton Label Contents
+(Use Image 14.3.3 as a guide)
+When Inner Pack Labels are necessary (see Mixed Case
+Pack/Label Requirements in Section 14.2 and Section 14.3), the following
+information is required on all inner packs:
+ Ulta Beauty SKU number
+ Description
+ QuantityUlta Beauty Supply Chain Guide – Published March 2025
+30
+14.4 Carton Label Placement
+ Palletized cartons must have outward facing labels, able to be scanned from any 
+side of the pallet.
+ Be sure the label is placed so that the bar code is scannable, i.e. not on a seam or 
+the corner of the carton, no closer than 1” from any edge.
+ Cartons more than 7 inches tall (refer to Image 14.4.1):
+o Carton labels must be placed a minimum of 1” from bottom right corner on 
+side of carton.
+o Carton label must be a minimum of 1.5”-3” from side of carton.
+ Cartons less than 7 inches tall (refer to Image 14.4.2):
+o Carton label should be placed in the same dimensional area as listed above 
+with the excess of the label folded over the top of the carton.
+o Do not cover taped seams with the label.
+ If your carton is under 4 ½” in height, the GS1-128 label may be rotated 90 degrees 
+counterclockwise (refer to image 14.4.3). The label may be folded overlapped over 
+the side of the carton if the barcode is not folded. 
+ Any shipped carton that requires a Hazmat label, the Hazmat label must be 
+completely visible, not covered by any other label or sticker.
+Unacceptable 
+ Never place any part of the label over the seam. 
+ Do not place labels over product ID numbers, UPC barcodes, retail price or other 
+consumer information. 
+ Do not place labels over hazmat or shipping labels 
+ Image 14.4.1:
+Carton Label Placement 
+More than 7 inches Tall
+Image 14.4.2:
+Carton Label Placement Less 
+than 7 inches Tall
+Image 14.4.3:
+Carton Label Placement Less 
+than 4 ½ inches TallUlta Beauty Supply Chain Guide – Published March 2025
+31
+14.5 Pallet Label Requirements
+GS1 Pallet Label
+ All pallets shipped to Ulta Beauty Distribution Centers require GS1 Pallet labels
+including a scannable barcode.
+ GS1 pallet labels should be applied in the upper corner of the 48-inch side of the 
+pallet, over the shrink wrap.
+ All GS1-128 Pallet Labels must follow all format and content requirements outlined in 
+Image 14.5.1
+ Carton & Pallet GS1-128 SSCC 18-digit serial shipping container codes cannot be 
+reused for a period of 3 years (see image 14.5.1 - field H).
+ GS1 barcodes are required. You should have an ongoing GS1 bar code quality 
+control program in place that ensures ANSI A or B print quality when scanning with 
+a 10 mil aperture. 
+ Be sure to use “smudge-proof” labeling / ink and high-quality paper products. Do 
+not use colored paper for GS1-128 labels, use non-reflective label stock and ink.
+ Create GS1 Pallet label based on the GS1 specifications: 
+o 4” by 6” label format
+o SSCC-18 bar code should be 3.02” in length, 1.25” in height
+o .25” quiet zone on each side. 
+ Only use GS1-128, subset C bar code symbology with the nominal X dimension of 20 
+mil
+*Additional information for GS1-128 labels is available https://www.gs1us.org/ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Ulta Beauty Supply Chain Guide – Published March 2025
+32
+GS1 Pallet Label Contents 
+(Use Image 14.5.1 as a guide)
+A: Supplier’s Name and Address
+B: Destination – Where merchandise is being shipped to
+C: Barcode (zip-code for ship-to address) – for carrier’s 
+benefit, as specified by transportation company moving the 
+shipment
+D: Carrier Name or SCAC, Tracking Numbers (Pro#, B/L, 
+AWB, etc.) if available at the time of label creation
+E: PO(s) on this pallet, pallet number and total number of 
+pallets in series ("1 of 5," "2 of 5," etc.), and total number of 
+cartons on this pallet 
+*Note - PO(s) should be shipped as 1 PO per pallet, see Section 15.2: 
+Pallet Loading and Wrapping for exceptions
+F: Receiving Facility Number – Barcode form
+G: Receiving Facility Number – Numeric form
+H: SSCC 18-digit serial shipping container code, with 
+application ID “00”
+**Violations in Section 14 are subject to a compliance charge** 
+Questions: SupplierOps@Ulta.com 
+Image 14.5.1: Example GS1 
+Pallet LabelUlta Beauty Supply Chain Guide – Published March 2025
+33
+SECTION 15: PALLET STANDARDS & TRAILER LOADING
+15.1 Pallet Types
+All products must be shipped on a Four Way 48” x 40” Hardwood GMA #2 Or Grade B 
+Pallet. 
+Specifications for a GMA#2 or Grade B pallet
+• No less than 4 boards on bottom
+• Average top deck spacing 2-1/2″ to 3-1/2″ but can be up to 4″
+• 3 stringers (1-1/2″ x 3-1/2″ each)
+• 4-way entry
+• Has plugs (repairs) on stringers
+• Plugs can be various length and location
+• No more than two boards (stringers) thick at any one point
+• Chips or partial split boards are acceptable and may have multiple blemishes and 
+color degradation
+Unacceptable
+• Plastic pallets, metal pallets, pressed wood pallets, or compressed paper core pallet 
+runners.
+Lead Board
+Deck Boards
+StringerUlta Beauty Supply Chain Guide – Published March 2025
+34
+15.2 Pallet Loading and Wrapping
+Requirements for Loading a Pallet
+ Combine like items (SKUs) on the same pallet. This will significantly improve 
+receiving accuracy and storage efficiency once your product arrives at the Ulta 
+Beauty DC. 
+ When loading multiple SKUs on a single pallet, keep like SKUs together. Items will 
+be unloaded from the top down, so like SKUs should be combined in layers from the 
+bottom up. Consider the diagrams in Image 15.2.1 as a guide on how to combine like 
+SKUs.
+ Build a stable base layer for the pallet by placing heaviest items on bottom with flat 
+edge in contact with pallet. This will help avoid tipping and load shifting.
+ Limit height of stackable, single item pallets to a maximum height of 51” (floor to 
+top). This allows for double stacking. 
+ Pallets with multiple SKU’s can be no higher than a height of 75” (floor to top). 
+ Shipments with multiple POs must be shipped as one PO per pallet. On an exception 
+basis if PO quantities are small and loaded on one pallet, POs should be separated 
+by a slip sheet.
+Image 15.2.1:
+Loading Multiple 
+SKUs on a PalletUlta Beauty Supply Chain Guide – Published March 2025
+35
+Requirements for Wrapping a Pallet
+ Stretch-wrap the pallet using plastic, heavyweight film wrapped as tightly as 
+possible to ensure stability, especially including any single cartons on the top layer.
+ Apply a pallet topper to each pallet to ensure pallet load integrity.
+ The stretch-wrap should be tied or attached to the pallet ensuring that the first 
+wrap covers the pallet. 
+ Pallet should be wrapped securely from the bottom to the top, grabbing all 4 
+corners of the pallet.
+ All orders exceeding 15 cases must be palletized and stretch-wrapped. 
+ Pallets must be labeled using the requirements provided in Section 14.5: Pallet Label 
+Requirements
+Recommendation for Wrapping a Pallet
+ Stretch-wrap the pallet using NON-clear (black preferred) plastic heavyweight film, 
+with a pallet topper, wrapped as tightly as possible for added security during 
+transportation 
+Unacceptable
+ No overhang is allowed.
+ Do not mix the same item on the same PO across multiple mixed pallets.
+ Do not mix cartons for different DCs on the same pallet.
+ Do not double stack pallets and wrap them together to create a single handling unit.
+Refer to Section 25.9: Pallet Examples for Acceptable and Unacceptable
+ 
+Acceptable Pallet Topper 
+ 
+Questions: SupplierOps@Ulta.com Ulta Beauty Supply Chain Guide – Published March 2025
+36
+15.3 Trailer Loading for Collect and Prepaid Shipments
+Load the most expensive and promotional product towards the nose of the trailer. 
+Three common techniques for pallet trailer loading. There are benefits and disadvantages 
+of each type. In most cases, pin-wheeled loading will be optimal for labor and freight 
+efficiency. 
+Method Description Benefits Disadvantages 
+Straight
+ Pallets loaded 
+straight (in the 
+direction of the 
+pallet stringers) 
+into the trailer or 
+container. 
+ Allows side by side loading (for 
+40” x 48” pallets) with extra space 
+between the pallets and the trailer 
+sidewalls
+ Quickest method of loading 
+pallets 
+ Lower cube utilization 
+than turned or pinwheeled 
+ Least protection against 
+load shifting 
+Turned
+ Requires the use 
+of four-way 
+pallets.
+ Allows side by side loading of 40” 
+x 48” standard pallets 
+ Better cube utilization than 
+straight loading
+ Better protection from load 
+shifting than straight loading. 
+ More labor than straight 
+loading for loading and 
+unloading 
+Pin-wheeled
+ Combination of 
+loading pallets 
+straight and 
+turned. 
+ Best overall mix of cube utilization 
+and stability
+ Less labor than turning all the 
+pallets
+ If Supplier uses nonstandard pallets they 
+may not fit side-by-side 
+in the trailer. 
+**Violations in Section 15 are subject to a compliance charge**
+Questions: SupplierOps@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+37
+SECTION 16: PREPAID SHIPMENT REQUIREMENTS
+Refer to the Vendor Purchasing Agreement (VPA) or Commercial Terms document & 
+Purchase Order(s) for freight terms.
+Packing & Loading Requirements
+• It is the Brand Partners responsibility to require the Carrier to count the cases and 
+deliver on stretch-wrapped pallets.
+ All shipments require a topper. 
+ Do not split POs between multiple shipments. All cartons associated with one PO 
+must be on a single shipment.
+ All parcel cartons associated with one PO must be tendered to the parcel carrier at 
+the same time.
+Refer to Section 14: Packing & Label Requirements & Section 15: Pallet Standards & Trailer 
+Loading
+Shipment Documentation Requirements
+• BOL and Packing Lists are required for all deliveries. Refer to Section 13: Shipment 
+Documentation.
+• Seal number shall be included on all truckload shipments and seal number must be 
+typed on the BOL to ensure shipment integrity. If any changes to the typed seal 
+number occur, please reach out to Transportation@Ulta.com with details.
+• Seals shall be preprinted with number; no handwritten seals will be accepted.
+Timing & Accuracy Requirements
+• The shipment must be delivered to the designated Ulta Beauty DC on the 
+Requested Delivery Date. RDD = Ship Date + Transit time in calendar days. 
+Exceptions are weekends or holidays 
+• If a Brand Partner receives PO(s) without adequate processing days or transit time 
+to meet the RDD, contact your Ulta Beauty Inventory Analyst and copy 
+SupplierOps@Ulta.com.
+o For pick/pack/ship days and ship-point information, refer to your Vendor 
+Purchasing Agreement.
+o Ulta Beauty maintains ship-point information on the Vendor Purchasing 
+Agreement for each Ulta Beauty DC. To update ship-point information, 
+contact SupplierOps@Ulta.com.
+Carrier & Transportation Requirements
+• Delivery appointments are required for all shipments except for small parcel 
+shipments. Refer to Section 18: Delivery Appointment Process.
+• Brand Partners are required to route the total order (all POs) shipping to a DC to 
+determine small parcel restrictions do not exceed 150lbs and <15 cases. 
+• No POs or shipments should be shipped directly to an Ulta Beauty retail location 
+unless it is previously authorized by the Ulta Beauty Merchant in writing. 
+• Freight must arrive in a dock height 53-foot semi-trailer with no lift gate. Vans, box 
+trucks and reefer/refrigerated trailers will not be unloaded.
+• Copy of signed BOL and Proof of Delivery (POD) must accompany the freight bill. 
+ **Violations in Section 16 are subject to a compliance charge*Ulta Beauty Supply Chain Guide – Published March 2025
+38
+SECTION 17: COLLECT SHIPMENT REQUIREMENTS 
+Refer to the Vendor Purchasing Agreement (VPA) or Commercial Terms document & 
+Purchase Order for freight terms.
+17.1 E2OPEN - Transportation Management System (TMS)
+Ulta Beauty utilizes E2OPEN to manage the planning and execution phases of daily inbound 
+transportation operations. The technology will be used to obtain ready-to-ship information 
+from our Brand Partners for transportation planning. If you have not been on-boarded, 
+please contact TMS@Ulta.com.
+17.2 General Shipping Requirements for Collect Shipments
+Timing & Accuracy Requirements
+• PO Details must be entered into the TMS at least 48 hours prior to the Requested Ship 
+Date to allow for tendering.
+• POs entered in TMS INSIDE of 48 hours may be at risk for on-time pickup, including Pos 
+entered into TMS ON the Requested Ship Date
+• The shipment must be ready for Carrier pick-up on the Requested Ship Date. The 
+Requested Ship Date = PO Submission Date + pick/pack/ship calendar days.
+• If you use a 3PL that ships other Ulta brands, your shipment may be consolidated with 
+other Ulta brands on the same shipment.
+• Changes to a single PO shipping terms must be approved by your Ulta Beauty 
+Inventory Analyst and Ulta Beauty Transportation.For changes to your overall freight 
+terms, reach out to your Ulta Beauty Merchant.
+• If a Brand Partner is receiving PO(s) without adequate pick, pack and ship days to meet 
+the Ship Date, contact your Inventory Analyst and copy SupplierOps@Ulta.com.
+ For pick/pack/ship days and ship-point information, refer to the Vendor 
+Purchasing Agreement (VPA) or Commercial Terms document.
+ Ulta Beauty maintains ship-point information on the Vendor Purchasing 
+Agreement (VPA) or Commercial Terms document for each Ulta Beauty DC. To 
+update a ship-point contact SupplierOps@Ulta.com & TMS@Ulta.com
+ Purchase Order dates are defined in Section 10.2: Purchase Order Dates and 
+Definitions.
+• To ensure Ulta Beauty Carriers are providing appropriate service, contact Ulta Beauty 
+Transportation at Transportation@Ulta.com if any of the following occur: 
+o LTL Carrier is 12 hours late for a scheduled pick up
+o TL Carrier is 2 hours late for a scheduled pickup
+o Carrier is not providing the appropriate equipment, or equipment in good 
+condition at pick up.
+o TL shipment does not have seal available
+• Planned Ship Date entered as part of our ready to ship date information does not 
+guarantee pick up on that date. Pick up is subject to Ulta’s discretion due to Carrier, 
+Ulta DC capacity and operational hours and transit times.Ulta Beauty Supply Chain Guide – Published March 2025
+39
+• Ulta reserves the right to consolidate at our discretion and will communicate any 
+changes to the planned pickup date to the shipping warehouse/brand partner.
+• Provide accurate pallet count information. If there is an update to the pallet count, 
+please contact Transportation@Ulta.com.
+• All POs ready to ship are required to be entered into TMS.
+• All POs that are to be consolidated and shipped to the same Ulta DC should be entered 
+into TMS on the same day.
+• If any PO(s) are added after receiving routing instructions, you must notify 
+Transportation@Ulta.com referencing the PO(s) and TMS ID that the PO(s) should ship 
+under.
+• All POs shall be included on the BOL, if shipment is consolidated include Master BOL 
+with all POs
+• Non-Compliance is subject to chargebacks outlined in section 23 and encompasses 
+these categories: Incorrect Freight Class, Split Loads (POs), Unplanned PO(s), Carrier 
+Selection, Incorrect Mode, Incorrect Use of UPS Account, Wrong Address.
+• Additional reimbursement attempts will be made encompassing these transportation 
+accessorials: TONU, detention, layover, mis-ship (wrong DC on BOL). 
+• Seal number shall be included on all truckload shipments and seal number must be 
+typed on the BOL to ensure shipment integrity. If any changes to the typed seal number 
+occur, please reach out to Transportation@Ulta.com with details.
+• Seals shall be preprinted with number; no handwritten seals will be accepted.
+• We reserve the right to request seal and trailer number information from pick up origin, 
+as well as general driver check-in information (driver name, recorded license, etc). 
+Ensure shipping records are available.
+• We reserve the right to request all information above for all stops on an Ulta load (if 
+multi-stop).
+Carriers & Transportation Requirements
+• Brand Partners are required to utilize E2OPEN to route all PO's. The only exception is 
+small parcel.
+• Small parcel shipments via UPS are < less than 150lbs and <15 cases for the combined
+total order including all PO’s. Small parcel shipments do not require entry in TMS. 
+o If there are multiple POs shipping on the same day to the same destination, 
+regardless of mode, combine weight and pallet count to determine consolidated 
+mode of transport. When CONSOLIDATED shipment is > greater than 150lbs and 
+>15 cases, enter all POs into TMS and follow guidelines in section 15.2 Pallet 
+Loading and Wrapping.
+o If individual UPS shipments are sent and not consolidated as outlined above, Ulta 
+Beauty reserves the right to charge a penalty fee along with the cost of the 
+parcel shipment, refer to chart in Section 23: Shipment Non-Compliance Fees. 
+• No POs or shipments should be shipped directly to an Ulta Beauty retail location unless 
+it is previously authorized by the Ulta Beauty Merchant in writing. 
+• Copy of signed BOL and Proof of Delivery (POD), must accompany the freight bill. Ulta Beauty Supply Chain Guide – Published March 2025
+40
+• Collect Brand Partners (including 3rd party billing) must follow routing instruction as 
+provided through the TMS. If you are non-compliant, the following charges apply:
+o Utilizing a carrier other than on the TMS tender, but within Ulta Beauty’s 
+Preferred Carrier Partnerships, the difference in expense between the tendered 
+carrier vs. non-tendered carrier will be charged back, including a $100 
+administrative fee. 
+o Utilizing a carrier other than on the TMS tender and outside of Ulta Beauty’s 
+Preferred Carrier Partnerships, the full expenses for that shipment will be 
+charged back to the Brand Partner, including a $25 administrative fee.
+17.3 Transportation Management System 
+Do’s & Don’ts
+ Do add leading zeroes when searching for a purchase order. Purchase order numbers 
+should be 10 digits. Examples: 0100XXXXXX or 0011XXXXXX
+ Do update your billing address to Ulta Beauty c/o Transportation 1000 Remington Blvd, 
+Ste. 120 Bolingbrook, IL 60440
+o Do enter ready to ship details into the TMS at least 48 hours prior to the ready 
+date to allow for tendering
+o Note: Planned Ship Date entered as part of our ready to ship information does 
+not guarantee pick up on that date. Pick up is subject to Ulta’s discretion due to 
+carrier and DC capacity, operational hours and transit times
+ Do read the tender instructions and ship as tendered. If there are any changes to the 
+tender, you are required to notify Transportation@Ulta.com. The instruction will 
+include mode of transportation, Load ID, and carrier information by purchase order.
+ Do contact Transportation@Ulta.com if you are unable to fulfill tender instructions
+o Examples: 
+ Purchase order is not ready on planned date
+ Need to add a PO to the shipment after receiving your tender 
+instructions
+ Unable to add ready to ship information to the TMS
+ Do include the TMS Load ID in the top right-hand corner of the BOL
+ Do consider ORIGIN hours of operation when entering POs in TMS. Available hours for 
+pickup will be 08:00-16:00 unless otherwise indicated.
+ Do not plan small parcel shipments in TMS
+ Do not ship without a TMS Load ID number
+ Do not call the carriers for a pickup or confirmation. An email alert is sent via TMS 
+Advisors when the load is accepted
+ In order to receive confirmation within TMS for load acceptance or load modifications, 
+you must set up Advisors (notifications). Contact TMS@Ulta.com for setup assistance. 
+o If notifications are set within the TMS system, a Shipment Notification email will 
+be sent within 24-48 hours prior to shipment date. This notification will include 
+the Load ID, Carrier, and the requested pick-up date. Requested pick up date Ulta Beauty Supply Chain Guide – Published March 2025
+41
+from carrier may differ from the shipment date based on DC Capacity and transit 
+time.
+ When planning PO’s in TMS that are less than a pallet you may use decimals that add up 
+to the final pallet count shipped. (i.e. 1 PO is .5 and another .5 = 1 pallet)
+ Do not ship a small PO via parcel if you also have an LTL or TL shipment shipping to the 
+same Ulta DC with the same PO Requested Ship Date. Add the small PO to your larger 
+shipment, separating that PO with a slip-sheet on the pallet.
+o EDI requirements for multiple POs on a pallet must be followed. Refer to 
+section 4.2 Required EDI Transactions 
+17.4 Less Than Truckload (LTL) Shipping Instructions - TMS
+LTL Requirements 
+ It is the Brand Partners responsibility to provide the Carrier with a BOL and Packing 
+List. There are two options for BOL(s):
+o Brand Partner generated BOL
+o Ulta Beauty BOL – Refer to Section 25.7: Master BOL Template
+ Shipper is responsible for submitting the correct freight class and providing the most 
+accurate physical shipment characteristics. Discrepancies are subject to chargebacks 
+and non-compliance fees.
+ If LTL Standard Service does not allow enough time for the PO to arrive at the Ulta 
+Beauty DC by the RDD, the Brand Partner may be charged back the difference in freight 
+expense for the expedited shipment at the sole discretion of the Ulta Beauty Merchant. 
+ Ulta Beauty Transportation will determine if expedited service is required and 
+approved.
+Packing & Loading Requirements
+ All Collect POs must be shipped per the TMS routing instructions. Any deviation that 
+may need to occur must be communicated to and approved by 
+Transportation@Ulta.com. This includes adding or removing POs from a shipment or 
+changing transportation mode.
+ Do not split POs between multiple shipments. All cartons associated with one PO must 
+be on a single shipment.
+ All shipments require a pallet topper. 
+ If shipping more than one PO to the same DC on the same day via LTL, a master BOL is 
+required. Refer to E2OPEN’s Tender Accepted Advisor within the portal for load 
+planning details.
+ Provide accurate pallet count information. If there is an update to the pallet count, 
+contact Transportation@Ulta.com.
+Refer to Section 14: Packing & Label Requirements and Section 15: Pallet Standards & Trailer 
+Loading for more details.Ulta Beauty Supply Chain Guide – Published March 2025
+42
+Shipment Documentation Requirements
+ BOL and Packing lists are required for all BOLs must contain:
+ TMS Load ID number (top right corner)
+ Bill To: Ulta Beauty
+ C/O Transportation
+ 1000 Remington Blvd., Ste 120
+ Bolingbrook, IL 60440-4708 
+ Brand Partners must have shipment documentation completed at the time the 
+carrier arrives for Pick-up.
+ Include all PO numbers on the Bill of Lading. Listing PO’s on additional manifests is 
+not acceptable.
+o Refer to Section 13: Shipment Documentation for detailed requirements
+17.5 Truckload (TL) Shipping Instructions - TMS
+Packing & Loading Requirements
+ Do not split POs between multiple shipments. All cartons associated with one PO 
+must be on a single shipment. 
+ Submit E2OPEN’s ready to ship information for all Ulta Beauty DCs/POs at the same 
+time, so Ulta Beauty Transportation can assess consolidation opportunities for 
+multiple-stop loads. Tender notification will be sent once carrier has been assigned.
+ It is the Brand Partners responsibility to provide a BOL and Packing list
+ Brand Partners shipping facility must seal the trailer utilizing CTPAT compliant ISO 
+17712 bolt seals and notate the seal number on the BOL. If the trailer is not properly 
+sealed, any discrepancies noted will be the responsibility of the Brand Partner.
+ Bolt seals CTPAT compliant ISO 17712 are required for shipments valued over 
+$250k.
+ Provide accurate pallet count information. If there is an update to the pallet count, 
+contact Transportation@Ulta.com
+ Load the most expensive and promotional product towards the nose of the trailer.
+Multi-Stop Load Additional Requirements
+ The first stop should be loaded in the tail with the last stop in the nose of the trailer. 
+ Brand Partner must provide seals unless otherwise instructed. If the Brand Partner 
+does not have access to seals, please contact Transportation@Ulta.com
+ If the Carrier provides the seal(s), the Brand Partner must document the seal 
+number when planning the shipment in TMS prior to truck arrival on the appropriate 
+bill of lading to ensure integrity of the shipment. 
+ Multi-stop loads must have BOLs for each individual stop along with additional 
+seal(s). Seal#’s must be pre-printed on each respective BOL. Physical seal# must 
+match the seal# printed on each respective BOL. Ulta Beauty Supply Chain Guide – Published March 2025
+43
+ Pallet labeling requirements including the Ulta Beauty DC number and all applicable 
+information is defined in Section 14.5: Pallet Label Requirements.
+ If a PO has a pallet count exceeding 30 non-stackable or 60 stackable pallets, 
+contact Transportation@Ulta.com
+ Refer to Section 13: Shipment Documentation for detailed requirements.
+17.6 Small Parcel Shipping Requirements 
+UPS Small Parcel General Info
+ Small parcel shipments are < 150 lbs. and < 15 cases for all combined POs that are 
+inbound to each DC. 
+ UPS Ground Commercial is required for all small parcel shipments shipping to Ulta 
+Beauty DC’s. 
+ Any PO shipped using any other UPS service level must be approved by Ulta 
+Transportation. Any such POs shipped without approval will be subject to 
+chargebacks at Ulta’s discretion. 
+ All parcel cartons associated with one PO must be tendered to the parcel carrier at 
+the same time. 
+ If any Ulta PO(s) are shipped via UPS to circumvent on-time pickup & readiness 
+requirements, these PO(s) may still be subject to chargebacks at Ulta’s discretion. 
+ Any charges associated with using an incorrect UPS account will not be absorbed 
+by Ulta and will be subject to chargebacks at Ulta’s discretion.
+UPS Small Parcel Requirements
+Brand Partners are required to follow these instructions with all UPS small parcel 
+shipments:
+ Ship collect using the Ulta Beauty UPS Account number. Contact 
+Transportation@Ulta.com to obtain the Ulta Beauty UPS Account number. You must 
+include all POs with the request.
+ Brand Partner is responsible for freight claims.
+ You are required to enter all Ulta Beauty PO numbers on any printed UPS labels 
+using Ulta Beauty’s UPS account.
+ Ulta Beauty DC addresses are documented in Section 20: Ulta Beauty Distribution 
+Centers. 
+ Brand Partners are required to complete the UPS labels and include Reference 
+Fields 1 and 2 as shown below:Ulta Beauty Supply Chain Guide – Published March 2025
+44
+Reference Field 1:
+ Shipping to ULTA FFC in Jacksonville, FL: 50000230-1095011000
+ Shipping to ULTA FFC in Romeoville, IL: 50000230-1095011000
+ Shipping to ULTA DC in Chambersburg, PA: 50000230-1095011000
+ Shipping to ULTA DC in Greenwood, IN: 50000230-1095011000
+ Shipping to ULTA DC in Dallas, TX: 50000230-1095011000
+ Shipping to ULTA DC in Fresno, CA: 50000230-1095011000
+ Shipping to ULTA DC in Greer, SC: 50000230-1095011000
+ Shipping to ULTA DC Bolingbrook, IL: 50000230-1095011000
+ Shipping Collect 3rd Party Billing: 61000290-100000ULTA
+Reference Field 2:
+ Ulta Beauty PO number
+Note: Brand Partners must ship UPS Ground Commercial. If shipping UPS Ground 
+Commercial does not allow enough time for the PO to arrive to the Ulta Beauty DC by the 
+RDD, contact Transportation@Ulta.com.
+UPS Small Parcel Lost or Damaged Packages
+When using Ulta Beauty’s Third Party Collect account number for UPS shipments, the 
+Brand Partner is considered the “shipper of record” even though it is Ulta Beauty’s account 
+being billed. If a shipment is damaged or lost it is the shipper’s responsibility to notify UPS. 
+The shipper can claim a refund for the value of the package up to $100 plus shipping.
+Lost packages: The shipper can file a claim 24 hours after the expected delivery date and 
+time via https://www.ups.com under Claims Support or call Customer Service 1-800-742-
+5877.
+Damaged packages: The shipper initiates a claim via https://www.ups.com under Claims 
+Support or calls Customer Service 1-800-742-5877
+When initiating a claim, you will need:
+• Provide detailed package information
+o Examples: Number of units in package, descriptions of units and actual cost
+• Indicate your role in the claim – shipper of record
+• Provide supporting documentation
+o Examples: invoice, purchase order, receipt, etc. that describes the contents 
+of the package(s) and value
+Reach out to transbillingandclaims@ulta.com with questions regarding the UPS small 
+parcel lost or damaged package process.
+17.7 Resources & Contact Information 
+Resources available based on the mode of transportation
+For estimated Less-Than-Truckload (LTL) transit times reach out to 
+Transportation@Ulta.com.
+*Violations in Section 17 are subject to a compliance charge**Ulta Beauty Supply Chain Guide – Published March 2025
+45
+SECTION 18: DELIVERY APPOINTMENT PROCESS
+18.1 Delivery Appointments
+General Requirements:
+ Ulta Beauty will NOT accept appointment requests via phone or email
+ Delivery appointments are required for all Prepaid LTL and TL shipments. *Small 
+parcel shipments (PO = <150 lbs and <15 cases) do not require appointments.
+ Please do not use USPS or DHL for PO shipments to Ulta Beauty DC Locations; 
+instead use UPS and FedEx
+ Pallet loaded delivery appointment requests should be a minimum of 48 hours in 
+advance of the Purchase Order Requested Delivery Date.
+ Floor loaded (non-palletized) shipments require approval from 
+Transportation@ulta.com. If you have an approved floor loaded shipment, 
+appointment requests require a minimum of 72 hours in advance of the Purchase 
+Order Requested Delivery Date. 
+ Same-day delivery appointments are NOT accepted. 
+ The Brand Partner must plan shipping, transportation and appointment scheduling 
+in advance to secure a delivery appointment on the Purchase Order RDD. 
+ Ulta Beauty DC standard receiving hours are listed in Table 19.1.1 for reference.
+** Please allow up to 2 hours for unloading scheduled deliveries. Floor loaded (non-palletized) 
+shipments will be an exception. Ulta Beauty cannot guarantee 2 hour unloading time for floor loaded 
+shipments.**
+18.2 Ulta Beauty DC Appointment Process
+Collect Shipments:
+ Brand Partners are required to tender the shipment through E2OPEN TMS for Ulta 
+Beauty pickup on the Requested Ship Date.
+ Delivery appointments will be handled by Ulta Beauty transportation for collect 
+shipments.
+Prepaid Shipments:
+ All delivery appointments must be scheduled through E2OPEN TMS: https://naapp.tms.e2open.com
+ Step by step instructions are provided in the Prepaid Supplier TMS Process Guide 
+located on the Supplier Portal / Document Library / Transportation 
+https://supplierportal.ultabeauty.com
+ For any TMS system related issues with User set-up contact TMS@ulta.com
+ For any DC related concerns for scheduling around time slot availability, etc., please 
+reach out to the respective DC Receiving office shown in Table 18.2.1.Ulta Beauty Supply Chain Guide – Published March 2025
+46
+Table 18.2.1: Ulta Beauty DC Receiving Offices
+**Violations in Section 18 are subject to a compliance charge*
+Questions:
+E2OPEN TMS: TMS@Ulta.com 
+All other: Transportation@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+47
+SECTION 19: ULTA BEAUTY RECEIVING HOURS
+19.1 Receiving Hours
+ During peak receiving periods (September-December), there may be opportunities 
+to schedule Saturday morning deliveries at the mutual convenience of the Carrier 
+and the Ulta Beauty DC. 
+Table 19.1.1: Ulta Beauty Receiving Hours
+* All times above are local time *
+**Times shown above may be affected by holidays and are subject to change**
+Questions: SupplierOps@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+48
+SECTION 20: ULTA BEAUTY DISTRIBUTION CENTERS 
+20.1 Ulta Beauty DC Information
+Ulta Beauty FFC #808 0808 EDI
+Receiving Office: (904) 539-3623 N1*ST*ULTA DC Jacksonville*92*0808~
+2619 Ignition Drive, Suite# 8 N3*2619 Ignition Drive, Suite 8~
+Jacksonville, FL 32218-0100 N4*Jacksonville*FL*32218~
+Packlist mailbox: Ulta.Packlist.JAX@ulta.com
+Ulta Beauty DC #822 0822 EDI
+Receiving Office: (717) 414-5531 N1*ST*ULTA DC Chambersburg*92*0822~
+95 Kriner Road N3*95 Kriner Road~
+Chambersburg, PA 17202-8841 N4*Chambersburg*PA*17202~
+Packlist mailbox: Ulta.Packlist.CBG@ulta.com 
+Ulta Beauty DC #833 0833 EDI
+Receiving Office: (317) 886-6601 N1*ST*ULTA DC Greenwood*92*0833~
+482 Chaney Avenue N3*482 Chaney Avenue~
+Greenwood, IN 46143-0103 N4*Greenwood*IN*46143~
+Packlist mailbox: Ulta.Packlist.GWD@ulta.com
+Ulta Beauty DC #844 0844 EDI
+Receiving Office: (469) 872-7034 N1*ST*ULTA DC Dallas*92*0844~
+4786 Mountain Creek Parkway N3*4786 Mountain Creek Parkway~
+Dallas, TX 75236 N4*Dallas*TX*75236~
+Packlist mailbox: Ulta.Packlist.DAL@ulta.com
+Ulta Beauty DC #855 0855 EDI
+Receiving Office: (559) 547-3456 N1*ST*ULTA DC Fresno*92*0855~
+850 East Central Avenue N3*850 East Central Avenue~
+Fresno, CA 93725 N4*Fresno*CA*93725~
+Packlist mailbox: Ulta.Packlist.FRE@ulta.com
+Ulta Beauty DC #870 0870 EDI
+Receiving Office: (864) 479-5815 N1*ST*ULTA DC Greer*92*0870~
+549 Mason Farm Lane N3*549 Mason Farm Lane~
+Greer, South Carolina 29651 N4*Greer*SC*29651~
+Packlist mailbox: Ulta.Packlist.GRR@ulta.com
+Ulta Beauty DC #871 0871 EDI
+Receiving Office: (331) 803-6326 N1*ST*ULTA DC Bolingbrook*92*0871~
+925 Belle Lane N3*925 Belle Lane~
+Bolingbrook, Illinois 60490 N4*Bolingbrook*IL*60490~
+Packlist mailbox: Ulta.Packlist.BLB@Ulta.com
+Questions: SupplierOps@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+49
+SECTION 21: INVOICE DISCREPANCY
+21.1 Invoice Discrepancy
+An invoice discrepancy occurs when there is an observed difference between the Invoice 
+submitted by the Brand Partner and the Remittance Advice issued by the Ulta Beauty 
+Accounts Payable team. Brand Partners who have not received a Remittance Advice should 
+reach out to their designated Accounts Payable Clerk for more information.
+Invoice Discrepancy Types & Definitions: 
+• Price variance: Pricing on Brand Partner invoice does not match Ulta Beauty AP 
+Remittance
+• Quantity Variance – Shortage: Quantity of item(s) received at Ulta Beauty DC is 
+less than the quantity stated on the Brand Partner invoice.
+Invoice Discrepancy Examples: 
+• Price Variance 
+o Brand Partner fails to update a cost change and has incorrect cost in PIM
+o Inaccurate item set up information (incorrect case count/unit of measure)
+o Brand Partner invoices Ulta Beauty with incorrect unit of measure (unit of 
+measure on the invoice must match the PO)
+o PO is set up as a discounted PO but Brand Partner bills Ulta Beauty at full cost
+• Quantity Variance – Shortage 
+o Brand Partner did not ship product or quantity stated on invoice
+o Ulta Beauty DC receiving error
+o Carrier freight loss (missing cartons, shrink wrap not intact)
+o Mis-ships (wrong item sent or over/under)
+o Item set up incorrectly (case pack/inner pack quantity error)
+o Damaged upon receipt
+o Carton mis-labeled
+o Shipment delivered to incorrect address
+21.2 Invoice Discrepancy Process 
+All Brand Partners have an opportunity to request a Purchase Order delivery audit for 
+shortage discrepancies within 30 business days (M-F; No holiday exceptions) of receiving 
+the Remittance Advice Form. This process must be initiated before the Chargeback dispute 
+process.
+Best Practice: Brand Partners should leverage a copy of their Invoice as backup when 
+disputing through the Chargeback Process, if the Remittance Advice form has not yet been 
+received from A/P. 
+Refer to the Ulta Beauty Supplier Portal / Document Library for the comprehensive Invoice 
+Discrepancy Process. https://supplierportal.ultabeauty.com
+Questions:
+Discrepancy inquiries: Your Ulta Beauty Accounts Payable Clerk
+All other: SupplierOps@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+50
+SECTION 22: CHARGEBACK PROGRAM
+22.1 Chargeback Program 
+The Ulta Beauty Chargeback Program strives to enhance supply chain efficiencies and ensure 
+consistent product availability, which promotes a winning experience for Ulta Beauty guests.
+Infraction Details:
+Compliance 
+Metric 
+Metric 
+Description 
+Metric 
+Fee 
+Type 
+Performance 
+Tier 0 
+Performance 
+Tier 1 
+Performance 
+Tier 2 
+Performance 
+Tier 3 
+98% 100% 95% - 97.9% 90% - 94.9 % 89.9% and 
+below 
+Shipping 
+Accuracy (EDI 
+ASN 856) 
+Measures the 
+ability to 
+successfully 
+receive against 
+Vendor provided 
+ASN
+Weight $0 
+$0.01 per units 
+manually rec’d
+Min $75
+$0.02 per 
+units manually 
+rec’d
+Min $150
+$0.04 per 
+units manually 
+rec’d Min 
+$300
+PO 
+Acknowledgement 
+(EDI 855 POA 
+Receipt) 
+Measures 
+successful receipt 
+of EDI 855 within 
+2 business days of 
+850 transmission
+Flat $0 $100 Per PO $200 Per PO $400 Per PO
+Revised Fill Rate 
+Measures the last 
+PO QTY change 
+successfully 
+received within 2 
+business days of 
+850 transmission
+Weight $0 
+1% of COGs 
+short/ over
+Min $100
+2% of COGs 
+short/ over
+Min $200
+4% of COGs 
+short/ over
+Min $400
+Inbound Delivery 
+Measures percent 
+of PO’s received 
+on time per PO 
+requirement
+Flat $0 $100 Per PO $200 Per PO $400 Per PO
+GS1-128 Labeling 
+Measures GS1-128 
+Pallet & Carton 
+Label Compliance
+Flat $0 $100 Per 
+Infraction
+$200 Per 
+Infraction
+$400 Per 
+Infraction
+EDI 810 Invoice 
+Measures EDI 810 
+Invoice 
+Compliance
+Flat $0 $50 Per PO $50 Per PO $50 Per PO
+*The Chargeback Program details, and infraction types are subject to change at the 
+discretion of Ulta Beauty Supplier Operations.Ulta Beauty Supply Chain Guide – Published March 2025
+51
+Performance Tiering:
+Tiering creates the opportunity to accurately align chargeback fees with Brands who are 
+non-compliant with the regulations outlined in the Ulta Beauty Supply Chain Guide
+Performance Tiers are determined by the rolled-up average, by Period, of four key core 
+metrics:
+o ASN Received 
+o Revised Fill Rate
+o On Time Performance
+o GS1-128 Shipping and Label
+• Performance Tiers measures the average performance of a rolling 3-month period
+• Performance Tiers are updated by period
+• Brands in Performance Tier Zero will not receive chargebacks 
+• Tiering will be measured on a rolling 3-month cadence, with a period break in between. 
+Example:
+o Jan Tier Measures  Sept, Oct, Nov Performance
+o Feb Tier Measures  Oct, Nov & Dec Performance
+Definitions:
+Shipping Accuracy: 
+Definition: Measures the ability of Ulta Beauty Distribution Centers to successfully 
+receive against a Brand submitted EDI-856 ASN (Advanced Shipping Notice). 
+Requirement: ASN’s should be submitted and successfully received prior to the arrival 
+of shipments into our DCs. 
+o Only one PO per ASN is accepted, and errors must be corrected promptly, 
+and prior to the arrival of shipments into our DCs to avoid penalties.
+o Accurate GS1-128 shipping labels with scannable barcodes are mandatory for 
+all shipping cartons and pallets.
+Violations: Chargebacks occur when an Ulta Beauty Distribution Centers cannot 
+systematically receive against the Brand Partner submitted ASN, and manual receiving 
+is required.
+PO Acknowledgement: 
+Definition: Measures the successful receipt of the EDI 855 Acknowledgement 
+transmitted within two business days of the EDI 850 submission.
+Requirement: PO Acknowledgements are required for all transmitted lines on each PO 
+(The PO Acknowledgement is a required document for all live PO 850s).
+Violations: Chargebacks are assessed when the EDI 855 document is not received 
+successfully within those first two business days of the PO – 850 Transmission Date.
+ 
+ Ulta Beauty Supply Chain Guide – Published March 2025
+52
+Fill Rate: 
+Definition: Fill Rate measures the overall order fulfillment percentage based on the last 
+PO Quantity change successfully received within two business days of the EDI 850 
+transmission.
+Requirement: 855 POA changes must be submitted within the two-business day 
+timeline to highlight quantity adjustments. 
+If the 855 POA is received with errors, Brand Partners will receive and must action error 
+notifications issued by AI Notification noreply@gxs.com or 
+prod.noreply@cloud.opentext.com within the 2-business day window for QTY changes 
+to be successfully captured.
+Violations: Chargebacks are assessed when non-compliance with the Ulta Beauty 
+Supply Chain Guide, specifically regarding shortages and/or overages at the Purchase 
+Order SKU level.
+o The Chargeback calculation is based on the Revised Purchase Order lineitem quantity if the PO Change request is successfully received within two 
+business days. 
+o In instances where the EDI 855 Purchase Order Acknowledgement is 
+received unsuccessfully (e.g. late or with errors), metrics are calculated 
+based on the Original Purchase Order line-item quantity.
+On-Time (Inbound Delivery): 
+Definition: Inbound Delivery measures the percent of POs that are on time, per Brand 
+Partner PO requirements (e.g. Collect, Prepaid). 
+Requirement: 
+Collect: Planned Ship Date must = Request Ship Date
+Prepaid: Shipments must be delivered by the Request Delivery Date
+Violations: Chargebacks are assessed when:
+o Collect shipments: If Planned Ship Date entered in TMS is after the 
+Requested Ship Date on PO.
+o Prepaid shipments: If shipments are received more than one day after the PO 
+RDD (Requested Delivery Date).
+GS1-128 Label Compliance: 
+Definition: GS1-128 Label Compliance measures the Brand Partners ability to 
+successfully adhere to all GS1-128 guidelines for label placement, scannable; successfully 
+adhere to all carton and pallet label guidelines outlined in Section 14. 
+Requirement: Accurate GS1-128 shipping labels with scannable barcodes are mandatory 
+for all shipping cartons and pallets. Cartons should not contain more than one visible 
+Master Carton Label (GS1-128). All carton labels should be properly placed, avoiding 
+box seams and creases
+Violations: Chargebacks are assessed when:Ulta Beauty Supply Chain Guide – Published March 2025
+53
+o Labels do not comply with the GS1-128 guidelines (e.g. missing labels, 
+placement violations, incorrect information, scan, etc.)
+o Manual receiving by the DC is required
+o Unreadable SSCC barcodes, etc.
+EDI 810 Invoice: 
+Definition: EDI 810 Invoice measures the successful transmission of EDI invoices through 
+the OpenText platform
+Requirement: Electronic invoices successfully submitted for all Ulta Beauty orders 
+placed
+Violations: Chargebacks are assessed when Brands Partners fail to comply with Ulta 
+Beauty EDI requirements to transmit a successful 810.
+22.2 Chargeback Program Dispute Process & Best Practices
+• The Compliance Program Dispute Process is completed through the OpenText A.I. 
+portal.
+• The Compliance Program Dispute Process does not serve as an additional opportunity 
+to dispute, but rather as an opportunity to align with the invoice discrepancy/audit 
+process outcomes.
+• Invoice Discrepancies must be requested for Fill Rate prior to going thru the 
+Compliance Dispute Process.
+Best Practice: 
+• Brand Partners should leverage a copy of their Invoice as backup when disputing 
+through the Chargeback Process, if the Remittance Advice form has not yet been 
+received from A/P.
+• Brand Partners must ensure all contact details (emails, point of contacts, numbers, etc.) 
+are accurate and up to date. Failure to do so may result in missed or delayed 
+communications. Brand Partners are responsible for updating all contact details and 
+notifying Ulta Beauty of any changes.
+22.3 Chargeback Program Tools & Resources
+Useful resources include the following:
+o OpenText A.I. platform
+o Supplier Portal: https://supplierportal.ultabeauty.com
+o Supplier Scorecard
+o Training Documents > Compliance Chargeback Training
+Questions: SupplierOps@Ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+54
+SECTION 23: SHIPMENT NON-COMPLIANCE FEES
+Failure to comply with requirements outlined in the Supply Chain Guide will create additional 
+logistics expenses, and unacceptable delays in transit time, which will result in an expense 
+offset fee. Multiple infractions on a shipment will result in multiple handling charges.
+*Shipment non-compliance fees listed below are not all inclusive and subject to change 
+Collect Vendors:
+Charge 
+Category
+Supply Chain 
+Guide Section
+Charge Description Charges
+Freight 
+Class 
+13.1 Bill of Lading 
+(BOL)
+Missing, incorrect, or incomplete 
+freight class on the Bill of Lading 
+(BOL) and/or in the Transportation 
+Management System (e2open).
+First occurrence will be 
+waived. 2-4 occurrences 
+within a one-month period, a 
+charge of $250 will apply per 
+occurrence. Four or more 
+occurrences, the charge will 
+increase to $500 or the cost 
+of difference, whichever is 
+lower. 
+Split Loads 
+(PO’s) 
+Section 17.4 Less Than 
+Truckload (LTL) 
+Shipping Instructions -
+TMS
+Multiple BOL's created for each PO 
+under a single Load ID instead of a 
+Master BOL and/or shipping 
+consolidated PO's on different trucks 
+resulting in multiple invoices
+$150 per occurrence per 
+invoice; Plus a $50 
+administrative fee
+Unplanned 
+PO(s) 
+Section 17: Collect 
+Shipment 
+Requirements
+PO(s) shipped to an Ulta DC and not 
+routed in E2OPEN (excluding small 
+parcel)
+$150 per occurrence; Plus a 
+$50 administrative fee
+Carrier 
+Selection 
+Section 17.2 General 
+Shipping 
+Requirements for 
+Collect Shipments
+Shipping with Carrier outside of Ulta 
+Beauty’s Preferred Carrier 
+Partnerships 
+Full expense for that 
+shipment; Plus a $100 
+administrative fee
+Carrier 
+Selection 
+Section 17.2 General 
+Shipping 
+Requirements for 
+Collect Shipments
+Shipping with Incorrect tendered 
+Carrier, but within Ulta Beauty’s 
+Preferred Carrier Partnerships
+Difference in expense 
+between preferred vs. nonpreferred carrier rate; Plus a 
+$100 administrative fee
+Incorrect 
+Mode 
+Section 17.2 General 
+Shipping 
+Requirements for 
+Collect Shipments
+Shipping PO(s) using the incorrect 
+mode under guidelines outlined 
+including shipping small parcel instead 
+of LTL for shipments greater than 
+150lbs.
+Difference in expense 
+between LTL vs. Parcel rate; 
+Plus a $100 administrative fee
+Wrong 
+Address 
+Section 17.6: Small
+Parcel Shipping
+Requirements
+Incorrect Address on UPS label
+Ulta Beauty will pass through 
+UPS incorrect address fee to 
+Brand Partner; Plus a $25.00 
+administrative feeUlta Beauty Supply Chain Guide – Published March 2025
+55
+Prepaid Vendors:
+Charge 
+Category
+Supply Chain 
+Guide Section
+Charge Description Charge
+Incorrect 
+Terms on 
+BOL 
+Section 13.1 Bill of 
+Lading (BOL)
+Prepaid shipments billed collect to 
+Ulta due to mismarked BOL $100 administrative fee
+Incorrect 
+Terms on 
+BOL 
+Section 13.1 Bill of 
+Lading (BOL)
+Prepaid shipments billed collect to 
+Ulta due to mismarked BOL with no 
+resolution (LOA) from Vendor within 
+30 days of notice
+Ulta Beauty will pass through 
+the cost of freight; Plus, a $100 
+administrative fee
+Other Fees related to Shipment Non-Compliance:
+Charge 
+Category
+Supply Chain 
+Guide Section Charge Description Charge
+EDI NonCompliance 
+Section 4: 
+EDI (Electronic Data 
+Interchange)
+Ulta Beauty requires all Brand 
+Partners to be EDI compliant unless 
+otherwise noted in the Vendor 
+Purchasing Agreement (VPA) or 
+Commercial Terms document by an 
+authorized Ulta Beauty associate
+$250 fee per PO
+Product 
+Returns 
+Section 24.2:
+Returns (Post Receipt 
+RTV)
+If Brand Partner requests product to 
+be returned to their facility
+Handling fee 8% or based on 
+VPA terms; Plus, the cost of 
+freight
+DC Labor All requirements in 
+this guide
+Any additional labor needed by the 
+DC to process a noncompliant* 
+shipment
+$0.40 times the SKU quantity 
+to correct any non-compliant* 
+issues ($0.60 during peak 
+season: Oct -Dec); Plus, a 
+$25.00 administrative fee
+*Regarding any requirements presented in this guide that can affect the 
+DC level of service when receiving
+Questions:
+For Collect or Prepaid non-compliance fees, reach out to: Transportation@Ulta.com
+All other: SupplierOps@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+56
+SECTION 24: RETURNS (RTV)
+24.1 Pre-Receipt RTV
+Product that is refused at an Ulta Beauty DC receiving dock (Example: product not ordered, 
+overages, damages, non-compliant packaging/labeling…etc.)
+Product Shipped into Ulta Beauty DC’s:
+Brand Partners are required to provide disposition within 2 business days of notification 
+from Ulta Beauty. Notifications are issued to your corporate email address on file by 
+Inbound_PO_Notifications@ulta.com. Pre-Receipt RTV’s are subject to the “RTV Terms” in 
+your Vendor Purchasing Agreement (VPA) or Commercial Terms document.
+Brand Partner is required to make all shipping arrangements for product to be picked up 
+and returned, donated, destroyed, or other. Ulta Beauty will not make shipping 
+arrangements.
+If disposition is not received within 2 business days, or if merchandise is not picked up 
+within 10 business days of notification from Ulta Beauty, merchandise will be disposed of 
+at the discretion of Ulta Beauty and any disposal related costs will be charged back to the 
+Brand Partner.
+24.2 Post-Receipt RTV
+Product that has been received into Ulta Beauty inventory
+Product Shipped into all Ulta Beauty locations:
+• Ulta Beauty will request a Return Authorization, these returns are subject to the 
+“RTV Terms” in your Vendor Purchasing Agreement (VPA) or Commercial Terms 
+document.
+• This product will not be returned to cross border-based Brand Partner locations.
+24.3 Return Address
+Brand Partner return address is located on the Vendor Purchasing Agreement. To update a 
+return address contact: VendorMaintenance@ulta.com
+ Questions:
+Vendor Purchasing Agreement: Ulta Beauty Merchant
+Pre-Receipt RTV’s: Inbound_PO_Notifications@ulta.com
+Post-Receipt RTV’s: Ulta Beauty Inventory Analyst
+All other: SupplierOps@ulta.comUlta Beauty Supply Chain Guide – Published March 2025
+57
+SECTION 25: ADDITIONAL INFO, CALENDARS & DEFINITIONS
+25.1 Supply Chain Transparency Statement
+California Transparency in Supply Chains Act of 2010
+Ulta Beauty Salon, Cosmetics & Fragrance, Inc. is the largest beauty retailer that provides 
+one-stop shopping for prestige, mass and salon products and salon services in the United 
+States. Ulta Beauty is committed to the highest standards of business conduct in its
+operations. At the core of Ulta Beauty's corporate policy is that all of its employees, 
+directors, suppliers and service providers conduct all relationships in accordance with the 
+highest ethical standards and compliance with all applicable laws and regulations.
+Ulta Beauty has implemented a Code of Business Conduct, wherein the Company has made 
+known its position that no employee will be permitted to unlawfully harass or discriminate 
+against another employee, customer or Supplier in any way. Ulta Beauty expects the 
+Suppliers it works with also abide by these same principles and expects that its Suppliers 
+will pass these principles along to their extended Suppliers engaged in the production of 
+goods that are ultimately purchased by Ulta Beauty.
+Verification and Certification
+Ulta Beauty requires all Suppliers who wish to conduct business with Ulta Beauty to sign a 
+binding Vendor Purchasing Agreement that denotes acceptance of all terms and conditions 
+within such agreement. Under the Vendor Purchasing Agreement, Suppliers must comply 
+with all applicable U.S. and foreign laws, rules, and regulations. Similarly, all Ulta Beauty
+manufacturers must execute a Manufacturing/Formulation Agreement that requires 
+compliance with all U.S. and foreign laws, rules, and regulations. This includes any and all 
+laws and regulations, domestic and foreign that pertains to human trafficking and forced 
+labor. Ulta Beauty also requires all private label Suppliers to certify that they are in 
+compliance with the laws regarding slavery and human trafficking in the countries in which 
+they do business.
+Audits 
+Ulta Beauty reserves the right under its Manufacturing/Formulation Agreement to audit the 
+facilities of its Suppliers that are used in the manufacturing, receiving, sampling, analyzing, 
+storing, handling, packaging, and shipping of products ordered by Ulta Beauty. A purpose 
+of these Audits would be to assure good manufacturing practices and compliance with 
+applicable laws and regulations at these facilities.
+Internal Accountability
+Suppliers are held accountable for non-compliance with Ulta Beauty's 
+Manufacturing/Formulation Agreement and Vendor Purchasing Agreement. Suppliers
+subject to the Manufacturing/Formulation Agreement are required to provide Ulta Beauty a 
+written response to any audit observations Ulta Beauty's auditors issue to the Suppliers and 
+are to immediately implement any corrective actions or enhancements to their 
+manufacturing, packaging and labeling operations and processes, as requested by Ulta 
+Beauty.Ulta Beauty Supply Chain Guide – Published March 2025
+58
+If Ulta Beauty discovers that a Supplier is not in compliance with the expected ethical 
+standards, which include the elimination of human trafficking and forced labor within its 
+supply chain, Ulta Beauty will provide such supplier with the opportunity to remedy any 
+potential non-compliance through the implementation of a corrective action plan. If the 
+supplier fails to remedy the non-compliance, Ulta Beauty reserves the right to eliminate 
+such Supplier from its supply chain. 
+Ulta Beauty employees are held accountable for non-compliance with Ulta Beauty’s Code 
+of Business Conduct. In accordance with the Code, any employee who is aware of a 
+violation or suspected violation of the Code will refer the violation to the Senior Vice 
+President of Human Resources or the Ethics Hotline. Violations of the Code are addressed 
+promptly by Ulta Beauty, subject to compliance with applicable laws or regulations, and 
+may subject persons to corrective and/or disciplinary action, including termination of 
+employment. 
+Training 
+Ulta Beauty recently launched an employee training program. Included in the program is a 
+training module on ethics, which includes social responsibility topics. 
+Conclusion 
+Ulta Beauty will not tolerate any instances of human trafficking or other forced labor within 
+its supply chains. Ulta Beauty expects that its employees, directors, suppliers, and service 
+providers conduct all relationships in accordance with the highest ethical standards. Failure 
+to comply with Ulta Beauty's standards will result in appropriate actions being taken 
+against such individuals and companies to preserve Ulta Beauty's high standards of 
+business conduct.
+This statement can be found at Ulta.com > About Us > Supply Chain TransparencyUlta Beauty Supply Chain Guide – Published March 2025
+59
+25.2 Fiscal Week ComparisonUlta Beauty Supply Chain Guide – Published March 2025
+60
+25.3 Fiscal CalendarsUlta Beauty Supply Chain Guide – Published March 2025
+61
+25.4 Quarter End Guidance Calendar
+*Shipping restrictions are subject to change. Check the Supplier Portal for updates Ulta Beauty Supply Chain Guide – Published March 2025
+62
+25.5 2024 POS Data Confidentiality Agreement Ulta Beauty Supply Chain Guide – Published March 2025
+63
+25.6 Master Bill of Lading Template 
+Questions: Transportation@Ulta.com
+Enter the TMS LOAD ID here
+Option 1: List all PO’s including 
+Pallet Count, Carton Count & Total 
+Weight
+Option 2: List all PO’s
+Required Field
+Required Field
+Required Field
+Required Fields
+Please TYPE
+Required Fields for 
+Truckload
+Ensure correct freight term is 
+marked 
+Required Fields
+List PRO number 
+Required Field for 
+Less than 
+TruckloadUlta Beauty Supply Chain Guide – Published March 2025
+64
+25.7 Packing List Example 
+Questions: SupplierOps@Ulta.com
+ULTA PO:
+Ship Date:
+Invoice:
+Page:
+Supplier ID:
+Ship To: Customer Bill To:
+ULTA Distribution Center #888 ULTA INC
+1135 Arbor Dr. 1000 Remington Blvd, Suite 120
+Romeoville, IL 60446 Bolingbrook, IL 60440
+STYLE # ULTA SKU UPC CTNS QTY WT
+HLPE8O-12 2241862 10465302280610 1 12 6.08
+HLBE8O-12 2241860 10465302280204 2 24 12.15
+HLFR8O-12 2246692 10465302201202 4 48 24.30
+HLUN8O-12 2246693 10465302201219 1 12 6.08
+HLLE8O-12 2241865 10465302210198 3 36 18.23
+HLVA8O-12 2245639 10465302210181 5 60 30.38
+HLCO8O-12 2241863 10465302210205 9 108 54.68
+Total Cartons: 25 Total Weight: 151.88
+Item Description
+LOTION COCONUT 8OZ
+LOTION VANILLA 8OZ
+LOTION LEMON 8OZ
+LOTION UNSCENT 8OZ
+LOTION FRESH 8OZ
+LOTION BERRY 8OZ
+LOTION PEAR 8OZ
+PACKING LIST
+999999
+Ulta Supplier
+1234 MAIN ST
+CHICAGO, IL 60601
+1 of 1
+3/1/2015
+10712345Ulta Beauty Supply Chain Guide – Published March 2025
+65
+25.8 Pallet Examples
+Unacceptable Pallets:
+ 
+
+Pallet Missing Stringer 
+Plastic Pallet 
+Unstable Layers
+  Double Stacked &  Wrapped Together
+Overhang & Misalignment
+  Too tall
+ Labels not all facing the 
+right directionUlta Beauty Supply Chain Guide – Published March 2025
+66
+Acceptable Pallets: 
+Questions: SupplierOps@Ulta.com
+ GMA #2 / Grade B Wood Pallet
+
+Shrink Wrapped from Bottom to 
+Top / Non-Clear Pallet Wrap Used 
+/ Pallet Topper Used / GS1 Pallet 
+Label Visible / GS1 Carton Labels 
+Visible
+Pallet TopperUlta Beauty Supply Chain Guide – Published March 2025
+67
+25.9 High Level Shipment Preparation Checklist
+Questions: SupplierOps@Ulta.com
+Category Checklist Refer to: Check 
+Appointment General
+Has a delivery appointment been 
+scheduled in TMS? Section 18.2
+Has a delivery appointment been 
+scheduled within the appropriate amount 
+of time based on load condition?
+Section 18.1
+Documents General 
+Is the Bill of Lading (BOL) included? Section 13.1 
+Is the E2OPEN Load ID number provided 
+on the BOL? Section 13.1
+Are the packing lists included? Section 13.2
+Is there a packing list for each individual 
+PO? (if there are multiple) Section 13.2
+Is the Packing List attached outside of 
+the carton? Section 13.2
+Has the Packing List been emailed to the 
+designated ULTA Beauty DC? Section 13.2
+Shipment 
+Accuracy 
+General 
+Has shipment been prepared properly? PO, SKU, UOM, Qty/Case 
+Pack must match
+Does actual shipped product match the 
+information on the Packing list & ASN? 
+PO, SKU, UOM, Qty/Case 
+Pack must match
+Are all required ASN components 
+included?
+Delivery/Transportation 
+info, actual/estimated ship 
+date
+Are products packed in a way that 
+ensures arrival free of any damage or 
+wear?
+Section 14.1
+ASN 
+Has ASN been sent prior to PO arrival at 
+DC? Section 14.2
+Have accurate GS1-128 shipping labels 
+with scannable barcodes been applied to 
+both cartons and pallets? 
+Section 14
+Do carton & pallet labels meet ULTA 
+requirements? Sections 14.2-14.5
+Load Conditions General 
+Do the pallets match ULTA 
+requirements? Section 15
+Is the pallet height/weight within ULTA 
+requirements for both single and multiSKU pallets? Section 15.1
+Are pallets shrink-wrapped appropriately 
+with pallet toppers present? Section 15.2
+Are products & pallets labeled 
+appropriately? Section 15.2
+Truck Loading General Are the pallets loaded appropriately, with 
+some space for unloading? Section 15.3
+Small Parcel 
+General 
+Are small parcel shipments under 150 lbs. 
+and under 15 cases? Section 17.6 
+Is the Packing List placed on the 
+designated lead carton? Section 13.2
+Small parcel General Is the lead carton marked with how many 
+cartons are in the small parcel shipment? Section 13.2Ulta Beauty Supply Chain Guide – Published March 2025
+68
+25.10 EAS Security Tagging Program
+Contact Keith McUmber to begin the process of product review
+Keith.McUmber@checkpt.com
+(407) 341 3905Ulta Beauty Supply Chain Guide – Published March 2025
+69Ulta Beauty Supply Chain Guide – Published March 2025
+70
+25.11 Definitions
+3PL (Third Party Logistics) -- Outsourced supply chain management of warehousing 
+and fulfillment services.
+Article -- Ulta Beauty SAP item number for the purpose of tracking inventory and 
+placing orders.
+ASN (Advanced Shipment Notice) -- A freight shipment notice furnished to the 
+consignee detailing shipment information of a pending delivery including number of 
+eaches for each item. 
+ASN % - Percentage of ASNs sent by Brand Partner and received by Ulta
+Bill of Lading (BOL) -- can be abbreviated as B/L or BOL, is a legal document between 
+the shipper of goods and the carrier detailing the type, quantity and destination of the 
+goods being carried. The bill of lading also serves as a receipt of shipment when the 
+goods are delivered at the predetermined destination.
+Cancel Date – The date up to which an issuer reserves the right to cancel the PO and 
+refuse delivery. Not a standard date used by Ulta Beauty, but at the discretion of the 
+Ulta Beauty Buying and Inventory teams, may also be exchanged.
+Carrier -- An entity or individual engaged in the business of transporting goods or 
+persons, for a fee.
+Chargeback -- A charge levied by the receiving company for violation of the policies 
+and procedures.
+Claim -- A written demand for payment because of loss or damage alleged to have 
+occurred while shipment was in possession of the Carrier.
+Collect Freight terms -- Freight charges will be paid by the consignee (Ulta Beauty).
+Commercial Terms document - A binding contract denoting a Brand Partner’s 
+acceptance of all terms and conditions of conducting business with Ulta Beauty
+Consignee -- The person or organization to which the freight is shipped.
+Consignor -- The person or organization to which the freight is leaving the facility.
+Country of Origin -- The country where an article is produced or in some instances in 
+which the majority of the components were produced.
+Delivery -- The act of transferring possession, such as the transfer of property from 
+consignor to Carrier, one Carrier to another or Carrier to consignee.
+Department -- The category number given within ULTA hierarchy that indicates under 
+which business the item is sold.Ulta Beauty Supply Chain Guide – Published March 2025
+71
+Destination -- The place to which a shipment is consigned.
+Display -- A fixture that saleable product is placed on
+Distribution Center (DC) -- Warehouse or specialized building for the receipt, storage, 
+and distribution of goods
+Eaches -- A single unit of a product that ULTA orders from the Vendor
+EDI (Electronic Data Interchange) -- Computer-to-computer communications of data 
+that permits the receiver to perform functions of a business transaction.
+European Article Number (EAN) – Unique 13 digit code used to identify an article –
+must be in accordance with the approved guidelines of the GS1 standards.
+Ensemble -- Multiple saleable items within a single display unit. 
+Fast Fulfillment Center (FFC) - A limited assortment facility that supports eCommerce 
+fulfillment for a specific market
+Fill Rate % -- Ratio of quantity received versus the quantity requested on the PO.
+FCL (Full Container Load) -- Whole container that is usually intended for one consignee.
+Freight -- Merchandise or goods transported by truck, train, ship, or aircraft.
+Freight Bill -- Document for common Carrier shipment. It gives the description of the 
+freight, weight, amount of charges and whether it is prepaid or collect. Charges paid by 
+the shipper are called prepaid freight bills. Charges collected at destination are called 
+destination or collect freight bills.
+FTL -- Full truck load or full trailer load.
+GS1 (Global Standards 1) – A not-for-profit organization that develops and maintains 
+global standards for business communication. The best known of these standards is the 
+barcode, a symbol printed on products that can be scanned electronically. To view the 
+current GS1 General Specifications standards: https://www.gs1us.org/
+Global Trade Item Number (GTIN) -- Unique identifier for trade items, developed by the 
+international organization GS1.
+GWP -- Gift with purchase. Item given to a customer for purchasing certain dollar 
+amount or quantity of a product.
+Invoice Discrepancy -- When there is a price or quantity variance between the invoice 
+submitted by the Brand Partner and the Remittance Advice issued by Ulta Beauty
+LCL (Less than Container Load) -- A shipment that is not large enough to fill a standard 
+cargo container.Ulta Beauty Supply Chain Guide – Published March 2025
+72
+Lead Time -- Number of days from the day a PO is transmitted to the day the product is 
+checked in at an Ulta Beauty DC (may not be same as delivery date).
+LTL (Less-than-Truckload) -- A quantity of freight less than that required for the 
+application of a truckload rate
+Marks -- Letters, numbers or characters placed on a package for identification.
+Master Pack/Case -- The case or carton containing one or more SKUs. When the Master 
+Case contains one SKU, it is considered a ‘‘Full Case’’ or a ‘‘Partial Case’’. When the 
+Master Case contains more than one SKU, it is considered a Mixed Case.
+Market Fulfillment Center (MFC) --A limited assortment facility that supports store 
+replenishment and eCommerce fulfillment for a specific market
+Mixed Case -- When orders contain items that are less than full case quantity and there 
+are more than one SKU in the master case.
+Non-Compliance Charge -- A charge levied by the receiving company for violation of 
+the policies and procedures.
+Notice -- Information given signifying the accomplishment of an act, such as the 
+placement of a trailer for loading or unloading.
+On Time % -- Percentage of purchase orders received on time per PO requirements. 
+• Collect (CC): Planned Ship Date entered into TMS is on or within +4 days 
+Requested Ship Date on the PO = On Time
+• Prepaid (PP): PO is received within +4 or -1 of the Requested Deliver Date on the 
+PO = On Time
+Packing List -- A detailed specification as to goods shipped.
+Pallet -- A small wooden or paper platform usually with top and bottom, on which 
+packaged goods are placed to facilitate movement by some type of freight handling 
+equipment.
+Partial Case -- When a carton contains less than a full case quantity and is shipped with 
+the same SKU in the master case.
+Period or Fiscal Period -- Time period of 4-5 weeks depending on month - used to 
+benchmark open to buy dollars, sales, performance and receipts for a department or 
+Vendor. See Ulta Fiscal Calendar in earlier section.
+Planned Ship Date -- Date shipment will be ready to ship as entered in TMS by shipper 
+(brand partner) with CC freight terms.
+Point of Origin -- The terminal at which a shipment is received by a Carrier from the 
+Shipper.
+Prepaid Freight terms -- Freight charges will be paid by the Shipper.Ulta Beauty Supply Chain Guide – Published March 2025
+73
+Purchase Order (PO) -- A commercial document and first official offer issued by a buyer 
+to a seller, indicating types, quantities, and agreed prices for products or services.
+Purchase Order Change (POC-860) -- A Purchase Order Change (POC-860) EDI 
+document communicates updates or modifications to a previously submitted purchase 
+order, including changes to quantities or delivery dates.
+Purchase Order Acknowledgement (POA-855) --A PO Acknowledgment (POA- 855)
+EDI document communicates acceptance, rejection, or proposed changes to the SKU 
+quantity or Requested Delivery Date.
+Point of Sale (POS-852) -- A Point of Sale (POS-852) EDI document provides detailed 
+point-of-sale data, such as sales, inventory, and performance metrics
+Proof of Delivery (POD) -- A signed delivery receipt.
+Remittance Advice -- An Accounts Payable summary document issued to Brand 
+Partner informing that an invoice has been paid, may also include any quantity or 
+pricing variances. 
+Requested Delivery Date (RDD) -- Date the shipment must be delivered to the 
+designated Ulta Beauty DC as stated on the Purchase Order.
+Requested Ship Date -- Requested ship date as stated on the Purchase Order.
+Seal -- A device for fastening or locking the doors of a truck.
+Serial Shipping Container Code 18 (SSCC-18) - Unique 18 digit code used to identify and 
+track freight as it moves through the supply chain. Common examples are pallets and 
+cartons. This code should be in both a scannable and human readable format and is 
+communicated on the accompanying ASN as well. 
+Shipment -- One or more pieces of freight with the same shipper or consignee.
+Shipper -- Company or individual who initiates the transport of goods.
+Shipper’s Load and Count (SL&C) -- A term denoting that the contents of a truck were 
+loaded and counted by the shipper and not checked or verified by the Carrier.
+Shortage -- Where a quantity ordered is greater than the quantity supplied.
+Stock Keeping Unit (SKU) -- Identification code for a product, often portrayed as a 
+machine readable bar code that helps track the item for inventory.
+Slip-Sheet -- A piece of material (normally cardboard) used for the separation and/or 
+movement of goods.
+Said to Contain (STC) -- A term denoting that the contents of a sealed container or 
+trailer are received by the carrier as is without any additions.
+Shrink Wrapped Skid (SWS) -- A shrink wrapped pallet/skid.Ulta Beauty Supply Chain Guide – Published March 2025
+74
+Transportation Management System (TMS) -- software used to manage freight, Ulta 
+Beauty utilizes E2OPEN.
+Vendor SKU/Style No. -- The item number the Supplier assigns to an item for the 
+purpose of tracking inventory and accepting orders.
+Universal Product Code (UPC) -- Unique code for an article or SKU used for tracking 
+purposes - must be in accordance with the approved guidelines of the GS1 standards.
+Unit of Measure (UOM) - The number by which we order product from the Brand 
+Partner. Orders can be placed in eaches, inners, or master case quantities.
+Global Trade Item Number (GTIN) -- Unique number to define any product code.
+Vendor Purchasing Agreement - A binding contract denoting a Brand Partner’s 
+acceptance of all terms and conditions of conducting business with Ulta Beauty.
+Warehouse -- A place for the receipt and storage of goods.Ulta Beauty Supply Chain Guide – Published March 2025
+75

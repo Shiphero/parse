@@ -1,0 +1,1709 @@
+856 Ship Notice/Manifest
+X12/V4030/856 : 856 Ship Notice/Manifest
+Version: 1.2 Final
+Author: OpenText
+Company: Ulta Beauty Inc.
+Publication: 5/13/20205/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 2 For external use 
+Version # Implemented By Revision Date Approved By Reason for Change
+v1.1 Kevin Baloue 4/13/2020 Aubrey Butler 1) Removed unnecessary Syntax rules, Semantics 
+and Comments from various Segments.
+2) Under BGN05 added notes for Ulta HL 
+Structure for clarity.
+3) Changed following Segment to reflect 
+Mandatory for clarity: TD1, REF, N1, PRF, REF, 
+MAN, PAL, MEA, MAN, LIN, SN1, PO4 and 
+CTT
+4) Added PID02 for consistence across all EDI 
+documents.
+v1.2 Kevin Baloue 5/13/2020 Aubrey Butler 1) Under 856 title page change wording on 
+Delimiters to: These are Ulta Required 
+Delimiters:
+2) Also, under delimiters added: 
+Repetition Separator “^” (HEX 5E)
+3) Under Example ISA sample data, in the ISA 11, 
+change “|” to “^”.
+4) Under the HL for “Tare”, changed from
+”Mandatory” to “Optional” and from “Must Use” 
+to “Used” since we do accept SOPI.
+5) Under TD101, Consolidated Part 1”CTN” and 
+Part 2 “25” to read as it comes in on the ASN 
+“CTN25” 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 1 For external use
+856 Ship Notice/Manifest
+Functional Group=SH
+Purpose: This Draft Standard for Trial Use contains the format and establishes the data contents of the Ship 
+Notice/Manifest Transaction Set (856) for use within the context of an Electronic Data Interchange (EDI) environment. 
+The transaction set can be used to list the contents of a shipment of goods as well as additional information relating 
+to the shipment, such as order information, product description, physical characteristics, type of packaging, marking, 
+carrier information, and configuration of goods within the transportation equipment. The transaction set enables the 
+sender to describe the contents and configuration of a shipment in various levels of detail and provides an ordered 
+flexibility to convey information. The sender of this transaction is the organization responsible for detailing and 
+communicating the contents of a shipment, or shipments, to one or more receivers of the transaction set. The 
+receiver of this transaction set can be any organization having an interest in the contents of a shipment or information 
+about the contents of a shipment.
+Not Defined:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+ISA Interchange Control 
+Header
+M 1 Must use
+GS Functional Group Header M 1 Must use
+Heading:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+0100 ST Transaction Set Header M 1 Must use
+0200 BSN Beginning Segment for 
+Ship Notice
+M 1 Must use
+Detail:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+LOOP ID - HL 200000 C2/0100L
+0100 HL Hierarchical Level -
+Shipment
+M 1 C2/0100 Must use
+1100 TD1 Carrier Details (Quantity 
+and Weight)
+M 20 Must use
+1200 TD5 Carrier Details (Routing 
+Sequence/Transit Time)
+O 12 Used
+LOOP ID - TD3 12
+1300 TD3 Carrier Details (Equipment) O 1 Used
+1400 TD4 Carrier Details (Special 
+Handling, or Hazardous 
+Materials, or Both)
+O 5 Used
+1500 REF Reference Identification M >1 Must use
+2000 DTM Date/Time Reference M 10 Must use
+LOOP ID - N1 200
+2200 N1 Name M 1 Must use
+LOOP ID - HL 200000 C2/0100L
+0100 HL Hierarchical Level - Order M 1 C2/0100 Must use
+0500 PRF Purchase Order Reference M 1 Must use
+1500 REF Reference Identification M >1 Must use
+LOOP ID - HL 200000 C2/0100L
+0100 HL Hierarchical Level - Tare O 1 C2/0100 Must use
+1900 MAN Marks and Numbers M >1 Must use
+2150 PAL Pallet Information M 1 Must use
+LOOP ID - HL 200000 C2/0100L
+0100 HL Hierarchical Level - Pack M 1 C2/0100 Must use5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 2 For external use 
+0800 MEA Measurements M 40 Must use
+1900 MAN Marks and Numbers M >1 Must use
+LOOP ID - HL 200000 C2/0100L
+0100 HL Hierarchical Level - Item M 1 C2/0100 Must use
+0200 LIN Item Identification M 1 Must use
+0300 SN1 Item Detail (Shipment) M 1 Must use
+0600 PO4 Item Physical Details M 1 Must use
+0700 PID Product/Item Description O 200 Used
+Summary:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+0100 CTT Transaction Totals M 1 N3/0100 Must use
+0200 SE Transaction Set Trailer M 1 Must use
+Not Defined:
+Pos Id Segment Name Req Max Use Repeat Notes Usage
+GE Functional Group Trailer M 1 Must use
+IEA Interchange Control Trailer M 1 Must use
+Notes: 
+3/0100 Number of line items (CTT01) is the accumulation of the number of HL segments. If used, hash total 
+(CTT02) is the sum of the value of units shipped (SN102) for each SN1 segment.
+Comments: 
+2/0100L The HL segment is the only mandatory segment within the HL loop, and by itself, the HL segment has no 
+meaning.
+2/0100 The HL segment is the only mandatory segment within the HL loop, and by itself, the HL segment has no 
+meaning.
+Ulta Note:
+Hierarchical levels:
+Shipment/Order/Tare/Pack/Item
+Shipment/Order/Tare/Item
+Shipment/Order/Pack/Item
+These are Ulta Required Delimiters:
+Element Separator - "*" (HEX 2A)
+Repetition Separator “^” (HEX 5E)
+Sub-Element Separator - ">" (HEX 3E)
+Segment Separator - "~" (HEX 7E)
+Additional Notes:
+1, Ulta is expecting one HL Order per ST/SE
+.
+2. X12 optional segments/elements that are mandatory for Ulta are identified in the Guideline as "User Option 
+(Usage): Must use" and "Ulta Note: Ulta mandatory".5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 3 For external use
+3. The following data from the 850 Purchase Order are required on this ASN (856):
+Description Provided on the 850 Purchase 
+Order
+850 Purchase Order value returned 
+on the 856
+Ulta DC Code
+N104 of the N1 Ship-to loop -
+Example,
+N1*ST*ULTA DC 
+Romeoville*92*0888~
+Expected return value in N104 of the 
+N1 Ship-to loop will be 0888-
+Example,
+N1*ST*DC STORE NAME*92*0888~
+Ulta SAP Vendor Code
+The Ulta SAP vendor code is 
+provided on the 850
+Purchase Order at the header REF IA 
+segment - Example,
+REF*IA*0000099999~
+Expected return value in REF02 IA of 
+the HL Order loop will be 
+0000099999- Example,
+HL*2*1*O
+PRF*S1234567*20190909~
+REF*IA*0000099999~
+Ulta PO Line Number
+Ulta PO line number is mapped in 
+PO101 - Example,
+PO1*00010*12*CA*2*WE*UP*085365
+819192*VA*9999999*IN*1234567
+Expected return value in LIN01 of the 
+HL Item will be 00010- Example
+HL*5*4*I
+LIN*00010*VA*9999999*IN*1234567*
+UP*0853658191925/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 4 For external use 
+ISA Interchange Control Header Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 16
+User Option (Usage): Must use
+Purpose: To start and identify an interchange of zero or more functional groups and interchange-related control 
+segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+ISA01 I01 Authorization Information Qualifier
+ 
+Description: Code identifying the type of 
+information in the Authorization Information
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 7, Included: 1)
+Code Name
+00 No Authorization Information Present (No Meaningful Information in I02)
+ISA02 I02 Authorization Information
+ 
+Description: Information used for 
+additional identification or authorization of 
+the interchange sender or the data in the 
+interchange; the type of information is set 
+by the Authorization Information Qualifier 
+(I01)
+M AN 10/10 Must use
+ISA03 I03 Security Information Qualifier
+ 
+Description: Code identifying the type of 
+information in the Security Information
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 2, Included: 1)
+Code Name
+00 No Security Information Present (No Meaningful Information in I04)
+ISA04 I04 Security Information
+ 
+Description: This is used for identifying 
+the security information about the 
+interchange sender or the data in the 
+interchange; the type of information is set 
+by the Security Information Qualifier (I03)
+M AN 10/10 Must use
+ISA05 I05 Interchange ID Qualifier
+ 
+Description: Code indicating the 
+system/method of code structure used to 
+designate the sender or receiver ID 
+element being qualified
+All valid standard codes are used. (Total 
+Codes: 41)
+M ID 2/2 Must use
+ISA06 I06 Interchange Sender ID
+ 
+Description: Identification code published 
+by the sender for other parties to use as 
+the receiver ID to route data to them; the 
+sender always codes this value in the 
+sender ID element
+M AN 15/15 Must use
+ISA07 I05 Interchange ID Qualifier
+ 
+Description: Code indicating the 
+system/method of code structure used to 
+designate the sender or receiver ID 
+M ID 2/2 Must use5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 5 For external use
+element being qualified
+CodeList Summary (Total Codes: 41, Included: 1)
+Code Name
+ZZ Mutually Defined
+ISA08 I07 Interchange Receiver ID
+ 
+Description: Identification code published 
+by the receiver of the data; When sending, 
+it is used by the sender as their sending ID, 
+thus other parties sending to them will use 
+this as a receiving ID to route data to them
+Ulta Note: ULTABEAUTY
+M AN 15/15 Must use
+ISA09 I08 Interchange Date
+ 
+Description: Date of the interchange
+M DT 6/6 Must use
+ISA10 I09 Interchange Time
+ 
+Description: Time of the interchange
+M TM 4/4 Must use
+ISA11 I65 Repetition Separator
+ 
+Description: Type is not applicable; the 
+repetition separator is a delimiter and not a 
+data element; this field provides the 
+delimiter used to separate repeated 
+occurrences of a simple data element or a 
+composite data structure; this value must 
+be different than the data element 
+separator, component element separator, 
+and the segment terminator
+M 1/1 Must use
+ISA12 I11 Interchange Control Version Number
+ 
+Description: Code specifying the version 
+number of the interchange control 
+segments
+M ID 5/5 Must use
+CodeList Summary (Total Codes: 15, Included: 1)
+Code Name
+00403 Draft Standards for Trial Use Approved for Publication by ASC X12 
+Procedures Review Board through October 1999
+ISA13 I12 Interchange Control Number
+ 
+Description: A control number assigned 
+by the interchange sender
+M N0 9/9 Must use
+ISA14 I13 Acknowledgment Requested
+ 
+Description: Code indicating sender's 
+request for an interchange 
+acknowledgment
+All valid standard codes are used. (Total 
+Codes: 2)
+M ID 1/1 Must use
+ISA15 I14 Usage Indicator
+ 
+Description: Code indicating whether data 
+enclosed by this interchange envelope is 
+test, production or information
+M ID 1/1 Must use
+CodeList Summary (Total Codes: 3, Included: 2)
+Code Name
+P Production Data
+T Test Data5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 6 For external use 
+ISA16 I15 Component Element Separator
+ 
+Description: Type is not applicable; the 
+component element separator is a delimiter 
+and not a data element; this field provides 
+the delimiter used to separate component 
+data elements within a composite data 
+structure; this value must be different than 
+the data element separator and the 
+segment terminator
+M 1/1 Must use
+Example:
+ISA*00* *00* *ZZ*SENDERID *ZZ*ULTABEAUTY 
+*041025*0111*^*00403*000143657*0*T*>~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 7 For external use
+GS Functional Group Header Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 8
+User Option (Usage): Must use
+Purpose: To indicate the beginning of a functional group and to provide control information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+GS01 479 Functional Identifier Code
+ 
+Description: Code identifying a group of 
+application related transaction sets
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 263, Included: 1)
+Code Name
+SH Ship Notice/Manifest (856)
+GS02 142 Application Sender's Code
+ 
+Description: Code identifying party 
+sending transmission; codes agreed to by 
+trading partners
+M AN 2/15 Must use
+GS03 124 Application Receiver's Code
+ 
+Description: Code identifying party 
+receiving transmission; codes agreed to by 
+trading partners
+Ulta Note: ULTABEAUTY
+M AN 2/15 Must use
+GS04 373 Date
+ 
+Description: Date expressed as 
+CCYYMMDD where CC represents the first 
+two digits of the calendar year
+M DT 8/8 Must use
+GS05 337 Time
+ 
+Description: Time expressed in 24-hour 
+clock time as follows: HHMM, or 
+HHMMSS, or HHMMSSD, or 
+HHMMSSDD, where H = hours (00-23), M 
+= minutes (00-59), S = integer seconds 
+(00-59) and DD = decimal seconds; 
+decimal seconds are expressed as follows: 
+D = tenths (0-9) and DD = hundredths 
+(00-99)
+M TM 4/8 Must use
+GS06 28 Group Control Number
+ 
+Description: Assigned number originated 
+and maintained by the sender
+M N0 1/9 Must use
+GS07 455 Responsible Agency Code
+ 
+Description: Code identifying the issuer of 
+the standard; this code is used in 
+conjunction with Data Element 480
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 2, Included: 1)
+Code Name
+X Accredited Standards Committee X12
+GS08 480 Version / Release / Industry Identifier 
+Code
+ 
+Description: Code indicating the version, 
+M AN 1/12 Must use5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 8 For external use 
+release, subrelease, and industry identifier 
+of the EDI standard being used, including 
+the GS and GE segments; if code in 
+DE455 in GS segment is X, then in DE 480 
+positions 1-3 are the version number; 
+positions 4-6 are the release and 
+subrelease, level of the version; and 
+positions 7-12 are the industry or trade 
+association identifiers (optionally assigned 
+by user); if code in DE455 in GS segment 
+is T, then other formats are allowed
+CodeList Summary (Total Codes: 41, Included: 1)
+Code Name
+004030 Draft Standards Approved for Publication by ASC X12 Procedures Review 
+Board through October 1999
+Semantics: 
+1. GS04 is the group date.
+2. GS05 is the group time.
+3. The data interchange control number GS06 in this header must be identical to the same data element in the 
+associated functional group trailer, GE02.
+Comments: 
+1. A functional group of related transaction sets, within the scope of X12 standards, consists of a collection of 
+similar transaction sets enclosed by a functional group header and a functional group trailer.
+Example:
+GS*SH*SENDERID*ULTABEAUTY*20041025*0111*20642*X*004030~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 9 For external use
+ST Transaction Set Header Pos: 0100 Max: 1
+Heading - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the start of a transaction set and to assign a control number
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+ST01 143 Transaction Set Identifier Code
+ 
+Description: Code uniquely identifying a 
+Transaction Set
+M ID 3/3 Must use
+CodeList Summary (Total Codes: 314, Included: 1)
+Code Name
+856 Ship Notice/Manifest
+ST02 329 Transaction Set Control Number
+ 
+Description: Identifying control number 
+that must be unique within the transaction 
+set functional group assigned by the 
+originator for a transaction set
+M AN 4/9 Must use
+Semantics: 
+1. The transaction set identifier (ST01) is used by the translation routines of the interchange partners to select the 
+appropriate transaction set definition (e.g., 810 selects the Invoice Transaction Set).
+2. The implementation convention reference (ST03) is used by the translation routines of the interchange partners 
+to select the appropriate implementation convention to match the transaction set definition.
+Example:
+ST*856*0001~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 10 For external use 
+BSN Beginning Segment for 
+Ship Notice
+Pos: 0200 Max: 1
+Heading - Mandatory
+Loop: N/A Elements: 5
+User Option (Usage): Must use
+Purpose: To transmit identifying numbers, dates, and other basic data relating to the transaction set
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+BSN01 353 Transaction Set Purpose Code
+ 
+Description: Code identifying purpose of 
+transaction set
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 65, Included: 1)
+Code Name
+00 Original
+BSN02 396 Shipment Identification
+ 
+Description: A unique control number 
+assigned by the original shipper to identify 
+a specific shipment
+M AN 2/30 Must use
+BSN03 373 Date
+ 
+Description: Date expressed as 
+CCYYMMDD where CC represents the first 
+two digits of the calendar year
+M DT 8/8 Must use
+BSN04 337 Time
+ 
+Description: Time expressed in 24-hour 
+clock time as follows: HHMM, or 
+HHMMSS, or HHMMSSD, or 
+HHMMSSDD, where H = hours (00-23), M 
+= minutes (00-59), S = integer seconds 
+(00-59) and DD = decimal seconds; 
+decimal seconds are expressed as follows: 
+D = tenths (0-9) and DD = hundredths 
+(00-99)
+M TM 4/8 Must use
+BSN05 1005 Hierarchical Structure Code
+ 
+Description: Code indicating the 
+hierarchical application structure of a 
+transaction set that utilizes the HL segment 
+to define the structure of the transaction 
+set
+O ID 4/4 Must use
+CodeList Summary (Total Codes: 79, Included: 1)
+Code Name
+0001 Shipment, Order, Tare, Packaging, Item
+Ulta Note:
+Hierarchical levels:
+Shipment/Order/Tare/Pack/Item
+Shipment/Order/Tare/Item
+Shipment/Order/Pack/Item5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 11 For external use
+Semantics: 
+1. BSN03 is the date the shipment transaction set is created.
+2. BSN04 is the time the shipment transaction set is created.
+Example:
+BSN*00*JB17649076*20091025*011111*00015/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 12 For external use 
+HL Hierarchical Level -
+Shipment
+Pos: 0100 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned 
+by the sender to identify a particular data 
+segment in a hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the 
+next higher hierarchical data segment that 
+the data segment being described is 
+subordinate to
+O AN 1/12 Not used
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the 
+characteristic of a level in a hierarchical 
+structure
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 218, Included: 1)
+Code Name
+S Shipment
+Comments: 
+1. The HL segment is used to identify levels of detail information using a hierarchical structure, such as relating 
+line-item data to shipment data, and packaging data to line-item data.
+2. The HL segment defines a top-down/left-right ordered structure.
+3. HL01 shall contain a unique alphanumeric number for each occurrence of the HL segment in the transaction 
+set. For example, HL01 could be used to indicate the number of occurrences of the HL segment, in which case 
+the value of HL01 would be "1" for the initial HL segment and would be incremented by one in each subsequent 
+HL segment within the transaction.
+4. HL02 identifies the hierarchical ID number of the HL segment to which the current HL segment is subordinate.
+5. HL03 indicates the context of the series of segments following the current HL segment up to the next 
+occurrence of an HL segment in the transaction. For example, HL03 is used to indicate that subsequent 
+segments in the HL loop form a logical grouping of data referring to shipment, order, or item-level information.
+Example:
+HL*1**S~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 13 For external use
+TD1 Carrier Details (Quantity 
+and Weight)
+Pos: 1100 Max: 20
+Detail - Mandatory
+Loop: HL Elements: 5
+User Option (Usage): Must use
+Purpose: To specify the transportation details relative to commodity, weight, and quantity
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD101 103 Packaging Code
+ 
+Description: Code identifying the type of 
+packaging; Part 1: Packaging Form, Part 2: 
+Packaging Material; if the Data Element is 
+used, then Part 1 is always required
+O AN 3/5 Must use
+CodeList Summary (Total Codes: 148, Included: 2)
+Code Name
+CTN Carton
+PLT Pallet
+CTN25 Carton, Corrugated
+TD102 80 Lading Quantity
+ 
+Description: Number of units (pieces) of 
+the lading commodity
+X N0 1/7 Must use
+TD106 187 Weight Qualifier
+ 
+Description: Code defining the type of 
+weight
+O ID 1/2 Must use
+CodeList Summary (Total Codes: 52, Included: 1)
+Code Name
+G Gross Weight
+TD107 81 Weight
+ 
+Description: Numeric value of weight
+X R 1/10 Must use
+TD108 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in 
+which a value is being expressed, or 
+manner in which a measurement has been 
+taken
+X ID 2/2 Must use
+CodeList Summary (Total Codes: 803, Included: 1)
+Code Name
+LB Pound
+Syntax Rules: 
+1. C0102 - If TD101 is present, then TD102 is required.
+2. C0304 - If TD103 is present, then TD104 is required.
+3. C0607 - If TD106 is present, then TD107 is required.
+4. P0708 - If either TD107 or TD108 is present, then the other is required.
+Ulta Note:
+Ulta mandatory
+Example:
+TD1* CTN25*1****G*1*LB~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 14 For external use 
+TD5 Carrier Details (Routing 
+Sequence/Transit Time)
+Pos: 1200 Max: 12
+Detail - Optional
+Loop: HL Elements: 5
+User Option (Usage): Used
+Purpose: To specify the carrier and sequence of routing and provide transit time information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD501 133 Routing Sequence Code
+ 
+Description: Code describing the 
+relationship of a carrier to a specific 
+shipment movement
+O ID 1/2 Must use
+CodeList Summary (Total Codes: 23, Included: 1)
+Code Name
+B Origin/Delivery Carrier (Any Mode)
+TD502 66 Identification Code Qualifier
+ 
+Description: Code designating the 
+system/method of code structure used for 
+Identification Code (67)
+X ID 1/2 Must use
+CodeList Summary (Total Codes: 223, Included: 1)
+Code Name
+2 Standard Carrier Alpha Code (SCAC)
+TD503 67 Identification Code
+ 
+Description: Code identifying a party or 
+other code
+X AN 2/80 Must use
+TD504 91 Transportation Method/Type Code
+ 
+Description: Code specifying the method 
+or type of transportation for the shipment
+X ID 1/2 Must use
+CodeList Summary (Total Codes: 80, Included: 4)
+Code Name
+A Air
+M Motor (Common Carrier)
+O Containerized Ocean
+R Rail
+TD506 368 Shipment/Order Status Code
+ 
+Description: Code indicating the status of 
+an order or shipment or the disposition of 
+any difference between the quantity 
+ordered and the quantity shipped for a line 
+item or transaction
+X ID 2/2 Must use
+CodeList Summary (Total Codes: 102, Included: 1)
+Code Name
+CC Shipment Complete on (Date)
+Syntax Rules: 
+1. R0204050612 - At least one of TD502, TD504, TD505, TD506 or TD512 is required.
+2. C0203 - If TD502 is present, then TD503 is required.
+Comments: 
+1. When specifying a routing sequence to be used for the shipment movement in lieu of specifying each carrier 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 15 For external use
+within the movement, use TD502 to identify the party responsible for defining the routing sequence, and use 
+TD503 to identify the actual routing sequence, specified by the party identified in TD502.
+Example:
+TD5*B*2*CNWY*M**CC~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 16 For external use 
+TD3 Carrier Details (Equipment) Pos: 1300 Max: 1
+Detail - Optional
+Loop: TD3 Elements: 4
+User Option (Usage): Used
+Purpose: To specify transportation details relating to the equipment used by the carrier
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD301 40 Equipment Description Code
+ 
+Description: Code identifying type of 
+equipment used for shipment
+X ID 2/2 Used
+CodeList Summary (Total Codes: 137, Included: 1)
+Code Name
+TL Trailer (not otherwise specified)
+TD302 206 Equipment Initial
+ 
+Description: Prefix or alphabetic part of an 
+equipment unit's identifying number
+O AN 1/4 Used
+TD303 207 Equipment Number
+ 
+Description: Sequencing or serial part of 
+an equipment unit's identifying number 
+(pure numeric form for equipment number 
+is preferred)
+X AN 1/10 Used
+TD309 225 Seal Number
+ 
+Description: Unique number on seal used 
+to close a shipment
+O AN 2/15 Must use
+Syntax Rules: 
+1. E0110 - Only one of TD301 or TD310 may be present.
+2. C0203 - If TD302 is present, then TD303 is required.
+Example:
+TD3*TL*999*8888888888******7777777~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 17 For external use
+TD4 Carrier Details (Special 
+Handling, or Hazardous 
+Materials, or Both)
+Pos: 1400 Max: 5
+Detail - Optional
+Loop: HL Elements: 4
+User Option (Usage): Used
+Purpose: To specify transportation special handling requirements, or hazardous materials information, or both
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+TD401 152 Special Handling Code
+ 
+Description: Code specifying special 
+transportation handling instructions
+X ID 2/3 Must use
+CodeList Summary (Total Codes: 542, Included: 1)
+Code Name
+HM Endorsed as Hazardous Material
+TD402 208 Hazardous Material Code Qualifier
+ 
+Description: Code which qualifies the 
+Hazardous Material Class Code (209)
+X ID 1/1 Must use
+CodeList Summary (Total Codes: 14, Included: 2)
+Code Name
+D Hazardous Materials ID, DOT
+X Hazard Class or Division
+TD403 209 Hazardous Material Class Code
+ 
+Description: Code specifying the kind of 
+hazard for a material
+Ulta Note: "HZD", "FL","FG","FP"
+X AN 1/4 Must use
+TD404 352 Description
+ 
+Description: A free-form description to 
+clarify the related data elements and their 
+content
+X AN 1/80 Must use
+Syntax Rules: 
+1. R010204 - At least one of TD401, TD402 or TD404 is required.
+2. C0203 - If TD402 is present, then TD403 is required.
+Example:
+TD4*HM*D*HZD*Description~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 18 For external use 
+REF Reference Identification Pos: 1500 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify identifying information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+REF01 128 Reference Identification Qualifier
+ 
+Description: Code qualifying the 
+Reference Identification
+M ID 2/3 Must use
+CodeList Summary (Total Codes: 1631, Included: 2)
+Code Name
+BM Bill of Lading Number
+CN Carrier's Reference Number (PRO/Invoice)
+REF02 127 Reference Identification
+ 
+Description: Reference information as 
+defined for a particular Transaction Set or 
+as specified by the Reference Identification 
+Qualifier
+X AN 1/50 Must use
+Syntax Rules: 
+1. R0203 - At least one of REF02 or REF03 is required.
+Semantics: 
+1. REF04 contains data relating to the value cited in REF02.
+Ulta Note:
+Ulta mandatory -
+Provide either one or both occurrences of the REF BM and REF CN.
+Example:
+REF*BM*07621800000018373~ 
+REF*CN*00000762180074799338~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 19 For external use
+DTM Date/Time Reference Pos: 2000 Max: 10
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must Use
+Purpose: To specify pertinent dates and times
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+DTM01 374 Date/Time Qualifier
+ 
+Description: Code specifying type of date 
+or time, or both date and time
+M ID 3/3 Must use
+CodeList Summary (Total Codes: 1226, Included: 2)
+Code Name
+011 Shipped
+067 Current Schedule Delivery
+DTM02 373 Date
+ 
+Description: Date expressed as 
+CCYYMMDD where CC represents the first 
+two digits of the calendar year
+X DT 8/8 Must use
+Syntax Rules: 
+1. R020305 - At least one of DTM02, DTM03 or DTM05 is required.
+Ulta Note:
+Ulta mandatory
+Example:
+DTM*011*20041024~ 
+DTM*067*20041031~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 20 For external use 
+N1 Name Pos: 2200 Max: 1
+Detail - Mandatory
+Loop: N1 Elements: 4
+User Option (Usage): Must use
+Purpose: To identify a party by type of organization, name, and code
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+N101 98 Entity Identifier Code
+ 
+Description: Code identifying an 
+organizational entity, a physical location, 
+property or an individual
+M ID 2/3 Must use
+CodeList Summary (Total Codes: 1446, Included: 2)
+Code Name
+SF Ship From
+ST Ship To
+N102 93 Name
+ 
+Description: Free-form name
+X AN 1/60 Must use
+N103 66 Identification Code Qualifier
+ 
+Description: Code designating the 
+system/method of code structure used for 
+Identification Code (67)
+X ID 1/2 Used
+CodeList Summary (Total Codes: 223, Included: 1)
+Code Name
+92 Assigned by Buyer or Buyer's Agent
+N104 67 Identification Code
+ 
+Description: Code identifying a party or 
+other code
+Ulta Note: N1 ST - Must return the Ulta 
+DC Code. for the N1 ST Loop provided on 
+the 850 Purchase Order
+X AN 2/80 Used
+Syntax Rules: 
+1. R0203 - At least one of N102 or N103 is required.
+2. P0304 - If either N103 or N104 is present, then the other is required.
+Comments: 
+1. This segment, used alone, provides the most efficient method of providing organizational identification. To 
+obtain this efficiency the "ID Code" (N104) must provide a key to the table maintained by the transaction 
+processing party.
+Ulta Note:
+Ulta mandatory
+Example:
+N1*ST*DC STORE NAME*92*ULTA DC Number~ 
+N1*SF*SHIP FROM NAME~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 21 For external use
+HL Hierarchical Level - Order Pos: 0100 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned 
+by the sender to identify a particular data 
+segment in a hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the 
+next higher hierarchical data segment that 
+the data segment being described is 
+subordinate to
+O AN 1/12 Used
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the 
+characteristic of a level in a hierarchical 
+structure
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 218, Included: 1)
+Code Name
+O Order
+Comments: 
+1. The HL segment is used to identify levels of detail information using a hierarchical structure, such as relating 
+line-item data to shipment data, and packaging data to line-item data.
+2. The HL segment defines a top-down/left-right ordered structure.
+3. HL01 shall contain a unique alphanumeric number for each occurrence of the HL segment in the transaction 
+set. For example, HL01 could be used to indicate the number of occurrences of the HL segment, in which case 
+the value of HL01 would be "1" for the initial HL segment and would be incremented by one in each subsequent 
+HL segment within the transaction.
+4. HL02 identifies the hierarchical ID number of the HL segment to which the current HL segment is subordinate.
+5. HL03 indicates the context of the series of segments following the current HL segment up to the next 
+occurrence of an HL segment in the transaction. For example, HL03 is used to indicate that subsequent 
+segments in the HL loop form a logical grouping of data referring to shipment, order, or item-level information.
+Ulta Note:
+Ulta mandatory
+Only 1 HL Order per ST/SE
+Example:
+HL*2*1*O~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 22 For external use 
+PRF Purchase Order Reference Pos: 0500 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must Use
+Purpose: To provide reference to a specific purchase order
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PRF01 324 Purchase Order Number
+ 
+Description: Identifying number for
+Purchase Order assigned by the 
+orderer/purchaser
+M AN 1/22 Must use
+PRF04 373 Date
+ 
+Description: Date expressed as 
+CCYYMMDD where CC represents the first 
+two digits of the calendar year
+O DT 8/8 Used
+Semantics: 
+1. PRF04 is the date assigned by the purchaser to purchase order.
+Ulta Note:
+Ulta mandatory
+Example:
+PRF*S1234567***20190909~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 23 For external use
+REF Reference Identification Pos: 1500 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify identifying information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+REF01 128 Reference Identification Qualifier
+ 
+Description: Code qualifying the 
+Reference Identification
+M ID 2/3 Must use
+CodeList Summary (Total Codes: 1631, Included: 1)
+Code Name
+IA Internal Vendor Number
+REF02 127 Reference Identification
+ 
+Description: Reference information as 
+defined for a particular Transaction Set or 
+as specified by the Reference Identification 
+Qualifier
+X AN 1/50 Must use
+Syntax Rules: 
+1. R0203 - At least one of REF02 or REF03 is required.
+Ulta Note:
+Ulta mandatory
+The Ulta SAP vendor code is provided on the 850 Purchase Order at the header REF IA segment. The same value 
+must be returned in REF02.
+Example:
+REF*IA*0000099999~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 24 For external use 
+HL Hierarchical Level - Tare Pos: 0100 Max: 1
+Detail - Optional
+Loop: HL Elements: 3
+User Option (Usage): Used
+Purpose: To identify dependencies among and the content of hierarchically related groups of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned 
+by the sender to identify a particular data 
+segment in a hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the 
+next higher hierarchical data segment that 
+the data segment being described is 
+subordinate to
+O AN 1/12 Used
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the 
+characteristic of a level in a hierarchical 
+structure
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 218, Included: 1)
+Code Name
+T Shipping Tare
+Comments: 
+1. The HL segment is used to identify levels of detail information using a hierarchical structure, such as relating 
+line-item data to shipment data, and packaging data to line-item data.
+2. The HL segment defines a top-down/left-right ordered structure.
+3. HL01 shall contain a unique alphanumeric number for each occurrence of the HL segment in the transaction 
+set. For example, HL01 could be used to indicate the number of occurrences of the HL segment, in which case 
+the value of HL01 would be "1" for the initial HL segment and would be incremented by one in each subsequent 
+HL segment within the transaction.
+4. HL02 identifies the hierarchical ID number of the HL segment to which the current HL segment is subordinate.
+5. HL03 indicates the context of the series of segments following the current HL segment up to the next 
+occurrence of an HL segment in the transaction. For example, HL03 is used to indicate that subsequent 
+segments in the HL loop form a logical grouping of data referring to shipment, order, or item-level information.
+Example:
+HL*3*2*T~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 25 For external use
+MAN Marks and Numbers Pos: 1900 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate identifying marks and numbers for shipping containers
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+MAN01 88 Marks and Numbers Qualifier
+ 
+Description: Code specifying the 
+application or source of Marks and 
+Numbers (87)
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 21, Included: 1)
+Code Name
+GM SSCC-18 and Application Identifier
+MAN02 87 Marks and Numbers
+ 
+Description: Marks and numbers used to 
+identify a shipment or parts of a shipment
+M AN 1/48 Must use
+Semantics: 
+1. MAN01/MAN02 and MAN04/MAN05 may be used to identify two different marks and numbers assigned to the 
+same physical container.
+2. When both MAN02 and MAN03 are used, MAN02 is the starting number of a sequential range and MAN03 is 
+the ending number of that range.
+Comments: 
+1. When MAN01 contains code "UC" (U.P.C. Shipping Container Code) and MAN05/MAN06 contain a range of ID 
+numbers, MAN03 is not used. The reason for this is that the U.P.C. Shipping Container code is the same on 
+every carton that is represented in the range in MAN05/MAN06.
+Ulta Note:
+Ulta mandatory
+Example:
+MAN*GM*00000762180074799338~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 26 For external use 
+PAL Pallet Information Pos: 2150 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 7
+User Option (Usage): Must use
+Purpose: To identify the type and physical attributes of the pallet, and, gross weight, gross volume, and height of the 
+load and the pallet
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PAL01 883 Pallet Type Code
+ 
+Description: Code indicating the type of 
+pallet
+O ID 1/2 Must use
+CodeList Summary (Total Codes: 7, Included: 5)
+Code Name
+1 Aluminum
+3 Metal
+5 Steel
+6 Wood
+7 Slip sheet 
+Description: Typically, cardboard or plastic sheets used to hold product for 
+storage or transportation
+PAL07 82 Length
+ 
+Description: Largest horizontal dimension 
+of an object measured when the object is 
+in the upright position
+X R 1/8 Must use
+PAL08 189 Width
+ 
+Description: Shorter measurement of the 
+two horizontal dimensions measured with 
+the object in the upright position
+X R 1/8 Must use
+PAL09 65 Height
+ 
+Description: Vertical dimension of an 
+object measured when the object is in the 
+upright position
+X R 1/8 Must use
+PAL10 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in 
+which a value is being expressed, or 
+manner in which a measurement has been 
+taken
+X ID 2/2 Must use
+CodeList Summary (Total Codes: 803, Included: 1)
+Code Name
+IN Inch
+PAL11 384 Gross Weight per Pack
+ 
+Description: Numeric value of gross 
+weight per pack
+X R 1/9 Must use
+PAL12 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in 
+which a value is being expressed, or 
+manner in which a measurement has been 
+taken
+X ID 2/2 Must use
+CodeList Summary (Total Codes: 803, Included: 1)5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 27 For external use
+Code Name
+LB Pound
+Syntax Rules: 
+1. P0506 - If either PAL05 or PAL06 is present, then the other is required.
+2. C0710 - If PAL07 is present, then PAL10 is required.
+3. C0810 - If PAL08 is present, then PAL10 is required.
+4. C0910 - If PAL09 is present, then PAL10 is required.
+5. L10070809 - If PAL10 is present, then at least one of PAL07, PAL08 or PAL09 is required.
+6. P1112 - If either PAL11 or PAL12 is present, then the other is required.
+Semantics: 
+1. PAL04 (Pack) is the number of pieces on the pallet.
+2. PAL05 (Unit Weight) is the weight of the pallet alone, before loading.
+3. PAL07 and PAL08 (Length and Width) are the dimensions of the pallet before loading.
+4. PAL09 (Height) is the height of the pallet and load.
+5. PAL11 and PAL13 (Gross Weight and Gross Volume) are measured after loading and includes the pallet.
+Ulta Note:
+Ulta mandatory
+Example:
+PAL*6******48*48*48*IN*2864*LB~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 28 For external use 
+HL Hierarchical Level - Pack Pos: 0100 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned 
+by the sender to identify a particular data 
+segment in a hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the 
+next higher hierarchical data segment that 
+the data segment being described is 
+subordinate to
+O AN 1/12 Must use
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the 
+characteristic of a level in a hierarchical 
+structure
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 218, Included: 1)
+Code Name
+P Pack
+Comments: 
+1. The HL segment is used to identify levels of detail information using a hierarchical structure, such as relating 
+line-item data to shipment data, and packaging data to line-item data.
+2. The HL segment defines a top-down/left-right ordered structure.
+3. HL01 shall contain a unique alphanumeric number for each occurrence of the HL segment in the transaction 
+set. For example, HL01 could be used to indicate the number of occurrences of the HL segment, in which case 
+the value of HL01 would be "1" for the initial HL segment and would be incremented by one in each subsequent 
+HL segment within the transaction.
+4. HL02 identifies the hierarchical ID number of the HL segment to which the current HL segment is subordinate.
+5. HL03 indicates the context of the series of segments following the current HL segment up to the next 
+occurrence of an HL segment in the transaction. For example, HL03 is used to indicate that subsequent 
+segments in the HL loop form a logical grouping of data referring to shipment, order, or item-level information.
+Example:
+HL*4*3*P5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 29 For external use
+MEA Measurements Pos: 0800 Max: 40
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To specify physical measurements or counts, including dimensions, tolerances, variances, and 
+weights(See Figures Appendix for example of use of C001)
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+MEA02 738 Measurement Qualifier
+ 
+Description: Code identifying a specific 
+product or process characteristic to which 
+a measurement applies
+O ID 1/3 Must use
+CodeList Summary (Total Codes: 959, Included: 1)
+Code Name
+WT Weight
+MEA03 739 Measurement Value
+ 
+Description: The value of the 
+measurement
+X R 1/20 Must use
+MEA04 C001 Composite Unit of Measure
+ 
+Description: To identify a composite unit 
+of measure(See Figures Appendix for 
+examples of use)
+X Comp Must use
+MEA04-01 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in 
+which a value is being expressed, or 
+manner in which a measurement has been 
+taken
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 803, Included: 1)
+Code Name
+LB Pound
+Syntax Rules: 
+1. R03050608 - At least one of MEA03, MEA05, MEA06 or MEA08 is required.
+2. C0504 - If MEA05 is present, then MEA04 is required.
+3. C0604 - If MEA06 is present, then MEA04 is required.
+4. L07030506 - If MEA07 is present, then at least one of MEA03, MEA05 or MEA06 is required.
+5. E0803 - Only one of MEA08 or MEA03 may be present.
+Semantics: 
+1. MEA04 defines the unit of measure for MEA03, MEA05, and MEA06.
+Comments: 
+1. When citing dimensional tolerances, any measurement requiring a sign (+ or -), or any measurement where a 
+positive (+) value cannot be assumed, use MEA05 as the negative (-) value and MEA06 as the positive (+) 
+value.
+Ulta Note:
+Ulta mandatory
+Example:
+MEA**WT*250*LB~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 30 For external use 
+MAN Marks and Numbers Pos: 1900 Max: >1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate identifying marks and numbers for shipping containers
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+MAN01 88 Marks and Numbers Qualifier
+ 
+Description: Code specifying the 
+application or source of Marks and 
+Numbers (87)
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 21, Included: 1)
+Code Name
+GM SSCC-18 and Application Identifier
+MAN02 87 Marks and Numbers
+ 
+Description: Marks and numbers used to 
+identify a shipment or parts of a shipment
+M AN 1/48 Must use
+Semantics: 
+1. MAN01/MAN02 and MAN04/MAN05 may be used to identify two different marks and numbers assigned to the 
+same physical container.
+2. When both MAN02 and MAN03 are used, MAN02 is the starting number of a sequential range and MAN03 is 
+the ending number of that range.
+Comments: 
+1. When MAN01 contains code "UC" (U.P.C. Shipping Container Code) and MAN05/MAN06 contain a range of ID 
+numbers, MAN03 is not used. The reason for this is that the U.P.C. Shipping Container code is the same on 
+every carton that is represented in the range in MAN05/MAN06.
+Ulta Note:
+Ulta mandatory
+Example:
+MAN*GM*00000762180099999999~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 31 For external use
+HL Hierarchical Level - Item Pos: 0100 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 3
+User Option (Usage): Must use
+Purpose: To identify dependencies among and the content of hierarchically related groups of data segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+HL01 628 Hierarchical ID Number
+ 
+Description: A unique number assigned 
+by the sender to identify a particular data 
+segment in a hierarchical structure
+M AN 1/12 Must use
+HL02 734 Hierarchical Parent ID Number
+ 
+Description: Identification number of the 
+next higher hierarchical data segment that 
+the data segment being described is 
+subordinate to
+O AN 1/12 Used
+HL03 735 Hierarchical Level Code
+ 
+Description: Code defining the 
+characteristic of a level in a hierarchical 
+structure
+M ID 1/2 Must use
+CodeList Summary (Total Codes: 218, Included: 1)
+Code Name
+I Item
+Comments: 
+1. The HL segment is used to identify levels of detail information using a hierarchical structure, such as relating 
+line-item data to shipment data, and packaging data to line-item data.
+2. The HL segment defines a top-down/left-right ordered structure.
+3. HL01 shall contain a unique alphanumeric number for each occurrence of the HL segment in the transaction 
+set. For example, HL01 could be used to indicate the number of occurrences of the HL segment, in which case 
+the value of HL01 would be "1" for the initial HL segment and would be incremented by one in each subsequent 
+HL segment within the transaction.
+4. HL02 identifies the hierarchical ID number of the HL segment to which the current HL segment is subordinate.
+5. HL03 indicates the context of the series of segments following the current HL segment up to the next 
+occurrence of an HL segment in the transaction. For example, HL03 is used to indicate that subsequent 
+segments in the HL loop form a logical grouping of data referring to shipment, order, or item-level information.
+Example:
+HL*5*4*I~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 32 For external use 
+LIN Item Identification Pos: 0200 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 7
+User Option (Usage): Must use
+Purpose: To specify basic item identification data
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+LIN01 350 Assigned Identification
+ 
+Description: Alphanumeric characters 
+assigned for differentiation within a 
+transaction set
+Ulta Note: Must return the PO101 value 
+from the 850 Purchase Order
+O AN 1/20 Must use
+LIN02 235 Product/Service ID Qualifier
+ 
+Description: Code identifying the 
+type/source of the descriptive number used 
+in Product/Service ID (234)
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 505, Included: 1)
+Code Name
+VA Vendor's Style Number
+LIN03 234 Product/Service ID
+ 
+Description: Identifying number for a 
+product or service
+M AN 1/48 Must use
+LIN04 235 Product/Service ID Qualifier
+ 
+Description: Code identifying the 
+type/source of the descriptive number used 
+in Product/Service ID (234)
+X ID 2/2 Must use
+CodeList Summary (Total Codes: 505, Included: 1)
+Code Name
+IN Buyer's Item Number
+LIN05 234 Product/Service ID
+ 
+Description: Identifying number for a 
+product or service
+X AN 1/48 Must use
+LIN06 235 Product/Service ID Qualifier
+ 
+Description: Code identifying the 
+type/source of the descriptive number used 
+in Product/Service ID (234)
+X ID 2/2 Used
+CodeList Summary (Total Codes: 505, Included: 3)
+Code Name
+EN EAN/UCC - 13 
+Description: Data structure for the 13 digit EAN.UCC (EAN 
+International.Uniform Code Council) Global Trade Identification Number 
+(GTIN)
+UK EAN/UCC - 14 
+Description: Data structure for the 14 digit EAN.UCC (EAN 
+International.Uniform Code Council) Global Trade Identification Number 
+(GTIN)
+UP UCC - 12 
+Description: Data structure for the 12 digit EAN.UCC (EAN 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 33 For external use
+International.Uniform Code Council) Global Trade Identification Number 
+(GTIN). Also known as the Universal Product Code (U.P.C.)
+LIN07 234 Product/Service ID
+ 
+Description: Identifying number for a 
+product or service
+X AN 1/48 Used
+Syntax Rules: 
+1. P0405 - If either LIN04 or LIN05 is present, then the other is required.
+2. P0607 - If either LIN06 or LIN07 is present, then the other is required.
+3. P0809 - If either LIN08 or LIN09 is present, then the other is required.
+Semantics: 
+1. LIN01 is the line item identification
+Comments: 
+1. See the Data Dictionary for a complete list of IDs.
+2. LIN02 through LIN31 provide for fifteen different product/service IDs for each item. For example: Case, Color, 
+Drawing No., U.P.C. No., ISBN No., Model No., or SKU.
+Ulta Note:
+Ulta mandatory
+Example:
+LIN*00010*VA*9999999*IN*1234567*UP*085365819192~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 34 For external use 
+SN1 Item Detail (Shipment) Pos: 0300 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify line-item detail relative to shipment
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+SN102 382 Number of Units Shipped
+ 
+Description: Numeric value of units 
+shipped in manufacturer's shipping units 
+for a line item or transaction set
+M R 1/10 Must use
+SN103 355 Unit or Basis for Measurement Code
+ 
+Description: Code specifying the units in 
+which a value is being expressed, or 
+manner in which a measurement has been 
+taken
+M ID 2/2 Must use
+CodeList Summary (Total Codes: 803, Included: 2)
+Code Name
+CA Case
+EA Each
+Syntax Rules: 
+1. P0506 - If either SN105 or SN106 is present, then the other is required.
+Semantics: 
+1. SN101 is the ship notice line-item identification.
+Comments: 
+1. SN103 defines the unit of measurement for both SN102 and SN104.
+Ulta Note:
+Ulta mandatory
+Example:
+SN1**10*EA~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 35 For external use
+PO4 Item Physical Details Pos: 0600 Max: 1
+Detail - Mandatory
+Loop: HL Elements: 2
+User Option (Usage): Must use
+Purpose: To specify the physical qualities, packaging, weights, and dimensions relating to the item
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PO401 356 Pack
+ 
+Description: The number of inner 
+containers, or number of eaches if there 
+are no inner containers, per outer container
+O N0 1/6 Must use
+PO414 810 Inner Pack
+ 
+Description: The number of eaches per 
+inner container
+O N0 1/6 Must use
+Ulta Note:
+Ulta mandatory
+Example:
+PO4*12*************1~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 36 For external use 
+PID Product/Item Description Pos: 0700 Max: 200
+Detail - Optional
+Loop: HL Elements: 2
+User Option (Usage): Used
+Purpose: To describe a product or process in coded or free-form format
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+PID01 349 Item Description Type
+ 
+Description: Code indicating the format of 
+a description
+M ID 1/1 Must use
+CodeList Summary (Total Codes: 3, Included: 1)
+Code Name
+F Free-form
+PID02 750 Product/Process Characteristic 
+Code
+ 
+Description: Code identifying the 
+general class of a product or 
+process characteristic
+O ID 2/3 Used
+CodeList Summary (Total Codes: 235, Included: 1)
+Code Name
+08 Product
+PID05 352 Description
+ 
+Description: A free-form description to 
+clarify the related data elements and their 
+content
+X AN 1/80 Must use
+Syntax Rules: 
+1. R0405 - At least one of PID04 or PID05 is required.
+2. C0905 - If PID09 is present, then PID05 is required.
+Semantics: 
+1. PID09 is used to identify the language being used in PID05.
+Comments: 
+1. If PID01 equals "F", then PID05 is used. If PID01 equals "S", then PID04 is used. If PID01 equals "X", then both 
+PID04 and PID05 are used.
+Example:
+PID*F*08***Product Description~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 37 For external use
+CTT Transaction Totals Pos: 0100 Max: 1
+Summary - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To transmit a hash total for a specific element in the transaction set
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+CTT01 354 Number of Line Items
+ 
+Description: Total number of line items in 
+the transaction set
+M N0 1/6 Must use
+CTT02 347 Hash Total
+ 
+Description: Sum of values of the 
+specified data element. All values in the 
+data element will be summed without 
+regard to decimal points (explicit or implicit) 
+or signs. Truncation will occur on the left 
+most digits if the sum is greater than the 
+maximum size of the hash total of the data 
+element. Example: -.0018 First 
+occurrence of value being hashed. .18 
+Second occurrence of value being hashed. 
+1.8 Third occurrence of value being 
+hashed. 18.01 Fourth occurrence of value 
+being hashed. --------- 1855 Hash Total
+O R 1/10 Must use
+Comments: 
+1. This segment is intended to provide hash totals to validate transaction completeness and correctness.
+Ulta Note:
+Ulta mandatory
+Example:
+CTT*1~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 38 For external use 
+SE Transaction Set Trailer Pos: 0200 Max: 1
+Summary - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the end of the transaction set and provide the count of the transmitted segments (including the 
+beginning (ST) and ending (SE) segments)
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+SE01 96 Number of Included Segments
+ 
+Description: Total number of segments 
+included in a transaction set including ST 
+and SE segments
+M N0 1/10 Must use
+SE02 329 Transaction Set Control Number
+ 
+Description: Identifying control number 
+that must be unique within the transaction 
+set functional group assigned by the 
+originator for a transaction set
+M AN 4/9 Must use
+Comments: 
+1. SE is the last segment of each transaction set.
+Example:
+SE*31*0001~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 39 For external use
+GE Functional Group Trailer Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To indicate the end of a functional group and to provide control information
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+GE01 97 Number of Transaction Sets Included
+ 
+Description: Total number of transaction 
+sets included in the functional group or 
+interchange (transmission) group 
+terminated by the trailer containing this 
+data element
+M N0 1/6 Must use
+GE02 28 Group Control Number
+ 
+Description: Assigned number originated 
+and maintained by the sender
+M N0 1/9 Must use
+Semantics: 
+1. The data interchange control number GE02 in this trailer must be identical to the same data element in the 
+associated functional group header, GS06.
+Comments: 
+1. The use of identical data interchange control numbers in the associated functional group header and trailer is 
+designed to maximize functional group integrity. The control number is the same as that used in the 
+corresponding header.
+Example:
+GE*1*20642~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 40 For external use 
+IEA Interchange Control Trailer Pos: Max: 1
+Not Defined - Mandatory
+Loop: N/A Elements: 2
+User Option (Usage): Must use
+Purpose: To define the end of an interchange of zero or more functional groups and interchange-related control 
+segments
+Element Summary: 
+Ref Id Element Name Req Type Min/Max Usage
+IEA01 I16 Number of Included Functional Groups
+ 
+Description: A count of the number of 
+functional groups included in an 
+interchange
+M N0 1/5 Must use
+IEA02 I12 Interchange Control Number
+ 
+Description: A control number assigned 
+by the interchange sender
+M N0 9/9 Must use
+Example:
+IEA*1*000143657~ 5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 41 For external use
+SAMPLE 856 (SOTPI)
+ISA*00* *00* *ZZ*SENDERID *ZZ*ULTABEAUTY 
+*041025*0111*^*00403*000143657*0*T*>~
+GS*SH*SENDERID*ULTABEAUTY*20200101*0111*20642*X*004030~
+ST*856*0001~
+BSN*00*ABYZ1234567890*20200101*011111*0001~
+HL*1**S~
+TD1*PLT*1****G*1*LB~
+TD5*B*2*CNWY*M**CC~
+TD3*TL*999*8888888888******7777777~
+TD4*HM*D*HZD*Description~
+REF*BM*07621800000018373~
+REF*CN*00000762180074799338~
+DTM*011*20200101~
+DTM*067*20200101~
+N1*ST*DC STORE NAME*92*ULTA DC Number~
+N1*SF*SHIP FROM NAME~
+HL*2*1*O~
+PRF*1234567890***20201010~
+REF*IA*0000099999~
+HL*3*2*T~
+MAN*GM*00000762180074799338~
+PAL*6******48*48*48*IN*2864*LB~
+HL*4*3*P~
+MEA**WT*250*LB~
+MAN*GM*00000762180099999999~
+HL*5*4*I~
+LIN*00010*VA*099999999*IN*000000000001234567*UP*098765432122334455~
+SN1**10*EA~
+PO4*12*************1~
+PID*F*08***Description~
+CTT*5~
+SE*29*0001~
+GE*1*20642~
+IEA*1*000143657~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 42 For external use 
+Sample 856 (SOPI)
+ISA*00* *00* *ZZ*SENDERID *ZZ*ULTABEAUTY 
+*041025*0111*^*00403*000143657*0*T*>~
+GS*SH*SENDERID*ULTABEAUTY*20200101*0111*20642*X*004030~
+ST*856*0003~
+BSN*00*ABYZ1234567890*20200101*011111*0001~
+HL*1**S~
+TD1*CTN*1****G*25*LB~
+TD5*B*2*CNWY*M**CC~
+TD3*TL*999*8888888888******7777777~
+TD4*HM*D*HZD*Description~
+REF*BM*07621800000018373~
+REF*CN*00000762180074799338~
+DTM*011*20200101~
+DTM*067*20200101~
+N1*ST*DC STORE NAME*92*ULTA DC Number~
+N1*SF*SHIP FROM NAME~
+HL*2*1*O~
+PRF*1234567890***20201010~
+REF*IA*0000099999~
+HL*3*2*P~
+MEA**WT*25*LB~
+MAN*GM*00000762180099999999~
+HL*4*3*I~
+LIN*00010*VA*099999999*IN*000000000001234567*UP*098765432122334455~
+SN1**20*EA~
+PO4*12*************1~
+PID*F*08***Description~
+CTT*4~
+SE*26*0003~
+GE*1*20642~
+IEA*1*000143657~5/13/2020 Ship Notice/Manifest - 856
+Ulta_Inbound_856_4030_Final_v1.2 43 For external use
+SAMPLE 856 SOTI
+ISA*00* *00* *ZZ*SENDERID *ZZ*ULTABEAUTY 
+*041025*0111*^*00403*000143657*0*T*>~
+GS*SH*SENDERID*ULTABEAUTY*20200101*0111*20642*X*004030~
+ST*856*0002~
+BSN*00*ABYZ1234567890*20200101*011111*0001~
+HL*1**S~
+TD1*PLT*1****G*250*LB~
+TD5*B*2*CNWY*M**CC~
+TD3*TL*999*8888888888******7777777~
+TD4*HM*D*HZD*Description~
+REF*BM*07621800000018373~
+REF*CN*00000762180074799338~
+DTM*011*20200101~
+DTM*067*20200101~
+N1*ST*DC STORE NAME*92*ULTA DC Number~
+N1*SF*SHIP FROM NAME~
+HL*2*1*O~
+PRF*1234567890***20201010~
+REF*IA*0000099999~
+HL*3*2*T~
+MAN*GM*00000762180074799338~
+PAL*6******48*48*48*IN*2864*LB~
+HL*4*3*I~
+LIN*00010*VA*099999999*IN*000000000001234567*UP*098765432122334455~
+SN1**10*EA~
+PO4*12*************1~
+PID*F*08***Description~
+CTT*4~
+SE*26*0002~
+GE*1*20642~
+IEA*1*000143657~
