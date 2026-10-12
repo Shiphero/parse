@@ -12,6 +12,16 @@
 8. In **Scenarios**, paste canonical JSON or a wholesale order containing `packing_layout`. Save an immutable snapshot. Optional overrides replace named top-level fields and are retained separately. Choose an exact release and run deterministic checks. Results show pass, fail, cannot determine or not applicable for each subject. Prior evaluations stay pinned to their release.
 9. To fetch ShipHero data, save an access token in Connections, choose the appropriate retailer, and enter a public wholesale order ID. Fetch & save performs one read-only query and records source/account/time. The import excludes names, email, phone, billing and payment data. It includes postal destination fields needed for rules; snapshots can still contain business-sensitive information. Tokens are refreshed manually. There are no ShipHero mutations.
 
+## General guidance versus shipment validation
+
+Rule `purpose` is independent of subject, obligation and verification:
+
+- `general_guidance`: onboarding, EDI enablement, account setup and business instructions. Retained in approved instructions and exports, excluded from shipment evaluation items and counts. Responding to an OpenText onboarding invitation belongs here.
+- `shipment_validation`: requirements checked against a shipment, including dimensions/weights, cartons/pallets, labels, routing, ASN timing and shipping documents. Human inspection and external evidence still belong here when they concern a shipment; they do not automatically pass.
+- `unclassified`: legacy rules without a purpose, or ambiguous proposals. Choose their use before approval/publication. Historical unclassified releases produce Cannot determine rather than silently passing or dropping those rules.
+
+New AI extraction prompts request the purpose explicitly. Existing drafts are not reclassified based on verification method. In Review rules, filter by rule use and select pending rules to classify in groups; classification creates new draft revisions and audit entries, without approving or changing evidence. Individual edits can change an approved rule's use and invalidate its approval. Bulk approval is a separate action. Scenario evaluator 1.1 excludes general guidance and reports how many were excluded; prior evaluation records remain unchanged. Rule purpose also participates in exact-match comparison, so a use change cannot inherit the earlier approval.
+
 ## Rule expressions
 
 `schema_version: "1.0"` separates instructions, obligation, subject, applicability, exceptions, verification and evidence. Expressions are validated data, never executable code.

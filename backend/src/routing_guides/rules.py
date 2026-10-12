@@ -71,6 +71,7 @@ class ExceptionRule(StrictModel):
 
 class RuleSpec(StrictModel):
     schema_version: Literal['1.0'] = '1.0'
+    purpose: Literal['general_guidance', 'shipment_validation', 'unclassified'] = Field(default='unclassified', description='Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.')
     title: str = Field(min_length=1, max_length=250)
     instruction: str = Field(min_length=1)
     subject: Literal['shipment', 'order', 'pallet', 'carton', 'item', 'label', 'document']

@@ -45,6 +45,7 @@ The original prototype contracts remain historical reference in `contracts.py`. 
 
 ## Core semantics
 
+- Rule purpose separates general guidance from shipment validation independently of verification method. General guidance remains in instructions and exports but is excluded from shipment checks. Unclassified legacy rules require classification before approval and publication.
 - Required, prohibited, recommended and informational obligations remain distinct.
 - Data, human, external-evidence and unresolved verification remain distinct.
 - Supported expressions: comparisons, allowed values, existence, all/any/not, counts, sums and unique counts. Compose ranges with all; evaluate consistency within each subject using unique counts.

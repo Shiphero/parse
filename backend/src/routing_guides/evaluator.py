@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from routing_guides.rules import Expression, RuleSpec
 
-VERSION = '1.0'
+VERSION = '1.1'
 MISSING = object()
 UNITS = {'oz': ('mass', Decimal('28.349523125')), 'lb': ('mass', Decimal('453.59237')),
          'g': ('mass', Decimal(1)), 'kg': ('mass', Decimal(1000)),
@@ -102,6 +102,10 @@ def expression(expr: Expression, facts: dict) -> tuple[bool | None, str]:
 
 def evaluate_rule(rule_id: str, rule: RuleSpec, snapshot: dict) -> dict[str, Any]:
     base = dict(rule_id=rule_id, title=rule.title, instruction=rule.instruction, obligation=rule.obligation)
+    if rule.purpose == 'general_guidance':
+        return dict(base, outcome='not_applicable', reason='General guidance is not a shipment validation rule.', subjects=[])
+    if rule.purpose == 'unclassified':
+        return dict(base, outcome='cannot_determine', reason='Rule use has not been classified; no shipment check was executed.', subjects=[])
     if rule.subject in {'order', 'shipment', 'document', 'label'}:
         targets = [snapshot.get('shipment', {})]
     else:
@@ -137,6 +141,7 @@ def evaluate_rule(rule_id: str, rule: RuleSpec, snapshot: dict) -> dict[str, Any
 
 
 def evaluate_release(rules: list[dict], snapshot: dict) -> dict:
-    items = [evaluate_rule(r['stable_id'], RuleSpec.model_validate(r['spec']), snapshot) for r in rules]
-    return {'evaluator_version': VERSION, 'items': items,
+    parsed = [(r['stable_id'], RuleSpec.model_validate(r['spec'])) for r in rules]
+    items = [evaluate_rule(rid, spec, snapshot) for rid, spec in parsed if spec.purpose != 'general_guidance']
+    return {'evaluator_version': VERSION, 'items': items, 'guidance_count': sum(spec.purpose == 'general_guidance' for _, spec in parsed),
             'counts': {s: sum(i['outcome'] == s for i in items) for s in ('pass', 'fail', 'cannot_determine', 'not_applicable')}}

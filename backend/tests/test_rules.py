@@ -3,14 +3,14 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 from pydantic import ValidationError
 from routing_guides.rules import Expression, RuleSpec
-from routing_guides.evaluator import expression, evaluate_rule
+from routing_guides.evaluator import expression, evaluate_rule, evaluate_release
 from routing_guides.scenarios import normalize
 from routing_guides.analysis_jobs import validate_evidence
 from routing_guides.workflow_api import assemble_release
 
 
 def rule(**changes):
-    data = dict(title='Carton weight', instruction='Keep carton weight at or below 50 lb.', subject='carton', obligation='required', verification='data', applicability_text='Every carton', assertion={'op':'lte','path':'weight','value':50,'unit':'lb'}, evidence=[{'page':1,'quote':'50 lb'}])
+    data = dict(purpose='shipment_validation',title='Carton weight', instruction='Keep carton weight at or below 50 lb.', subject='carton', obligation='required', verification='data', applicability_text='Every carton', assertion={'op':'lte','path':'weight','value':50,'unit':'lb'}, evidence=[{'page':1,'quote':'50 lb'}])
     data.update(changes)
     return RuleSpec.model_validate(data)
 
@@ -61,6 +61,30 @@ class EvaluationTests(unittest.TestCase):
             Expression(op='python',path='eval(x)',value=1)
         with self.assertRaises(ValidationError):
             Expression(op='all',children=[])
+
+    def test_rule_use_is_independent_of_verification_and_legacy_is_unclassified(self):
+        data = rule().model_dump(mode='json')
+        data.pop('purpose')
+        legacy = RuleSpec.model_validate(data)
+        self.assertEqual(legacy.purpose, 'unclassified')
+        self.assertEqual(evaluate_rule('legacy', legacy, {'cartons': [{'weight': {'value': 1, 'unit': 'lb'}}]})['outcome'], 'cannot_determine')
+        self.assertEqual(rule(purpose='general_guidance', verification='external_evidence').purpose, 'general_guidance')
+        self.assertEqual(rule(purpose='shipment_validation', verification='external_evidence').purpose, 'shipment_validation')
+
+    def test_guidance_is_excluded_from_shipment_counts_but_inspections_remain(self):
+        specs = [rule(purpose='general_guidance', title='Onboarding'), rule(),
+                 rule(verification='human', title='Label placement', assertion=None)]
+        rules = [{'stable_id': str(i), 'spec': spec.model_dump(mode='json')} for i, spec in enumerate(specs)]
+        result = evaluate_release(rules, {'cartons': [{'weight': {'value': 10, 'unit': 'lb'}}]})
+        self.assertEqual(result['guidance_count'], 1)
+        self.assertEqual([r['rule_id'] for r in result['items']], ['1', '2'])
+        self.assertEqual(result['counts']['pass'], 1)
+        self.assertEqual(result['counts']['cannot_determine'], 1)
+        self.assertEqual(sum(result['counts'].values()), 2)
+        guidance_only = evaluate_release(rules[:1], {})
+        self.assertEqual(guidance_only['items'], [])
+        self.assertEqual(sum(guidance_only['counts'].values()), 0)
+        self.assertEqual(guidance_only['guidance_count'], 1)
 
 
 class MappingTests(unittest.TestCase):

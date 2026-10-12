@@ -138,6 +138,10 @@ class BulkApproval(VersionedAction):
     revisions: dict[UUID, int] = Field(min_length=1, max_length=1000)
 
 
+class ClassifyRules(BulkApproval):
+    purpose: Literal['general_guidance', 'shipment_validation']
+
+
 class CarryApprovals(VersionedAction):
     base_release_id: UUID
     scope_confirmed: bool
@@ -211,6 +215,7 @@ class EvaluationView(BaseModel):
     evaluator_version: str
     items: list[EvaluationItem]
     counts: dict[str, int]
+    guidance_count: int = 0
     created_at: datetime
 
 
@@ -369,12 +374,43 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             if (body.action == 'reject' or individual_review_reasons(RuleSpec.model_validate(rule['spec']), rule.get('evidence_issues', []), rule['spec']['title'].strip().casefold() in duplicate_titles(data['rules']))) and not body.note.strip():
                 raise HTTPException(422, 'Add a note for rejections or rules requiring individual review.')
             if body.action == 'approve':
+                if RuleSpec.model_validate(rule['spec']).purpose == 'unclassified':
+                    raise HTTPException(422, 'Choose general guidance or shipment validation before approving.')
                 if rule.get('evidence_issues'):
                     raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
                 await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
             rule.update(carried_from_release_id=None, carried_from_rule_id=None, status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
+        return RunView.model_validate(run)
+
+
+@router.post('/analysis/{run_id}/classify', response_model=RunView)
+async def classify_rules(run_id: UUID, body: ClassifyRules):
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        guard(run, body.version)
+        data = deepcopy(run.payload)
+        by_id = {r['id']: r for r in data['rules']}
+        selected = []
+        for rule_id, revision in body.revisions.items():
+            rule = by_id.get(str(rule_id))
+            if rule is None:
+                raise HTTPException(404, 'A selected rule does not belong to this draft.')
+            if rule['revision'] != revision or rule['status'] != 'pending':
+                raise HTTPException(409, 'Classify only current pending revisions. Edit approved rules to change their use.')
+            selected.append(rule)
+        batch_id = str(uuid4())
+        for rule in selected:
+            if rule['spec'].get('purpose') == body.purpose:
+                continue
+            before = deepcopy(rule)
+            rule['spec']['purpose'] = body.purpose
+            rule.update(revision=rule['revision'] + 1, review=None,
+                        carried_from_release_id=None, carried_from_rule_id=None)
+            audit(session, run.id, body.actor, 'rule_classified',
+                  {'before': before, 'after': rule, 'note': body.note, 'batch_id': batch_id})
+        run.payload, run.version = data, run.version + 1
         return RunView.model_validate(run)
 
 
@@ -520,6 +556,8 @@ def assemble_release(run, base, body):
     for rid, r in approved.items():
         if rid not in used:
             result.append(dict(stable_id=rid, spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
+    if any(RuleSpec.model_validate(r['spec']).purpose == 'unclassified' for r in result):
+        raise HTTPException(409, 'Classify each approved rule as general guidance or shipment validation before publication.')
     body.decisions = decisions
     return result
 
@@ -588,7 +626,7 @@ async def export_release(release_id: UUID, format: Literal['json','markdown'] = 
         return Response(value.model_dump_json(indent=2), media_type='application/json', headers={'Content-Disposition': f'attachment; filename="rules-{release_id}.json"'})
     lines = [f'# {value.name}', f'Effective: {value.effective_date}', f'Scope: {value.payload.scope}', '']
     for r in value.payload.rules:
-        lines += [f'## {r.spec.title}', r.spec.instruction, f'Obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Applies: {r.spec.applicability_text}']
+        lines += [f'## {r.spec.title}', r.spec.instruction, f'Use: {r.spec.purpose}; obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Applies: {r.spec.applicability_text}']
         lines += [f'Exception: {e.description}' for e in r.spec.exceptions]
         lines += [f'Source: guide {r.source_guide_id}, PDF page {e.page}: {e.quote}' for e in r.spec.evidence]
         lines += ['']
@@ -654,11 +692,11 @@ async def evaluate(scenario_id: UUID, release_id: UUID):
         evaluation = Evaluation(id=uuid4(), scenario_id=scenario_id, release_id=release_id, payload=result)
         session.add(evaluation)
         await session.flush()
-        return EvaluationView(id=evaluation.id, scenario_id=scenario_id, release_id=release_id, created_at=evaluation.created_at, **{k:result[k] for k in ('evaluator_version','items','counts')})
+        return EvaluationView(id=evaluation.id, scenario_id=scenario_id, release_id=release_id, created_at=evaluation.created_at, guidance_count=result.get('guidance_count', 0), **{k:result[k] for k in ('evaluator_version','items','counts')})
 
 
 @router.get('/scenarios/{scenario_id}/evaluations', response_model=list[EvaluationView])
 async def evaluation_history(scenario_id: UUID):
     async with sessions() as session:
         records = (await session.scalars(select(Evaluation).where(Evaluation.scenario_id == scenario_id).order_by(Evaluation.created_at.desc()))).all()
-        return [EvaluationView(id=r.id, scenario_id=r.scenario_id, release_id=r.release_id, created_at=r.created_at, **{k:r.payload[k] for k in ('evaluator_version','items','counts')}) for r in records]
+        return [EvaluationView(id=r.id, scenario_id=r.scenario_id, release_id=r.release_id, created_at=r.created_at, guidance_count=r.payload.get('guidance_count', 0), **{k:r.payload[k] for k in ('evaluator_version','items','counts')}) for r in records]

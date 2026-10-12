@@ -10,6 +10,9 @@ class ExactComparisonTests(unittest.TestCase):
         moved = rule(evidence=[{'page': 2, 'quote': original['evidence'][0]['quote']}]).model_dump(mode='json')
         candidate = {'id': 'new', 'spec': moved}
         self.assertEqual(compare_rules([candidate], old)['unchanged'], {'new': 'old'})
+        moved['purpose'] = 'general_guidance'
+        self.assertEqual(compare_rules([candidate], old)['unchanged'], {})
+        moved['purpose'] = 'shipment_validation'
         moved['assertion']['value'] = 40
         comparison = compare_rules([candidate], old)
         self.assertEqual(comparison['unchanged'], {})

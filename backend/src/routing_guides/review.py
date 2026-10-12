@@ -7,6 +7,8 @@ from routing_guides.rules import RuleSpec
 
 def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
     reasons = list(evidence_issues)
+    if spec.purpose == 'unclassified':
+        reasons.append('Choose general guidance or shipment validation before approval.')
     if duplicate:
         reasons.append('Possible duplicate or conflict: review matching titles together.')
     if spec.unresolved_questions or spec.verification == 'unresolved':

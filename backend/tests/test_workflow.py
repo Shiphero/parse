@@ -322,6 +322,60 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['payload']['rules'][0]['draft_id'], replacement)
         self.assertEqual(result['payload']['decisions'], {candidate: 'replace:' + replacement})
 
+    async def test_classification_is_atomic_revisioned_and_does_not_approve(self):
+        run = await self.add_candidate(1, rule(purpose='unclassified'))
+        run = await self.add_candidate(run['version'], rule(title='Onboarding', purpose='unclassified', verification='external_evidence'))
+        first, second = run['payload']['rules']
+        url = f'/api/analysis/{self.rid}/classify'
+        body = {'version': run['version'], 'actor': 'Reviewer', 'purpose': 'general_guidance',
+                'revisions': {first['id']: 1, second['id']: 1}}
+        await self.send('POST', url, {**body, 'version': 1}, 409)
+        await self.send('POST', url, {**body, 'revisions': {first['id']: 1, str(uuid4()): 1}}, 404)
+        await self.send('POST', url, {**body, 'revisions': {first['id']: 1, second['id']: 99}}, 409)
+        await self.send('PUT', f'/api/analysis/{self.rid}/rules/{first["id"]}',
+            {'version': run['version'], 'actor': 'Reviewer', 'action': 'approve', 'note': 'Cannot bypass missing classification'}, 422)
+        classified = await self.send('POST', url, body)
+        for candidate in classified['payload']['rules']:
+            self.assertEqual(candidate['revision'], 2)
+            self.assertEqual(candidate['status'], 'pending')
+            self.assertIsNone(candidate['review'])
+            self.assertEqual(candidate['spec']['purpose'], 'general_guidance')
+        self.assertEqual(classified['payload']['rules'][0]['spec']['evidence'], first['spec']['evidence'])
+        self.assertEqual(classified['payload']['rules'][1]['spec']['verification'], 'external_evidence')
+        audits = (await self.client.get(f'/api/audit/{self.rid}')).json()
+        self.assertEqual(len([a for a in audits if a['action'] == 'rule_classified']), 2)
+        approved = await self.send('POST', f'/api/analysis/{self.rid}/bulk-approve',
+            {'version': classified['version'], 'actor': 'Reviewer', 'revisions': {first['id']: 2, second['id']: 2}})
+        await self.send('POST', url, {**body, 'version': approved['version'], 'revisions': {first['id']: 2}}, 409)
+        edited = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{first["id"]}',
+            {'version': approved['version'], 'actor': 'Reviewer', 'action': 'save', 'note': 'Weight applies to each shipment',
+             'spec': rule(purpose='shipment_validation').model_dump(mode='json')})
+        self.assertEqual(edited['payload']['rules'][0]['status'], 'pending')
+        self.assertIsNone(edited['payload']['rules'][0]['review'])
+
+    async def test_guidance_remains_in_release_exports_but_not_shipment_results(self):
+        run = await self.add_candidate(1, rule(title='Respond to OpenText onboarding invitation', purpose='general_guidance',
+                                              verification='external_evidence', assertion=None))
+        candidate = run['payload']['rules'][0]['id']
+        run = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{candidate}',
+            {'version': run['version'], 'actor': 'Reviewer', 'action': 'approve'})
+        release = await self.send('POST', f'/api/analysis/{self.rid}/publish',
+            {'version': run['version'], 'actor': 'Reviewer', 'note': 'Fixture coverage verified', 'name': 'Guidance',
+             'effective_date': '2026-01-01', 'scope': 'New supplier onboarding', 'coverage_confirmed': True,
+             'impact_confirmed': True, 'decisions': {}, 'base_release_id': None})
+        self.assertEqual(release['payload']['rules'][0]['spec']['purpose'], 'general_guidance')
+        exported = await self.client.get(f'/api/releases/{release["id"]}/export?format=markdown')
+        self.assertIn('Use: general_guidance', exported.text)
+        self.assertIn('Respond to OpenText', exported.text)
+        scenario = await self.send('POST', '/api/scenarios', {'retailer_id': self.retailer, 'name': 'Shipment',
+                                   'raw': {'schema_version': '1.0', 'shipment': {}, 'cartons': []}})
+        evaluation = await self.send('POST', f'/api/scenarios/{scenario["id"]}/evaluate/{release["id"]}', {})
+        self.assertEqual(evaluation['guidance_count'], 1)
+        self.assertEqual(evaluation['items'], [])
+        self.assertEqual(sum(evaluation['counts'].values()), 0)
+        history = (await self.client.get(f'/api/scenarios/{scenario["id"]}/evaluations')).json()
+        self.assertEqual(history[0]['guidance_count'], 1)
+
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
         with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):
             response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})

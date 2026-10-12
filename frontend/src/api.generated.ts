@@ -243,6 +243,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/classify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Classify Rules */
+        post: operations["classify_rules_api_analysis__run_id__classify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis/{run_id}/bulk-approve": {
         parameters: {
             query?: never;
@@ -628,6 +645,27 @@ export interface components {
             /** Scope Confirmed */
             scope_confirmed: boolean;
         };
+        /** ClassifyRules */
+        ClassifyRules: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Revisions */
+            revisions: {
+                [key: string]: number;
+            };
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "general_guidance" | "shipment_validation";
+        };
         /** ComparisonView */
         ComparisonView: {
             /** Base Release Id */
@@ -740,6 +778,11 @@ export interface components {
             counts: {
                 [key: string]: number;
             };
+            /**
+             * Guidance Count
+             * @default 0
+             */
+            guidance_count: number;
             /**
              * Created At
              * Format: date-time
@@ -1118,6 +1161,13 @@ export interface components {
              * @constant
              */
             schema_version: "1.0";
+            /**
+             * Purpose
+             * @description Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.
+             * @default unclassified
+             * @enum {string}
+             */
+            purpose: "general_guidance" | "shipment_validation" | "unclassified";
             /** Title */
             title: string;
             /** Instruction */
@@ -1157,6 +1207,13 @@ export interface components {
              * @constant
              */
             schema_version: "1.0";
+            /**
+             * Purpose
+             * @description Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.
+             * @default unclassified
+             * @enum {string}
+             */
+            purpose: "general_guidance" | "shipment_validation" | "unclassified";
             /** Title */
             title: string;
             /** Instruction */
@@ -1840,6 +1897,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReviewAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    classify_rules_api_analysis__run_id__classify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassifyRules"];
             };
         };
         responses: {

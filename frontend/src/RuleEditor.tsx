@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { rulePurposeLabels } from './rulePurpose';
 import type { Candidate, RuleSpec } from './api';
 
-export const blankRule = (): RuleSpec => ({schema_version:'1.0', title:'',instruction:'',subject:'carton',obligation:'required',verification:'human',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
+export const blankRule = (): RuleSpec => ({schema_version:'1.0',purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'human',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
 
 export function Evidence({guideId, spec}: {guideId:string;spec:RuleSpec}) {
   const [chosen, setChosen] = useState(0);
@@ -17,6 +18,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
   const set = <K extends keyof RuleSpec>(key:K,value:RuleSpec[K])=>setSpec(s=>({...s,[key]:value}));
   const save = async () => { try {const details=JSON.parse(advanced); await onSave({...spec,...details},note);} catch(e){setError((e as Error).message);} };
   return <div className="rule-review-grid"><div className="rule-form"><h3>{candidate?'Edit interpretation':'Add a rule from the source'}</h3><p className="muted">Saving creates a new draft revision and clears any prior approval.</p>
+    <label>Rule use<select value={spec.purpose||'unclassified'} onChange={e=>set('purpose',e.target.value as RuleSpec['purpose'])}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><p className="muted">General guidance stays in the instructions but is excluded from shipment checks. Shipment validation includes automatic checks, physical inspections and shipment evidence.</p>
     <label>Rule title<input value={spec.title} onChange={e=>set('title',e.target.value)}/></label><label>Operational instruction<textarea rows={3} value={spec.instruction} onChange={e=>set('instruction',e.target.value)}/></label>
     <div className="form-row"><label>Subject<select value={spec.subject} onChange={e=>set('subject',e.target.value as RuleSpec['subject'])}>{['shipment','order','pallet','carton','item','label','document'].map(v=><option key={v}>{v}</option>)}</select></label><label>Obligation<select value={spec.obligation} onChange={e=>set('obligation',e.target.value as RuleSpec['obligation'])}>{['required','prohibited','recommended','informational'].map(v=><option key={v}>{v}</option>)}</select></label></div>
     <label>Applies when<textarea rows={2} value={spec.applicability_text} onChange={e=>set('applicability_text',e.target.value)}/></label><label>Verification<select value={spec.verification} onChange={e=>set('verification',e.target.value as RuleSpec['verification'])}><option value="data">Automatic data check</option><option value="human">Human inspection</option><option value="external_evidence">External evidence required</option><option value="unresolved">Unresolved interpretation</option></select></label>

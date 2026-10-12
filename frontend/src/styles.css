@@ -447,3 +447,10 @@ input[type=checkbox] { accent-color: var(--accent); }
 .review-card-flags { margin-top:12px; padding:10px; font-size:12px; line-height:1.6; background:var(--warning-subtle); color:var(--warning); border-radius:6px}
 .review-card-flags ul { margin:4px 0 0; padding-left:18px}
 @media(max-width:1100px) { .bulk-review-layout.has-selection { grid-template-columns:1fr} .bulk-review-layout.has-selection .rule-list { max-height:480px} }
+
+.rule-purpose-filters { display:flex; gap:8px; flex-wrap:wrap; margin:22px 0 12px}
+.rule-purpose-filters .selected { color:var(--accent); border-color:var(--accent); background:var(--accent-subtle)}
+.rule-purpose-filters strong { font-variant-numeric:tabular-nums}
+.rule-purpose-badge { display:inline-block; font-size:11px; font-weight:500; border-radius:4px; padding:4px 7px; margin-top:10px; background:var(--surface-muted); color:var(--text-secondary)}
+.rule-purpose-badge.shipment_validation { background:var(--accent-subtle); color:var(--accent)}
+.rule-purpose-badge.unclassified { background:var(--warning-subtle); color:var(--warning)}
