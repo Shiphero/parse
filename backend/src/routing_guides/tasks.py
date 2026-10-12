@@ -34,3 +34,10 @@ async def analyze_guide(run_id: str) -> None:
     from uuid import UUID
     from routing_guides.analysis_jobs import run_analysis
     await run_analysis(UUID(run_id))
+
+
+@task_queue.task(name='guides.classify_rules')
+async def classify_guide_rules(run_id: str, job_id: str) -> None:
+    from uuid import UUID
+    from routing_guides.classification_jobs import run_classification
+    await run_classification(UUID(run_id), job_id)

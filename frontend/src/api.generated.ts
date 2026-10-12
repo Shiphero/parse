@@ -243,6 +243,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/auto-classify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auto Classify */
+        post: operations["auto_classify_api_analysis__run_id__auto_classify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/cancel-classification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Classification */
+        post: operations["cancel_classification_api_analysis__run_id__cancel_classification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis/{run_id}/classify": {
         parameters: {
             query?: never;
@@ -619,6 +653,10 @@ export interface components {
             } | null;
             /** Evidence Issues */
             evidence_issues?: string[];
+            /** Classification */
+            classification?: {
+                [key: string]: unknown;
+            } | null;
             /** Carried From Release Id */
             carried_from_release_id?: string | null;
             /** Carried From Rule Id */
@@ -1274,6 +1312,10 @@ export interface components {
              * @default []
              */
             pending_batches: number[][];
+            /** Classification Job */
+            classification_job?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** RunView */
         RunView: {
@@ -1371,6 +1413,29 @@ export interface components {
              */
             request_id: string;
         };
+        /** StartClassification */
+        StartClassification: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Provider
+             * @default anthropic
+             * @enum {string}
+             */
+            provider: "anthropic" | "openai";
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+        };
         /** UploadResult */
         UploadResult: {
             guide: components["schemas"]["GuideSummary"];
@@ -1392,6 +1457,18 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VersionedAction */
+        VersionedAction: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
         };
         /** WorkflowView */
         WorkflowView: {
@@ -1897,6 +1974,76 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReviewAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auto_classify_api_analysis__run_id__auto_classify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartClassification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_classification_api_analysis__run_id__cancel_classification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedAction"];
             };
         };
         responses: {

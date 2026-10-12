@@ -14,7 +14,7 @@ from routing_guides.config import get_settings
 from routing_guides.models import Retailer, ReleaseHead, Guide, GuidePage, AnalysisRun, RuleRelease
 from routing_guides.rules import Extraction
 from routing_guides.analysis_provider import ProviderOutput, ProviderFailure
-from routing_guides import workflow_api, analysis_jobs
+from routing_guides import workflow_api, analysis_jobs, classification_jobs
 from test_rules import rule
 
 
@@ -24,7 +24,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.conn = await self.engine.connect()
         self.transaction = await self.conn.begin()
         self.sessions = async_sessionmaker(self.conn,expire_on_commit=False,join_transaction_mode='create_savepoint')
-        self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions)]
+        self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions),patch.object(classification_jobs,'sessions',self.sessions)]
         for p in self.patches:p.start()
         self.retailer='test-'+uuid4().hex
         self.gid=uuid4(); self.rid=uuid4()
@@ -375,6 +375,81 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sum(evaluation['counts'].values()), 0)
         history = (await self.client.get(f'/api/scenarios/{scenario["id"]}/evaluations')).json()
         self.assertEqual(history[0]['guidance_count'], 1)
+
+    async def seed_classification(self, count=1):
+        ids = [str(uuid4()) for _ in range(count)]
+        job_id = str(uuid4())
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            data = deepcopy(run.payload)
+            data['rules'] = [{'id': rid, 'revision': 1, 'status': 'pending', 'spec': rule(title=f'Rule {i}', purpose='unclassified').model_dump(mode='json'),
+                              'source_guide_id': str(self.gid), 'review': None, 'evidence_issues': []} for i, rid in enumerate(ids)]
+            data['classification_job'] = {'id': job_id, 'status': 'queued', 'provider': 'anthropic', 'model': 'test', 'actor': 'Reviewer',
+                'pending': [{'id': rid, 'revision': 1} for rid in ids], 'total': count, 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
+            run.payload = data
+        return job_id, ids
+
+    async def test_auto_classification_batches_resume_without_repeating_accepted_work(self):
+        from routing_guides.classification_provider import Classification, ClassifiedOutput
+        job_id, ids = await self.seed_classification(41)
+        def result(rids):
+            return ClassifiedOutput([Classification(id=rid, purpose='general_guidance', reason='Supplier administration.') for rid in rids], 'test-model', {'input_tokens': 100})
+        with patch.object(classification_jobs, 'classify', AsyncMock(side_effect=[result(ids[:40]), ProviderFailure('Temporary problem')])) as mocked:
+            await classification_jobs.run_classification(self.rid, job_id)
+            self.assertEqual(mocked.await_count, 2)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.payload['classification_job']['status'], 'failed')
+            self.assertEqual(saved.payload['classification_job']['processed'], 40)
+            self.assertTrue(all(r['status'] == 'pending' for r in saved.payload['rules']))
+            self.assertEqual(saved.payload['rules'][-1]['spec']['purpose'], 'unclassified')
+        with patch.object(classification_jobs, 'classify', AsyncMock(return_value=result(ids[-1:]))) as mocked:
+            await classification_jobs.run_classification(self.rid, job_id)
+            await classification_jobs.run_classification(self.rid, job_id)
+            self.assertEqual(mocked.await_count, 1)
+            self.assertEqual([r['id'] for r in mocked.call_args.args[2]], ids[-1:])
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.payload['classification_job']['status'], 'complete')
+            self.assertEqual(saved.payload['classification_job']['applied'], 41)
+            self.assertEqual(saved.payload['rules'][0]['revision'], 2)
+            self.assertEqual(saved.payload['rules'][0]['classification']['method'], 'ai')
+            self.assertEqual(saved.payload['rules'][0]['spec']['assertion'], rule().model_dump(mode='json')['assertion'])
+        audits = (await self.client.get(f'/api/audit/{self.rid}')).json()
+        self.assertEqual(len([a for a in audits if a['action'] == 'rule_auto_classified']), 41)
+
+    async def test_auto_classification_preserves_human_edits_during_model_call(self):
+        from routing_guides.classification_provider import Classification, ClassifiedOutput
+        job_id, ids = await self.seed_classification()
+        async def provider(*args):
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                data = deepcopy(run.payload)
+                data['rules'][0]['spec']['purpose'] = 'shipment_validation'
+                data['rules'][0]['revision'] = 2
+                run.payload, run.version = data, run.version+1
+            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', reason='Proposed category')], 'test', {})
+        with patch.object(classification_jobs, 'classify', provider):
+            await classification_jobs.run_classification(self.rid, job_id)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['rules'][0]['spec']['purpose'], 'shipment_validation')
+            self.assertEqual(run.payload['rules'][0]['revision'], 2)
+            self.assertEqual(run.payload['classification_job']['skipped'], 1)
+            self.assertEqual(run.payload['classification_job']['applied'], 0)
+
+    async def test_cancelled_classification_discards_inflight_result(self):
+        from routing_guides.classification_provider import Classification, ClassifiedOutput
+        job_id, ids = await self.seed_classification()
+        async def provider(*args):
+            await self.send('POST', f'/api/analysis/{self.rid}/cancel-classification', {'version': 1, 'actor': 'Reviewer'})
+            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', reason='Proposed category')], 'test', {})
+        with patch.object(classification_jobs, 'classify', provider):
+            await classification_jobs.run_classification(self.rid, job_id)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['rules'][0]['spec']['purpose'], 'unclassified')
+            self.assertEqual(run.payload['classification_job']['status'], 'cancelled')
 
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
         with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):

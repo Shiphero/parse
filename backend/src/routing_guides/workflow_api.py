@@ -19,7 +19,7 @@ from routing_guides.review import compare_rules, duplicate_titles, individual_re
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
 from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
-from routing_guides.tasks import analyze_guide, dsn
+from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
 
@@ -32,6 +32,7 @@ class Candidate(BaseModel):
     source_guide_id: str
     review: dict[str, Any] | None = None
     evidence_issues: list[str] = Field(default_factory=list)
+    classification: dict[str, Any] | None = None
     carried_from_release_id: str | None = None
     carried_from_rule_id: str | None = None
 
@@ -49,6 +50,7 @@ class RunPayload(BaseModel):
     warnings: list[str] = []
     batches: list[dict[str, Any]] = []
     pending_batches: list[list[int]] = []
+    classification_job: dict[str, Any] | None = None
 
 
     @model_validator(mode='after')
@@ -140,6 +142,11 @@ class BulkApproval(VersionedAction):
 
 class ClassifyRules(BulkApproval):
     purpose: Literal['general_guidance', 'shipment_validation']
+
+
+class StartClassification(VersionedAction):
+    provider: Literal['anthropic', 'openai'] = 'anthropic'
+    model: str = Field(default='', max_length=150)
 
 
 class CarryApprovals(VersionedAction):
@@ -369,7 +376,7 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             if not body.note.strip():
                 raise HTTPException(422, 'Explain the correction before saving.')
             await check_evidence(session, run, body.spec)
-            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], carried_from_release_id=None, carried_from_rule_id=None)
+            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], classification=None, carried_from_release_id=None, carried_from_rule_id=None)
         else:
             if (body.action == 'reject' or individual_review_reasons(RuleSpec.model_validate(rule['spec']), rule.get('evidence_issues', []), rule['spec']['title'].strip().casefold() in duplicate_titles(data['rules']))) and not body.note.strip():
                 raise HTTPException(422, 'Add a note for rejections or rules requiring individual review.')
@@ -382,6 +389,53 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             rule.update(carried_from_release_id=None, carried_from_rule_id=None, status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
+        return RunView.model_validate(run)
+
+
+@router.post('/analysis/{run_id}/auto-classify')
+async def auto_classify(run_id: UUID, body: StartClassification):
+    config = connection(body.provider)
+    model = body.model.strip() or config['model']
+    if not model or not config['key']:
+        raise HTTPException(422, 'Configure the classification provider and model in Connections first.')
+    async with await psycopg.AsyncConnection.connect(dsn) as conn:
+        cursor = await conn.execute('SELECT status, version, payload FROM analysis_runs WHERE id=%s FOR UPDATE', (run_id,))
+        row = await cursor.fetchone()
+        if not row:
+            raise HTTPException(404, 'Analysis not found.')
+        status, version, data = row
+        if status != 'complete' or version != body.version:
+            raise HTTPException(409, 'Refresh the completed draft before classifying.')
+        job = data.get('classification_job') or {}
+        if job.get('status') in {'queued', 'running'}:
+            raise HTTPException(409, 'Automatic classification is already running.')
+        if job.get('status') == 'failed' and job.get('provider') == body.provider and job.get('model') == model:
+            job.update(status='queued', error=None, actor=body.actor)
+        else:
+            pending = [{'id': r['id'], 'revision': r['revision']} for r in data['rules']
+                       if r['status'] == 'pending' and r['spec'].get('purpose', 'unclassified') == 'unclassified']
+            if not pending:
+                raise HTTPException(409, 'No unclassified pending rules remain.')
+            job = {'id': str(uuid4()), 'status': 'queued', 'provider': body.provider, 'model': model, 'actor': body.actor,
+                   'pending': pending, 'total': len(pending), 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
+        data['classification_job'] = job
+        await conn.execute('UPDATE analysis_runs SET payload=%s::jsonb, version=version+1 WHERE id=%s', (json.dumps(data), run_id))
+        await classify_guide_rules.configure(connection=conn, lock=f'classification:{run_id}', queueing_lock=f'classification:{run_id}').defer_async(run_id=str(run_id), job_id=job['id'])
+    return {'status': 'queued'}
+
+
+@router.post('/analysis/{run_id}/cancel-classification', response_model=RunView)
+async def cancel_classification(run_id: UUID, body: VersionedAction):
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        guard(run, body.version)
+        data = deepcopy(run.payload)
+        job = data.get('classification_job') or {}
+        if job.get('status') not in {'queued', 'running', 'failed'}:
+            raise HTTPException(409, 'No active classification to stop.')
+        job['status'] = 'cancelled'
+        run.payload, run.version = data, run.version + 1
+        audit(session, run.id, body.actor, 'classification_cancelled', {'job_id': job['id']})
         return RunView.model_validate(run)
 
 
@@ -406,7 +460,7 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
                 continue
             before = deepcopy(rule)
             rule['spec']['purpose'] = body.purpose
-            rule.update(revision=rule['revision'] + 1, review=None,
+            rule.update(revision=rule['revision'] + 1, review=None, classification={'method': 'manual', 'reason': body.note or 'Rule use selected by reviewer.', 'actor': body.actor},
                         carried_from_release_id=None, carried_from_rule_id=None)
             audit(session, run.id, body.actor, 'rule_classified',
                   {'before': before, 'after': rule, 'note': body.note, 'batch_id': batch_id})
@@ -517,6 +571,8 @@ async def review_coverage(run_id: UUID, body: CoverageAction):
 
 def assemble_release(run, base, body):
     rules = run.payload['rules']
+    if (run.payload.get('classification_job') or {}).get('status') in {'queued', 'running'}:
+        raise HTTPException(409, 'Wait for automatic classification to finish or stop it before publishing.')
     if any(r['status'] == 'pending' for r in rules):
         raise HTTPException(409, 'Review every candidate before publishing.')
     approved = {r['id']: r for r in rules if r['status'] == 'approved'}
