@@ -533,6 +533,8 @@ export interface components {
             review?: {
                 [key: string]: unknown;
             } | null;
+            /** Evidence Issues */
+            evidence_issues?: string[];
         };
         /** ConnectionAction */
         ConnectionAction: {

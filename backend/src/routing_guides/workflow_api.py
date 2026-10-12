@@ -30,6 +30,7 @@ class Candidate(BaseModel):
     spec: RuleSpec
     source_guide_id: str
     review: dict[str, Any] | None = None
+    evidence_issues: list[str] = Field(default_factory=list)
 
 
 class RunPayload(BaseModel):
@@ -316,11 +317,14 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             if not body.spec:
                 raise HTTPException(422, 'Provide the edited rule.')
             await check_evidence(session, run, body.spec)
-            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None)
+            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[])
         else:
             if not body.note.strip():
                 raise HTTPException(422, 'Add a review note explaining your decision.')
-            await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
+            if body.action == 'approve':
+                if rule.get('evidence_issues'):
+                    raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
+                await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
             rule.update(status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule})
@@ -349,6 +353,8 @@ def assemble_release(run, base, body):
     if any(r['status'] == 'pending' for r in rules):
         raise HTTPException(409, 'Review every candidate before publishing.')
     approved = {r['id']: r for r in rules if r['status'] == 'approved'}
+    if any(r.get('evidence_issues') for r in approved.values()):
+        raise HTTPException(409, 'Approved rules cannot contain unresolved source evidence issues.')
     if any(p['outcome'] == 'needs_review' for p in run.payload['coverage']) or run.payload['pending_batches']:
         raise HTTPException(409, 'Resolve all page coverage before publishing.')
     old = base.payload['rules'] if base else []

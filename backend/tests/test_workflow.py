@@ -144,6 +144,50 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             run=await s.get(AnalysisRun,self.rid)
             self.assertEqual(run.status,'failed');self.assertEqual(run.payload['coverage'],[])
 
+    async def test_citation_issues_preserve_drafts_and_continue_but_block_approval(self):
+        bad = rule(evidence=[{'page': 1, 'quote': 'Cartons may weigh up to 60 lb.'}])
+        good = rule(evidence=[{'page': 2, 'quote': '50 lb'}])
+        async with self.sessions.begin() as session:
+            guide = await session.get(Guide, self.gid)
+            guide.page_count = 2
+            session.add(GuidePage(guide_id=self.gid, page_index=1, text='Maximum weight is 50 lb.', text_status='extracted', image_status='ready'))
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'queued'
+            run.config = {'provider': 'anthropic', 'model': 'test'}
+            run.payload = {**run.payload, 'coverage': [], 'pending_batches': [[1], [2]]}
+        responses = [
+            ProviderOutput(Extraction(rules=[bad, bad], coverage=[{'page': 1, 'outcome': 'rules_found', 'note': 'Proposed requirements'}], warnings=[]), 'test', {}),
+            ProviderOutput(Extraction(rules=[good], coverage=[{'page': 2, 'outcome': 'rules_found', 'note': 'Matched'}], warnings=[]), 'test', {}),
+        ]
+        with patch.object(analysis_jobs, 'analyze', AsyncMock(side_effect=responses)) as provider:
+            await analysis_jobs.run_analysis(self.rid)
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual(provider.await_count, 2)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.status, 'complete')
+            self.assertEqual(len(saved.payload['rules']), 3)
+            self.assertEqual(saved.payload['coverage'][0]['outcome'], 'needs_review')
+            self.assertEqual(saved.payload['coverage'][1]['outcome'], 'rules_found')
+            self.assertEqual(saved.payload['rules'][0]['spec']['evidence'][0]['quote'], bad.evidence[0].quote)
+            self.assertTrue(saved.payload['rules'][0]['evidence_issues'])
+            self.assertFalse(saved.payload['rules'][2]['evidence_issues'])
+            version = saved.version
+            first, second = [r['id'] for r in saved.payload['rules'][:2]]
+        endpoint = f'/api/analysis/{self.rid}/rules/{first}'
+        body = {'version': version, 'actor': 'Reviewer', 'note': 'Checked source'}
+        await self.send('PUT', endpoint, {**body, 'action': 'approve'}, 422)
+        rejected = await self.send('PUT', endpoint, {**body, 'action': 'reject'})
+        self.assertEqual(rejected['payload']['rules'][0]['status'], 'rejected')
+        endpoint = f'/api/analysis/{self.rid}/rules/{second}'
+        body['version'] = rejected['version']
+        await self.send('PUT', endpoint, {**body, 'action': 'save', 'spec': bad.model_dump(mode='json')}, 422)
+        edited = await self.send('PUT', endpoint, {**body, 'action': 'save', 'spec': rule().model_dump(mode='json')})
+        self.assertEqual(edited['payload']['rules'][1]['evidence_issues'], [])
+        approved = await self.send('PUT', endpoint, {**body, 'version': edited['version'], 'action': 'approve'})
+        self.assertEqual(approved['payload']['rules'][1]['status'], 'approved')
+        self.assertEqual(approved['payload']['coverage'][0]['outcome'], 'needs_review')
+
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
         with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):
             response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})

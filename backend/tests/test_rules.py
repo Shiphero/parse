@@ -93,6 +93,13 @@ class EvidenceAndReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_evidence(rule(), {2:'50 lb'})
 
+    def test_citation_typography_does_not_change_meaning(self):
+        spec = rule(evidence=[{'page': 1, 'quote': '"Non-compliant" office shipments: 50 lb.'}])
+        validate_evidence(spec, {1: '“Non-\ncompliant” ofﬁce shipments: 50 lb.'})
+        for quote in ['"Non-compliant" office shipments: 60 lb.', 'Office shipments may weigh 50 lb.', '   ']:
+            with self.subTest(quote=quote), self.assertRaises(ValueError):
+                validate_evidence(rule(evidence=[{'page': 1, 'quote': quote}]), {1: '“Non-\ncompliant” ofﬁce shipments: 50 lb.'})
+
     def test_missing_rule_does_not_silently_disappear(self):
         run=SimpleNamespace(payload={'rules':[], 'coverage':[], 'pending_batches':[]})
         base=SimpleNamespace(payload={'rules':[{'stable_id':'old','spec':rule().model_dump()}]})
