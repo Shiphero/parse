@@ -6,7 +6,7 @@ import json
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, computed_field, field_validator, model_validator, PrivateAttr
 import psycopg
 from sqlalchemy import select
 from routing_guides.analysis_jobs import validate_evidence
@@ -15,6 +15,7 @@ from routing_guides.connections import connection, statuses, save_connection
 from routing_guides.db import sessions
 from routing_guides.evaluator import evaluate_release
 from routing_guides.models import AnalysisRun, AuditEvent, Evaluation, Guide, GuidePage, ReleaseHead, RuleRelease, Scenario
+from routing_guides.review import compare_rules, duplicate_titles, individual_review_reasons
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
 from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
@@ -31,6 +32,15 @@ class Candidate(BaseModel):
     source_guide_id: str
     review: dict[str, Any] | None = None
     evidence_issues: list[str] = Field(default_factory=list)
+    carried_from_release_id: str | None = None
+    carried_from_rule_id: str | None = None
+
+    _duplicate: bool = PrivateAttr(default=False)
+
+    @computed_field
+    @property
+    def individual_review_reasons(self) -> list[str]:
+        return individual_review_reasons(self.spec, self.evidence_issues, self._duplicate)
 
 
 class RunPayload(BaseModel):
@@ -39,6 +49,14 @@ class RunPayload(BaseModel):
     warnings: list[str] = []
     batches: list[dict[str, Any]] = []
     pending_batches: list[list[int]] = []
+
+
+    @model_validator(mode='after')
+    def flag_duplicates(self):
+        duplicates = duplicate_titles([{'spec': {'title': r.spec.title}, 'status': r.status} for r in self.rules])
+        for rule in self.rules:
+            rule._duplicate = rule.status != 'rejected' and rule.spec.title.strip().casefold() in duplicates
+        return self
 
 
 class RunView(BaseModel):
@@ -106,6 +124,33 @@ class VersionedAction(BaseModel):
     version: int
     actor: str = Field(min_length=1, max_length=200)
     note: str = Field(default='', max_length=5000)
+
+
+    @field_validator('actor')
+    @classmethod
+    def named_reviewer(cls, value):
+        if not value.strip():
+            raise ValueError('Enter your reviewer name.')
+        return value.strip()
+
+
+class BulkApproval(VersionedAction):
+    revisions: dict[UUID, int] = Field(min_length=1, max_length=1000)
+
+
+class CarryApprovals(VersionedAction):
+    base_release_id: UUID
+    scope_confirmed: bool
+
+
+class ComparisonView(BaseModel):
+    base_release_id: UUID | None = None
+    base_name: str = ''
+    base_scope: str = ''
+    unchanged: dict[str, str] = Field(default_factory=dict)
+    changed: dict[str, list[str]] = Field(default_factory=dict)
+    added: list[str] = Field(default_factory=list)
+    missing: list[str] = Field(default_factory=list)
 
 
 class ReviewAction(VersionedAction):
@@ -316,18 +361,104 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
         if body.action == 'save':
             if not body.spec:
                 raise HTTPException(422, 'Provide the edited rule.')
-            await check_evidence(session, run, body.spec)
-            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[])
-        else:
             if not body.note.strip():
-                raise HTTPException(422, 'Add a review note explaining your decision.')
+                raise HTTPException(422, 'Explain the correction before saving.')
+            await check_evidence(session, run, body.spec)
+            rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], carried_from_release_id=None, carried_from_rule_id=None)
+        else:
+            if (body.action == 'reject' or individual_review_reasons(RuleSpec.model_validate(rule['spec']), rule.get('evidence_issues', []), rule['spec']['title'].strip().casefold() in duplicate_titles(data['rules']))) and not body.note.strip():
+                raise HTTPException(422, 'Add a note for rejections or rules requiring individual review.')
             if body.action == 'approve':
                 if rule.get('evidence_issues'):
                     raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
                 await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
-            rule.update(status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
+            rule.update(carried_from_release_id=None, carried_from_rule_id=None, status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
-        audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule})
+        audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
+        return RunView.model_validate(run)
+
+
+@router.post('/analysis/{run_id}/bulk-approve', response_model=RunView)
+async def bulk_approve(run_id: UUID, body: BulkApproval):
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        guard(run, body.version)
+        data = deepcopy(run.payload)
+        by_id = {r['id']: r for r in data['rules']}
+        selected = []
+        duplicates = duplicate_titles(data['rules'])
+        # Validate the entire selection before changing any rule or audit history.
+        for rule_id, revision in body.revisions.items():
+            rule = by_id.get(str(rule_id))
+            if rule is None:
+                raise HTTPException(404, 'A selected rule does not belong to this draft.')
+            if rule['revision'] != revision or rule['status'] != 'pending':
+                raise HTTPException(409, 'A selected rule changed. Refresh and select the latest pending revisions.')
+            spec = RuleSpec.model_validate(rule['spec'])
+            if individual_review_reasons(spec, rule.get('evidence_issues', []), spec.title.strip().casefold() in duplicates):
+                raise HTTPException(422, 'This selection includes rules requiring individual review.')
+            await check_evidence(session, run, spec)
+            selected.append(rule)
+        timestamp = datetime.now(timezone.utc).isoformat()
+        batch_id = str(uuid4())
+        for rule in selected:
+            before = deepcopy(rule)
+            rule.update(status='approved', review={'actor': body.actor, 'note': body.note.strip(),
+                        'revision': rule['revision'], 'at': timestamp, 'mode': 'bulk', 'batch_id': batch_id})
+            audit(session, run.id, body.actor, 'approve', {'before': before, 'after': rule, 'batch_id': batch_id})
+        run.payload, run.version = data, run.version + 1
+        return RunView.model_validate(run)
+
+
+async def active_baseline(session, run, lock=False):
+    guide = await required(session, Guide, run.guide_id)
+    head = await required(session, ReleaseHead, guide.retailer_id, lock)
+    if not head.release_id:
+        return None
+    base = await session.scalar(select(RuleRelease).where(
+        RuleRelease.id == head.release_id, RuleRelease.retailer_id == guide.retailer_id))
+    if base is None:
+        raise HTTPException(409, 'The active release is unavailable for this retailer.')
+    return base
+
+
+@router.get('/analysis/{run_id}/comparison', response_model=ComparisonView)
+async def comparison(run_id: UUID):
+    async with sessions() as session:
+        run = await required(session, AnalysisRun, run_id)
+        base = await active_baseline(session, run)
+        return ComparisonView(base_release_id=base.id if base else None, base_name=base.name if base else '',
+                              base_scope=base.payload['scope'] if base else '',
+                              **compare_rules(run.payload['rules'], base.payload['rules'] if base else []))
+
+
+@router.post('/analysis/{run_id}/carry-approvals', response_model=RunView)
+async def carry_approvals(run_id: UUID, body: CarryApprovals):
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        guard(run, body.version)
+        base = await active_baseline(session, run, True)
+        if not base or base.id != body.base_release_id:
+            raise HTTPException(409, 'The active release changed or belongs to another retailer. Refresh the comparison.')
+        if not body.scope_confirmed:
+            raise HTTPException(422, 'Confirm this guide has the same operational scope as the baseline.')
+        matches = compare_rules(run.payload['rules'], base.payload['rules'])['unchanged']
+        previous = {r['stable_id']: r for r in base.payload['rules']}
+        data = deepcopy(run.payload)
+        selected = [r for r in data['rules'] if r['id'] in matches and r['status'] == 'pending']
+        if not selected:
+            raise HTTPException(409, 'No pending exact matches to carry forward.')
+        for rule in selected:
+            await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
+        for rule in selected:
+            before = deepcopy(rule)
+            stable_id = matches[rule['id']]
+            rule.update(status='approved', carried_from_release_id=str(base.id), carried_from_rule_id=stable_id,
+                        review={'actor': body.actor, 'note': body.note.strip(), 'revision': rule['revision'],
+                                'at': datetime.now(timezone.utc).isoformat(), 'mode': 'carried_forward',
+                                'prior_review': deepcopy(previous[stable_id]['review'])})
+            audit(session, run.id, body.actor, 'approval_carried_forward', {'before': before, 'after': rule})
+        run.payload, run.version = data, run.version + 1
         return RunView.model_validate(run)
 
 
@@ -358,11 +489,21 @@ def assemble_release(run, base, body):
     if any(p['outcome'] == 'needs_review' for p in run.payload['coverage']) or run.payload['pending_batches']:
         raise HTTPException(409, 'Resolve all page coverage before publishing.')
     old = base.payload['rules'] if base else []
-    if set(body.decisions) != {r['stable_id'] for r in old}:
+    matches = compare_rules(rules, old)['unchanged']
+    decisions = dict(body.decisions)
+    for rid, rule in approved.items():
+        if rule.get('carried_from_release_id'):
+            if not base or rule['carried_from_release_id'] != str(base.id) or matches.get(rid) != rule.get('carried_from_rule_id'):
+                raise HTTPException(409, 'Carried approvals no longer match the active baseline. Review those rules again.')
+            stable_id = rule['carried_from_rule_id']
+            if stable_id in decisions and decisions[stable_id] != 'replace:' + rid:
+                raise HTTPException(422, 'A carried rule cannot also be retained or retired. Review it individually first.')
+            decisions[stable_id] = 'replace:' + rid
+    if set(decisions) != {r['stable_id'] for r in old}:
         raise HTTPException(422, 'Explicitly retain, replace or retire every rule in the previous release.')
     result, used = [], set()
     for previous in old:
-        decision = body.decisions[previous['stable_id']]
+        decision = decisions[previous['stable_id']]
         if decision == 'retain':
             result.append(deepcopy(previous))
         elif decision == 'retire':
@@ -379,6 +520,7 @@ def assemble_release(run, base, body):
     for rid, r in approved.items():
         if rid not in used:
             result.append(dict(stable_id=rid, spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
+    body.decisions = decisions
     return result
 
 

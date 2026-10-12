@@ -243,6 +243,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/bulk-approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Approve */
+        post: operations["bulk_approve_api_analysis__run_id__bulk_approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comparison */
+        get: operations["comparison_api_analysis__run_id__comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/carry-approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Carry Approvals */
+        post: operations["carry_approvals_api_analysis__run_id__carry_approvals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis/{run_id}/coverage": {
         parameters: {
             query?: never;
@@ -515,6 +566,22 @@ export interface components {
             /** Effective Date */
             effective_date?: string | null;
         };
+        /** BulkApproval */
+        BulkApproval: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Revisions */
+            revisions: {
+                [key: string]: number;
+            };
+        };
         /** Candidate */
         Candidate: {
             /** Id */
@@ -535,6 +602,58 @@ export interface components {
             } | null;
             /** Evidence Issues */
             evidence_issues?: string[];
+            /** Carried From Release Id */
+            carried_from_release_id?: string | null;
+            /** Carried From Rule Id */
+            carried_from_rule_id?: string | null;
+            /** Individual Review Reasons */
+            readonly individual_review_reasons: string[];
+        };
+        /** CarryApprovals */
+        CarryApprovals: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Base Release Id
+             * Format: uuid
+             */
+            base_release_id: string;
+            /** Scope Confirmed */
+            scope_confirmed: boolean;
+        };
+        /** ComparisonView */
+        ComparisonView: {
+            /** Base Release Id */
+            base_release_id?: string | null;
+            /**
+             * Base Name
+             * @default
+             */
+            base_name: string;
+            /**
+             * Base Scope
+             * @default
+             */
+            base_scope: string;
+            /** Unchanged */
+            unchanged?: {
+                [key: string]: string;
+            };
+            /** Changed */
+            changed?: {
+                [key: string]: string[];
+            };
+            /** Added */
+            added?: string[];
+            /** Missing */
+            missing?: string[];
         };
         /** ConnectionAction */
         ConnectionAction: {
@@ -1721,6 +1840,107 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReviewAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_approve_api_analysis__run_id__bulk_approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comparison_api_analysis__run_id__comparison_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    carry_approvals_api_analysis__run_id__carry_approvals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarryApprovals"];
             };
         };
         responses: {

@@ -22,10 +22,11 @@ export function useRemote<T>(url: string, poll = 0, revision = 0) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState('');
   const [tick, setTick] = useState(0);
+  useEffect(() => { setData(null); }, [url]);
   useEffect(() => {
     const controller = new AbortController();
     let pending = false;
-    setData(null); setError('');
+    setError('');
     const load = async () => {
       if (pending) return;
       pending = true;
@@ -66,3 +67,5 @@ export type Evaluation = components['schemas']['EvaluationView'];
 export type Connection = components['schemas']['ConnectionView'];
 export type PublishAction = components['schemas']['PublishAction'];
 export function jsonRequest<T>(url: string, body: unknown, method = 'POST') { return request<T>(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+
+export type Comparison = components['schemas']['ComparisonView'];
