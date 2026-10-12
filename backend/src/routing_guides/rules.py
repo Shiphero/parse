@@ -1,6 +1,8 @@
 """Versioned rule contracts and a deliberately bounded, non-executable rule language."""
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from routing_guides.taxonomy import OperationalCategory, ConsumptionPoint, canonical_consumption_points
 
 
 class StrictModel(BaseModel):
@@ -70,7 +72,9 @@ class ExceptionRule(StrictModel):
 
 
 class RuleSpec(StrictModel):
-    schema_version: Literal['1.0'] = '1.0'
+    schema_version: Literal['1.0', '1.1'] = '1.1'
+    operational_category: OperationalCategory = Field(default='unclassified', description='Primary operational activity; independent of purpose and verification.')
+    consumption_points: list[ConsumptionPoint] = Field(default_factory=list, description='Workflows enforcing or presenting this obligation, not upstream data sources.')
     purpose: Literal['general_guidance', 'shipment_validation', 'unclassified'] = Field(default='unclassified', description='Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.')
     title: str = Field(min_length=1, max_length=250)
     instruction: str = Field(min_length=1)
@@ -83,6 +87,11 @@ class RuleSpec(StrictModel):
     assertion: Expression | None = Field(default=None, description='True means compliance, even for prohibited obligations')
     evidence: list[EvidenceRef] = Field(min_length=1)
     unresolved_questions: list[str] = Field(default_factory=list)
+
+    @field_validator('consumption_points')
+    @classmethod
+    def unique_consumers(cls, value):
+        return canonical_consumption_points(value)
 
     @model_validator(mode='after')
     def executable(self):

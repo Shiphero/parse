@@ -393,7 +393,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         from routing_guides.classification_provider import Classification, ClassifiedOutput
         job_id, ids = await self.seed_classification(41)
         def result(rids):
-            return ClassifiedOutput([Classification(id=rid, purpose='general_guidance', reason='Supplier administration.') for rid in rids], 'test-model', {'input_tokens': 100})
+            return ClassifiedOutput([Classification(id=rid, purpose='general_guidance', operational_category='business_administration', consumption_points=['supplier_management'], reason='Supplier administration.') for rid in rids], 'test-model', {'input_tokens': 100})
         with patch.object(classification_jobs, 'classify', AsyncMock(side_effect=[result(ids[:40]), ProviderFailure('Temporary problem')])) as mocked:
             await classification_jobs.run_classification(self.rid, job_id)
             self.assertEqual(mocked.await_count, 2)
@@ -428,7 +428,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                 data['rules'][0]['spec']['purpose'] = 'shipment_validation'
                 data['rules'][0]['revision'] = 2
                 run.payload, run.version = data, run.version+1
-            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', reason='Proposed category')], 'test', {})
+            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', operational_category='business_administration', consumption_points=['supplier_management'], reason='Proposed category')], 'test', {})
         with patch.object(classification_jobs, 'classify', provider):
             await classification_jobs.run_classification(self.rid, job_id)
         async with self.sessions() as session:
@@ -443,13 +443,76 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         job_id, ids = await self.seed_classification()
         async def provider(*args):
             await self.send('POST', f'/api/analysis/{self.rid}/cancel-classification', {'version': 1, 'actor': 'Reviewer'})
-            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', reason='Proposed category')], 'test', {})
+            return ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', operational_category='business_administration', consumption_points=['supplier_management'], reason='Proposed category')], 'test', {})
         with patch.object(classification_jobs, 'classify', provider):
             await classification_jobs.run_classification(self.rid, job_id)
         async with self.sessions() as session:
             run = await session.get(AnalysisRun, self.rid)
             self.assertEqual(run.payload['rules'][0]['spec']['purpose'], 'unclassified')
             self.assertEqual(run.payload['classification_job']['status'], 'cancelled')
+
+    async def test_backfill_taxonomy_preserves_existing_rule_use_and_evidence(self):
+        from routing_guides.classification_provider import Classification, ClassifiedOutput
+        job_id, ids = await self.seed_classification()
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            data = deepcopy(run.payload)
+            spec = data['rules'][0]['spec']
+            spec.update(purpose='shipment_validation', schema_version='1.0')
+            spec.pop('operational_category')
+            spec.pop('consumption_points')
+            original = deepcopy(spec)
+            run.payload = data
+        output = ClassifiedOutput([Classification(id=ids[0], purpose='general_guidance', operational_category='warehouse_operations', consumption_points=['mobile_packing'], reason='Carton packing requirement.')], 'test', {})
+        with patch.object(classification_jobs, 'classify', AsyncMock(return_value=output)):
+            await classification_jobs.run_classification(self.rid, job_id)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            candidate = run.payload['rules'][0]
+            self.assertEqual(candidate['status'], 'pending')
+            self.assertEqual(candidate['revision'], 2)
+            self.assertEqual(candidate['spec']['purpose'], 'shipment_validation')
+            self.assertEqual(candidate['spec']['operational_category'], 'warehouse_operations')
+            self.assertEqual(candidate['spec']['consumption_points'], ['mobile_packing'])
+            self.assertEqual(candidate['spec']['evidence'], original['evidence'])
+            self.assertEqual(candidate['spec']['assertion'], original['assertion'])
+
+    async def test_missing_taxonomy_cannot_be_approved_even_with_note(self):
+        run = await self.add_candidate(1, rule(operational_category='unclassified', consumption_points=[]))
+        candidate = run['payload']['rules'][0]
+        await self.send('PUT', f'/api/analysis/{self.rid}/rules/{candidate["id"]}',
+            {'version': run['version'], 'actor': 'Reviewer', 'action': 'approve', 'note': 'Cannot bypass classification'}, 422)
+        await self.send('POST', f'/api/analysis/{self.rid}/bulk-approve',
+            {'version': run['version'], 'actor': 'Reviewer', 'revisions': {candidate['id']: 1}}, 422)
+
+    async def test_consumer_endpoint_separates_asn_from_packing_and_reports_legacy_gaps(self):
+        run = await self.add_candidate(1, rule())
+        run = await self.add_candidate(run['version'], rule(title='ASN contents', operational_category='electronic_documents_edi', consumption_points=['asn_generation', 'edi_transmission']))
+        approved = await self.send('POST', f'/api/analysis/{self.rid}/bulk-approve',
+            {'version': run['version'], 'actor': 'Reviewer', 'revisions': {r['id']: r['revision'] for r in run['payload']['rules']}})
+        release = await self.send('POST', f'/api/analysis/{self.rid}/publish',
+            {'version': approved['version'], 'actor': 'Reviewer', 'note': 'Synthetic scope', 'name': 'Consumer test', 'effective_date': '2026-01-01', 'scope': 'Synthetic rules', 'coverage_confirmed': True, 'impact_confirmed': True, 'decisions': {}, 'base_release_id': None})
+        url = f'/api/releases/{release["id"]}/rules'
+        packed = (await self.client.get(url, params={'consumption_point': 'mobile_packing'})).json()
+        self.assertEqual([r['spec']['title'] for r in packed['rules']], ['Carton weight'])
+        self.assertTrue(packed['routing_complete'])
+        asn = (await self.client.get(url, params={'consumption_point': 'asn_generation'})).json()
+        self.assertEqual([r['spec']['title'] for r in asn['rules']], ['ASN contents'])
+        mismatch = (await self.client.get(url, params={'consumption_point': 'asn_generation', 'operational_category': 'warehouse_operations'})).json()
+        self.assertEqual(mismatch['rules'], [])
+        self.assertEqual((await self.client.get(url, params={'consumption_point': 'unknown'})).status_code, 422)
+        self.assertEqual((await self.client.get(f'/api/releases/{uuid4()}/rules', params={'consumption_point': 'mobile_packing'})).status_code, 404)
+        # Simulate an immutable pre-upgrade release in this rollback-only fixture.
+        async with self.sessions.begin() as session:
+            stored = await session.get(RuleRelease, release['id'])
+            data = deepcopy(stored.payload)
+            data['rules'][1]['spec'].pop('operational_category')
+            data['rules'][1]['spec'].pop('consumption_points')
+            stored.payload = data
+        legacy = (await self.client.get(url, params={'consumption_point': 'asn_generation'})).json()
+        self.assertEqual(legacy['rules'], [])
+        self.assertEqual(legacy['unclassified_rule_count'], 1)
+        self.assertFalse(legacy['routing_complete'])
 
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
         with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):

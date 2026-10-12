@@ -72,3 +72,7 @@ Repository changes are committed automatically at substantial milestones using t
 ## Source scope
 
 Local research includes ten text extracts and 54 illustrative examples, never automatically approved rules. The user uploaded the 75-page original Ulta guide. Walmart material is secondary packaging, not full routing coverage. Michaels still needs its referenced routing/label manual. Supporting documents and guide authority need human review; dates and authority are not inferred from upload time.
+
+### Operational rule delivery (rule schema 1.1)
+
+Operational category and explicit consumption points are independent of rule purpose and verification. The four categories are warehouse operations, transportation/scheduling, electronic documents/EDI, and business administration. Consumers request approved immutable release rules for their specific workflow (for example mobile packing versus ASN generation). The review UI, AI extraction, draft backfill, corrections, exact comparisons, and exports carry this metadata. Missing legacy routing is visible and blocks new approval/publication; published data is never silently backfilled. See `docs/workflow.md` for semantics and the consumer endpoint.

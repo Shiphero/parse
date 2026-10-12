@@ -10,7 +10,7 @@ from routing_guides.workflow_api import assemble_release
 
 
 def rule(**changes):
-    data = dict(purpose='shipment_validation',title='Carton weight', instruction='Keep carton weight at or below 50 lb.', subject='carton', obligation='required', verification='data', applicability_text='Every carton', assertion={'op':'lte','path':'weight','value':50,'unit':'lb'}, evidence=[{'page':1,'quote':'50 lb'}])
+    data = dict(operational_category='warehouse_operations',consumption_points=['mobile_packing'],purpose='shipment_validation',title='Carton weight', instruction='Keep carton weight at or below 50 lb.', subject='carton', obligation='required', verification='data', applicability_text='Every carton', assertion={'op':'lte','path':'weight','value':50,'unit':'lb'}, evidence=[{'page':1,'quote':'50 lb'}])
     data.update(changes)
     return RuleSpec.model_validate(data)
 

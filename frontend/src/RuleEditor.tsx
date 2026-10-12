@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { operationalCategoryLabels, consumptionPointLabels } from './ruleTaxonomy';
 import { rulePurposeLabels } from './rulePurpose';
 import type { Candidate, RuleSpec } from './api';
 
-export const blankRule = (): RuleSpec => ({schema_version:'1.0',purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'human',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
+export const blankRule = (): RuleSpec => ({schema_version:'1.1',operational_category:'unclassified',consumption_points:[],purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'human',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
 
 export function Evidence({guideId, spec}: {guideId:string;spec:RuleSpec}) {
   const [chosen, setChosen] = useState(0);
@@ -16,8 +17,10 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
   const [error,setError] = useState('');
   const [note,setNote] = useState('');
   const set = <K extends keyof RuleSpec>(key:K,value:RuleSpec[K])=>setSpec(s=>({...s,[key]:value}));
-  const save = async () => { try {const details=JSON.parse(advanced); await onSave({...spec,...details},note);} catch(e){setError((e as Error).message);} };
+  const save = async () => { try {const details=JSON.parse(advanced); await onSave({...spec,...details,schema_version:'1.1'},note);} catch(e){setError((e as Error).message);} };
   return <div className="rule-review-grid"><div className="rule-form"><h3>{candidate?'Edit interpretation':'Add a rule from the source'}</h3><p className="muted">Saving creates a new draft revision and clears any prior approval.</p>
+    <label>Operational category<select value={spec.operational_category||'unclassified'} onChange={e=>set('operational_category',e.target.value as RuleSpec['operational_category'])}>{Object.entries(operationalCategoryLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
+    <fieldset className="consumption-points"><legend>Consumed by</legend><p className="muted">Choose where this rule is enforced or displayed. Do not select a workflow only because it supplies data; ASN requirements normally belong to ASN generation or EDI transmission.</p>{Object.entries(consumptionPointLabels).map(([value,label])=><label className="checkbox-label" key={value}><input type="checkbox" checked={spec.consumption_points?.includes(value as NonNullable<RuleSpec['consumption_points']>[number])||false} onChange={e=>set('consumption_points',e.target.checked?[...(spec.consumption_points||[]),value as NonNullable<RuleSpec['consumption_points']>[number]]:(spec.consumption_points||[]).filter(p=>p!==value))}/>{label}</label>)}</fieldset>
     <label>Rule use<select value={spec.purpose||'unclassified'} onChange={e=>set('purpose',e.target.value as RuleSpec['purpose'])}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><p className="muted">General guidance stays in the instructions but is excluded from shipment checks. Shipment validation includes automatic checks, physical inspections and shipment evidence.</p>
     <label>Rule title<input value={spec.title} onChange={e=>set('title',e.target.value)}/></label><label>Operational instruction<textarea rows={3} value={spec.instruction} onChange={e=>set('instruction',e.target.value)}/></label>
     <div className="form-row"><label>Subject<select value={spec.subject} onChange={e=>set('subject',e.target.value as RuleSpec['subject'])}>{['shipment','order','pallet','carton','item','label','document'].map(v=><option key={v}>{v}</option>)}</select></label><label>Obligation<select value={spec.obligation} onChange={e=>set('obligation',e.target.value as RuleSpec['obligation'])}>{['required','prohibited','recommended','informational'].map(v=><option key={v}>{v}</option>)}</select></label></div>

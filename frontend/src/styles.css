@@ -458,3 +458,5 @@ input[type=checkbox] { accent-color: var(--accent); }
 .auto-classification { padding:16px; margin:20px 0; border:1px solid var(--border); border-radius:8px; background:var(--surface-subtle)}
 .auto-classification p { font-size:13px; line-height:1.6}
 .review-rule-card .classification-reason { font-size:12px; color:var(--text-muted); border-left:2px solid var(--border); padding-left:10px}
+
+.consumption-points{border:1px solid var(--border);border-radius:8px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.consumption-points p{grid-column:1/-1}.consumption-points .checkbox-label{margin:0}.rule-consumers{font-size:12px;color:var(--text-muted);margin:8px 0}

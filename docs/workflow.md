@@ -63,3 +63,16 @@ Official integration references consulted:
 - [OpenAI Responses structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 - [ShipHero wholesale order query](https://developer.shiphero.com/schema/queries/wholesale-order.html)
 - [ShipHero packing layout](https://developer.shiphero.com/flows/export-packing-layout/)
+
+## Operational categories and consumption points
+
+Rule schema 1.1 adds two independent fields:
+
+- `operational_category`: `warehouse_operations`, `transportation_scheduling`, `electronic_documents_edi`, `business_administration`, or `unclassified` for incomplete drafts.
+- `consumption_points`: a bounded, unique list of workflows that enforce or present the obligation. Mobile picking/packing, label generation/application, pallet building, staging/loading, transport planning, pickup/delivery scheduling, document generation/delivery, ASN generation, EDI transmission, supplier onboarding/management, product setup, order management, billing, and compliance disputes have distinct identifiers in the API schema.
+
+These fields do not replace `purpose`, `subject`, `obligation`, or `verification`. A per-shipment ASN rule belongs to electronic documents and EDI; it is consumed by ASN generation or EDI transmission. Packing-list delivery by email or portal uses `document_transmission`; sending structured EDI messages uses `edi_transmission`. Capturing carton contents in mobile packing does not make mobile packing a consumer of the ASN rule. A physical instruction to place a packing list on a carton belongs to warehouse operations; document content requirements belong to electronic documents. Classify by the required action, not guide section or department. Extraction should split independent obligations; classification of existing mixed rules flags ambiguity without changing the original text.
+
+Review rules has operational category and consumption-point filters, and both fields are editable. Automatic classification fills missing dimensions on pending drafts while preserving known rule use, categories and consumers. Accepted edits and approvals are never overwritten. All changes remain audited, revisioned proposals. Rule schema 1.0 records stay readable; absent categories/consumers remain explicitly unclassified, never guessed. New approvals and publications require complete classification. Previously published releases remain immutable. Correcting consumer routing invalidates approval and prevents exact-match carry-forward.
+
+Consumers can request `GET /api/releases/{release_id}/rules?consumption_point=mobile_packing`, optionally adding `operational_category=warehouse_operations`. This reads only an explicitly chosen immutable release and returns matching fully classified rules with evidence, review metadata, retailer ID and effective date. It includes guidance when explicitly assigned to that consumer; the existing scenario evaluator still excludes general guidance. Incomplete legacy rules are excluded with `unclassified_rule_count` and `routing_complete=false`, so an empty response must not be interpreted as complete coverage. This is rule delivery, not an integration with ShipHero mobile or the EDI transmission system, and it does not assess shipment applicability or claim compliance. JSON and Markdown release exports include both fields.

@@ -10,6 +10,8 @@ from routing_guides.analysis_provider import ProviderFailure
 from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun, AuditEvent
 from routing_guides.storage import guide_directory
+from routing_guides.taxonomy import needs_classification
+from routing_guides.rules import RuleSpec
 
 
 async def run_classification(run_id, job_id):
@@ -32,7 +34,7 @@ async def run_classification(run_id, job_id):
                 requested = [deepcopy(current[item['id']]) for item in batch if item['id'] in current
                              and current[item['id']]['revision'] == item['revision']
                              and current[item['id']]['status'] == 'pending'
-                             and current[item['id']]['spec'].get('purpose', 'unclassified') == 'unclassified']
+                             and needs_classification(current[item['id']]['spec'])]
                 settings = deepcopy(job)
                 guide_id = run.guide_id
                 run.payload = data
@@ -53,10 +55,18 @@ async def run_classification(run_id, job_id):
                 for classified in output.rules if output else []:
                     rule = current.get(str(classified.id))
                     # Recheck revisions AFTER the model call: human edits always win.
-                    if not rule or rule['status'] != 'pending' or rule['revision'] != expected[rule['id']] or rule['spec'].get('purpose', 'unclassified') != 'unclassified':
+                    if not rule or rule['status'] != 'pending' or rule['revision'] != expected[rule['id']] or not needs_classification(rule['spec']):
                         continue
                     before = deepcopy(rule)
-                    rule['spec']['purpose'] = classified.purpose
+                    spec = rule['spec']
+                    if spec.get('purpose', 'unclassified') == 'unclassified':
+                        spec['purpose'] = classified.purpose
+                    if spec.get('operational_category', 'unclassified') == 'unclassified':
+                        spec['operational_category'] = classified.operational_category
+                    if not spec.get('consumption_points'):
+                        spec['consumption_points'] = classified.consumption_points
+                    spec['schema_version'] = '1.1'
+                    rule['spec'] = RuleSpec.model_validate(spec).model_dump(mode='json')
                     rule.update(revision=rule['revision']+1, review=None, carried_from_release_id=None, carried_from_rule_id=None,
                                 classification={'method': 'ai', 'reason': classified.reason, 'provider': settings['provider'],
                                                 'model': output.model, 'prompt_version': PROMPT_VERSION,

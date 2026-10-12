@@ -413,6 +413,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/releases/{release_id}/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consumer Rules
+         * @description Read an immutable release for a specific consumer; never guess legacy routing.
+         */
+        get: operations["consumer_rules_api_releases__release_id__rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/releases/{release_id}/export": {
         parameters: {
             query?: never;
@@ -749,6 +769,34 @@ export interface components {
             credential_configured: boolean;
             /** Model */
             model: string;
+        };
+        /** ConsumerRulesView */
+        ConsumerRulesView: {
+            /**
+             * Release Id
+             * Format: uuid
+             */
+            release_id: string;
+            /** Retailer Id */
+            retailer_id: string;
+            /**
+             * Effective Date
+             * Format: date
+             */
+            effective_date: string;
+            /** Operational Category */
+            operational_category: ("warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified") | null;
+            /**
+             * Consumption Point
+             * @enum {string}
+             */
+            consumption_point: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+            /** Rules */
+            rules: components["schemas"]["ReleaseRule"][];
+            /** Unclassified Rule Count */
+            unclassified_rule_count: number;
+            /** Routing Complete */
+            routing_complete: boolean;
         };
         /** CoverageAction */
         CoverageAction: {
@@ -1195,10 +1243,22 @@ export interface components {
         "RuleSpec-Input": {
             /**
              * Schema Version
-             * @default 1.0
-             * @constant
+             * @default 1.1
+             * @enum {string}
              */
-            schema_version: "1.0";
+            schema_version: "1.0" | "1.1";
+            /**
+             * Operational Category
+             * @description Primary operational activity; independent of purpose and verification.
+             * @default unclassified
+             * @enum {string}
+             */
+            operational_category: "warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified";
+            /**
+             * Consumption Points
+             * @description Workflows enforcing or presenting this obligation, not upstream data sources.
+             */
+            consumption_points?: ("mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes")[];
             /**
              * Purpose
              * @description Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.
@@ -1241,10 +1301,22 @@ export interface components {
         "RuleSpec-Output": {
             /**
              * Schema Version
-             * @default 1.0
-             * @constant
+             * @default 1.1
+             * @enum {string}
              */
-            schema_version: "1.0";
+            schema_version: "1.0" | "1.1";
+            /**
+             * Operational Category
+             * @description Primary operational activity; independent of purpose and verification.
+             * @default unclassified
+             * @enum {string}
+             */
+            operational_category: "warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified";
+            /**
+             * Consumption Points
+             * @description Workflows enforcing or presenting this obligation, not upstream data sources.
+             */
+            consumption_points?: ("mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes")[];
             /**
              * Purpose
              * @description Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.
@@ -2330,6 +2402,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReleaseView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consumer_rules_api_releases__release_id__rules_get: {
+        parameters: {
+            query: {
+                consumption_point: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+                operational_category?: ("warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified") | null;
+            };
+            header?: never;
+            path: {
+                release_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsumerRulesView"];
                 };
             };
             /** @description Validation Error */

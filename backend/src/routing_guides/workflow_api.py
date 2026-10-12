@@ -19,6 +19,8 @@ from routing_guides.review import compare_rules, duplicate_titles, individual_re
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
 from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
+from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification
+from routing_guides.classification_provider import PROMPT_VERSION as CLASSIFICATION_PROMPT_VERSION
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
@@ -100,6 +102,17 @@ class ReleaseView(BaseModel):
     effective_date: date
     payload: ReleasePayload
     created_at: datetime
+
+
+class ConsumerRulesView(BaseModel):
+    release_id: UUID
+    retailer_id: str
+    effective_date: date
+    operational_category: OperationalCategory | None
+    consumption_point: ConsumptionPoint
+    rules: list[ReleaseRule]
+    unclassified_rule_count: int
+    routing_complete: bool
 
 
 class ConnectionView(BaseModel):
@@ -381,8 +394,8 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             if (body.action == 'reject' or individual_review_reasons(RuleSpec.model_validate(rule['spec']), rule.get('evidence_issues', []), rule['spec']['title'].strip().casefold() in duplicate_titles(data['rules']))) and not body.note.strip():
                 raise HTTPException(422, 'Add a note for rejections or rules requiring individual review.')
             if body.action == 'approve':
-                if RuleSpec.model_validate(rule['spec']).purpose == 'unclassified':
-                    raise HTTPException(422, 'Choose general guidance or shipment validation before approving.')
+                if needs_classification(rule['spec']):
+                    raise HTTPException(422, 'Choose rule use, operational category and consumption points before approving.')
                 if rule.get('evidence_issues'):
                     raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
                 await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
@@ -409,14 +422,14 @@ async def auto_classify(run_id: UUID, body: StartClassification):
         job = data.get('classification_job') or {}
         if job.get('status') in {'queued', 'running'}:
             raise HTTPException(409, 'Automatic classification is already running.')
-        if job.get('status') == 'failed' and job.get('provider') == body.provider and job.get('model') == model:
+        if job.get('status') == 'failed' and job.get('provider') == body.provider and job.get('model') == model and job.get('prompt_version') == CLASSIFICATION_PROMPT_VERSION:
             job.update(status='queued', error=None, actor=body.actor)
         else:
             pending = [{'id': r['id'], 'revision': r['revision']} for r in data['rules']
-                       if r['status'] == 'pending' and r['spec'].get('purpose', 'unclassified') == 'unclassified']
+                       if r['status'] == 'pending' and needs_classification(r['spec'])]
             if not pending:
                 raise HTTPException(409, 'No unclassified pending rules remain.')
-            job = {'id': str(uuid4()), 'status': 'queued', 'provider': body.provider, 'model': model, 'actor': body.actor,
+            job = {'id': str(uuid4()), 'prompt_version': CLASSIFICATION_PROMPT_VERSION, 'status': 'queued', 'provider': body.provider, 'model': model, 'actor': body.actor,
                    'pending': pending, 'total': len(pending), 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
         data['classification_job'] = job
         await conn.execute('UPDATE analysis_runs SET payload=%s::jsonb, version=version+1 WHERE id=%s', (json.dumps(data), run_id))
@@ -612,8 +625,8 @@ def assemble_release(run, base, body):
     for rid, r in approved.items():
         if rid not in used:
             result.append(dict(stable_id=rid, spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
-    if any(RuleSpec.model_validate(r['spec']).purpose == 'unclassified' for r in result):
-        raise HTTPException(409, 'Classify each approved rule as general guidance or shipment validation before publication.')
+    if any(needs_classification(r['spec']) for r in result):
+        raise HTTPException(409, 'Choose rule use, operational category and consumption points for every rule before publication.')
     body.decisions = decisions
     return result
 
@@ -673,6 +686,22 @@ async def activate_release(release_id: UUID, body: RestoreAction):
         return ReleaseView.model_validate(release)
 
 
+@router.get('/releases/{release_id}/rules', response_model=ConsumerRulesView)
+async def consumer_rules(release_id: UUID, consumption_point: ConsumptionPoint, operational_category: OperationalCategory | None = None):
+    """Read an immutable release for a specific consumer; never guess legacy routing."""
+    async with sessions() as session:
+        release = await required(session, RuleRelease, release_id)
+        value = ReleaseView.model_validate(release)
+    missing = sum(needs_classification(r.spec.model_dump()) for r in value.payload.rules)
+    rules = [r for r in value.payload.rules
+             if not needs_classification(r.spec.model_dump())
+             and consumption_point in r.spec.consumption_points
+             and (operational_category is None or r.spec.operational_category == operational_category)]
+    return ConsumerRulesView(release_id=value.id, retailer_id=value.retailer_id, effective_date=value.effective_date,
+                             operational_category=operational_category, consumption_point=consumption_point,
+                             rules=rules, unclassified_rule_count=missing, routing_complete=missing == 0)
+
+
 @router.get('/releases/{release_id}/export')
 async def export_release(release_id: UUID, format: Literal['json','markdown'] = 'json'):
     async with sessions() as session:
@@ -682,7 +711,7 @@ async def export_release(release_id: UUID, format: Literal['json','markdown'] = 
         return Response(value.model_dump_json(indent=2), media_type='application/json', headers={'Content-Disposition': f'attachment; filename="rules-{release_id}.json"'})
     lines = [f'# {value.name}', f'Effective: {value.effective_date}', f'Scope: {value.payload.scope}', '']
     for r in value.payload.rules:
-        lines += [f'## {r.spec.title}', r.spec.instruction, f'Use: {r.spec.purpose}; obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Applies: {r.spec.applicability_text}']
+        lines += [f'## {r.spec.title}', r.spec.instruction, f'Use: {r.spec.purpose}; obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Operational category: {r.spec.operational_category}', f'Consumption points: {", ".join(r.spec.consumption_points)}', f'Applies: {r.spec.applicability_text}']
         lines += [f'Exception: {e.description}' for e in r.spec.exceptions]
         lines += [f'Source: guide {r.source_guide_id}, PDF page {e.page}: {e.quote}' for e in r.spec.evidence]
         lines += ['']

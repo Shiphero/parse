@@ -9,6 +9,8 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
     reasons = list(evidence_issues)
     if spec.purpose == 'unclassified':
         reasons.append('Choose general guidance or shipment validation before approval.')
+    if spec.operational_category == 'unclassified' or not spec.consumption_points:
+        reasons.append('Choose an operational category and consumption points before approval.')
     if duplicate:
         reasons.append('Possible duplicate or conflict: review matching titles together.')
     if spec.unresolved_questions or spec.verification == 'unresolved':
