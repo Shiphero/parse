@@ -99,7 +99,7 @@ class PageCoverage(StrictModel):
 class Extraction(StrictModel):
     rules: list[RuleSpec]
     coverage: list[PageCoverage]
-    warnings: list[str]
+    warnings: list[str] = Field(default_factory=list)
 
 
 class EvaluationItem(StrictModel):

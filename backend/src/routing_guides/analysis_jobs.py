@@ -6,7 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from sqlalchemy import select
-from routing_guides.analysis_provider import analyze, ProviderFailure, PROMPT_VERSION
+from routing_guides.analysis_provider import analyze, ProviderFailure
 from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun, GuidePage
 from routing_guides.storage import guide_directory
@@ -73,7 +73,9 @@ async def run_analysis(run_id: UUID):
             try:
                 for attempt in range(3):
                     try:
-                        output = await analyze(config['provider'], config['model'], requested, context, guide_directory(guide_id))
+                        directory = guide_directory(guide_id)
+                        response_path = directory / 'analysis' / str(run_id) / ('batch-' + '-'.join(map(str, batch)) + '.json')
+                        output = await analyze(config['provider'], config['model'], requested, context, directory, response_path=response_path)
                         break
                     except ProviderFailure as exc:
                         if not exc.retryable or attempt == 2:
@@ -116,7 +118,7 @@ async def run_analysis(run_id: UUID):
                 data['pending_batches'] = data['pending_batches'][1:]
                 data['coverage'] += [p.model_dump() for p in extraction.coverage]
                 data['warnings'] += extraction.warnings
-                data['batches'].append({'pages': batch, 'model': output.model, 'usage': output.usage, 'completed_at': datetime.now(timezone.utc).isoformat(), 'prompt_version': PROMPT_VERSION, 'evidence_review_required': sum(bool(r['evidence_issues']) for r in candidates)})
+                data['batches'].append({'pages': batch, 'model': output.model, 'usage': output.usage, 'completed_at': datetime.now(timezone.utc).isoformat(), 'prompt_version': output.prompt_version, 'evidence_review_required': sum(bool(r['evidence_issues']) for r in candidates)})
                 data['rules'] += candidates
                 run.payload = data
                 run.version += 1

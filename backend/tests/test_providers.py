@@ -1,10 +1,13 @@
 import unittest
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 from routing_guides.analysis_provider import analyze, provider_failure, ProviderFailure
 from routing_guides.rules import Extraction
+from routing_guides.extraction_results import parse_extraction
+from pydantic import ValidationError
 from test_rules import rule
 
 
@@ -63,6 +66,47 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ProviderFailure) as error:
                 await analyze('anthropic','test',[{'page':1,'text':''}],'context',self.directory)
         self.assertNotIn('synthetic-key',str(error.exception))
+
+    async def test_missing_warning_metadata_is_accepted_and_response_is_reused(self):
+        raw = self.extraction.model_dump(mode='json')
+        del raw['warnings']
+        response = SimpleNamespace(stop_reason='tool_use', content=[SimpleNamespace(type='tool_use', name='submit_extraction', input=raw)], model='returned-claude', usage=SimpleNamespace(model_dump=lambda: {'input_tokens': 7}))
+        client = FakeClient(response)
+        cached = self.directory / 'analysis' / 'batch-1.json'
+        with patch('routing_guides.analysis_provider.AsyncAnthropic', return_value=client):
+            first = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], 'context', self.directory, response_path=cached)
+            second = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], 'context', self.directory, response_path=cached)
+        self.assertEqual(client.create.await_count, 1)
+        self.assertEqual(len(first.extraction.rules), 1)
+        self.assertEqual(first.extraction, second.extraction)
+        self.assertIn('omitted', first.extraction.warnings[0])
+        self.assertNotIn('warnings', json.loads(cached.read_text())['raw'])
+        self.assertEqual(cached.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(second.usage, {'input_tokens': 7})
+
+    async def test_invalid_rule_response_is_retained_and_reports_field(self):
+        raw = self.extraction.model_dump(mode='json')
+        del raw['rules'][0]['instruction']
+        response = SimpleNamespace(stop_reason='tool_use', content=[SimpleNamespace(type='tool_use', name='submit_extraction', input=raw)], model='returned-claude', usage=SimpleNamespace(model_dump=lambda: {}))
+        client = FakeClient(response)
+        cached = self.directory / 'analysis' / 'batch-1.json'
+        with patch('routing_guides.analysis_provider.AsyncAnthropic', return_value=client):
+            for _ in range(2):
+                with self.assertRaises(ProviderFailure) as failure:
+                    await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], 'context', self.directory, response_path=cached)
+                self.assertIn('rules.0.instruction', str(failure.exception))
+        self.assertEqual(client.create.await_count, 1)
+        self.assertEqual(json.loads(cached.read_text())['raw'], raw)
+
+    def test_only_omitted_warnings_are_optional(self):
+        for field in ('rules', 'coverage'):
+            raw = self.extraction.model_dump(mode='json')
+            del raw[field]
+            with self.subTest(field=field), self.assertRaises(ValidationError):
+                parse_extraction(raw)
+        for warnings in (None, 'not a list'):
+            with self.subTest(warnings=warnings), self.assertRaises(ValidationError):
+                parse_extraction({**self.extraction.model_dump(mode='json'), 'warnings': warnings})
 
     def test_only_confirmed_input_limits_split_batches(self):
         for status, message, split, expected in [
