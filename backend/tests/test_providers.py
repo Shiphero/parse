@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
-from routing_guides.analysis_provider import analyze, ProviderFailure
+from routing_guides.analysis_provider import analyze, provider_failure, ProviderFailure
 from routing_guides.rules import Extraction
 from test_rules import rule
 
@@ -36,7 +36,8 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(request['model'],'requested-model')
         self.assertTrue(any(b['type']=='image' for b in request['messages'][0]['content']))
         self.assertIn('full context',request['messages'][0]['content'][0]['text'])
-        self.assertEqual(request['tool_choice']['name'],'submit_extraction')
+        self.assertEqual(request['tool_choice'], {'type': 'auto'})
+        self.assertEqual(request['tools'][0]['name'], 'submit_extraction')
 
     async def test_openai_has_images_schema_and_no_stored_response(self):
         response=SimpleNamespace(status='completed',output_text=self.extraction.model_dump_json(),model='returned-openai',usage=None)
@@ -62,3 +63,33 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ProviderFailure) as error:
                 await analyze('anthropic','test',[{'page':1,'text':''}],'context',self.directory)
         self.assertNotIn('synthetic-key',str(error.exception))
+
+    def test_only_confirmed_input_limits_split_batches(self):
+        for status, message, split, expected in [
+            (400, 'tool_choice: type "tool" and "any" are not supported for this model.', False, 'tool settings'),
+            (400, 'invalid schema', False, 'schema'),
+            (400, 'invalid parameter', False, 'configuration'),
+            (400, 'prompt is too long', True, 'input limit'),
+            (413, 'request too large', True, 'input limit'),
+            (404, 'not found', False, 'model ID'),
+            (400, 'credit balance too low', False, 'billing'),
+        ]:
+            with self.subTest(status=status, message=message):
+                exc = Exception('Do not expose request or secrets')
+                exc.status_code = status
+                exc.body = {'error': {'message': message + ' synthetic-key'}}
+                exc.request_id = 'req_diagnostic'
+                failure = provider_failure(exc)
+                self.assertEqual(failure.split, split)
+                self.assertFalse(failure.retryable)
+                self.assertIn(expected, str(failure))
+                self.assertIn('req_diagnostic', str(failure))
+                self.assertNotIn('synthetic-key', str(failure))
+
+    async def test_claude_plain_text_or_truncated_tool_is_not_accepted(self):
+        for reason in ('end_turn', 'max_tokens'):
+            response = SimpleNamespace(stop_reason=reason, content=[SimpleNamespace(type='text', text='Not structured rules')])
+            with patch('routing_guides.analysis_provider.AsyncAnthropic', return_value=FakeClient(response)):
+                with self.assertRaises(ProviderFailure) as error:
+                    await analyze('anthropic', 'test', [{'page': 1, 'text': ''}], 'context', self.directory)
+            self.assertEqual(error.exception.split, reason == 'max_tokens')

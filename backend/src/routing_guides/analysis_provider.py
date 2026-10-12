@@ -1,11 +1,12 @@
 """Native SDK adapters. Structured results are data, never tools that execute code."""
 import asyncio
 import base64
-import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
+from pydantic import ValidationError
 from routing_guides.connections import connection
 from routing_guides.rules import Extraction
 
@@ -42,6 +43,39 @@ def strict_schema(schema):
     return schema
 
 
+def provider_failure(exc: Exception) -> ProviderFailure:
+    """Classify rejection reasons without exposing response bodies or source content."""
+    code = getattr(exc, 'status_code', None)
+    body = getattr(exc, 'body', None)
+    error = body.get('error', body) if isinstance(body, dict) else {}
+    message = str(error.get('message', '')).lower() if isinstance(error, dict) else ''
+    request_id = getattr(exc, 'request_id', None)
+    suffix = f' Request ID: {request_id}.' if isinstance(request_id, str) and re.fullmatch(r'[A-Za-z0-9_-]{1,100}', request_id) else ''
+    def failure(text, **kwargs):
+        return ProviderFailure(text + suffix, **kwargs)
+    if code in (401, 403):
+        return failure('Provider rejected access. Check the key and model permissions in Connections.')
+    if code == 404:
+        return failure('Provider could not find the selected model. Check its exact model ID and start a new analysis.')
+    if code == 402 or code == 400 and any(term in message for term in ('credit balance', 'billing', 'spend limit')):
+        return failure('Provider billing or spending limit prevents analysis. Check your provider account.')
+    if code == 413 or code == 400 and any(term in message for term in ('prompt is too long', 'context length', 'context window', 'request too large', 'request size exceeds', 'too many images')):
+        return failure('Provider input limit exceeded. Smaller page batches will be attempted; a single-page failure needs context or image preparation changes.', split=True)
+    if code == 400:
+        if 'tool_choice' in message:
+            return failure('The selected model rejected the extraction tool settings. Smaller batches will not resolve this; the provider adapter needs a compatible request.')
+        if 'schema' in message:
+            return failure('Provider rejected the extraction schema. The provider adapter needs a compatible schema; smaller batches will not resolve this.')
+        if 'image' in message:
+            return failure('Provider rejected a page image. Check image format, dimensions and per-image size.')
+        return failure('Provider rejected the request configuration (HTTP 400). Smaller batches are only useful for confirmed input limits.')
+    if code == 429 or code and code >= 500 or isinstance(exc, (TimeoutError, asyncio.TimeoutError)) or 'Timeout' in type(exc).__name__ or 'Connection' in type(exc).__name__:
+        return failure('Provider temporarily unavailable or rate limited. Retry this run.', retryable=True)
+    if isinstance(exc, ValidationError):
+        return failure('Provider output did not meet the rule contract. No rules from this batch were accepted.')
+    return failure('The provider adapter encountered an unexpected error. No rules from this batch were accepted.')
+
+
 async def analyze(provider: str, model: str, pages: list[dict], context: str, directory: Path) -> ProviderOutput:
     secret = connection(provider)['key']
     if not secret or not model:
@@ -57,12 +91,14 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
             async with AsyncAnthropic(api_key=secret, timeout=180, max_retries=0) as client:
                 result = await client.messages.create(model=model, max_tokens=16000, system=SYSTEM,
                     messages=[{'role': 'user', 'content': content}], tools=[{'name': 'submit_extraction', 'description': 'Return all candidate rules and page coverage.', 'input_schema': Extraction.model_json_schema()}],
-                    tool_choice={'type': 'tool', 'name': 'submit_extraction'})
+                    # Some models reject forced tool calls. Auto retains the same
+                    # structured tool schema and local validation without forcing it.
+                    tool_choice={'type': 'auto'})
             if result.stop_reason == 'max_tokens':
                 raise ProviderFailure('Model output was truncated. Retrying smaller page batches.', split=True)
             blocks = [b for b in result.content if b.type == 'tool_use' and b.name == 'submit_extraction']
             if len(blocks) != 1 or result.stop_reason != 'tool_use':
-                raise ProviderFailure('The model did not return a complete structured extraction.')
+                raise ProviderFailure('The model did not return the extraction tool result. No rules were accepted; retry or select another model.')
             return ProviderOutput(Extraction.model_validate(blocks[0].input), result.model, result.usage.model_dump())
         if provider == 'openai':
             content = [{'type': 'input_text', 'text': text} if kind == 'text' else {'type': 'input_image', 'image_url': f'data:image/png;base64,{text}', 'detail': 'high'} for kind, text in text_blocks]
@@ -76,11 +112,4 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
     except ProviderFailure:
         raise
     except Exception as exc:
-        code = getattr(exc, 'status_code', None)
-        if code in (401, 403):
-            raise ProviderFailure('Provider rejected access. Check the key and model permissions in Connections.') from None
-        if code in (400, 413):
-            raise ProviderFailure('Provider rejected this request size or model capability. Try smaller batches or another vision-capable model.', split=True) from None
-        if code == 429 or code and code >= 500 or isinstance(exc, (TimeoutError, asyncio.TimeoutError)) or 'Timeout' in type(exc).__name__ or 'Connection' in type(exc).__name__:
-            raise ProviderFailure('Provider temporarily unavailable or rate limited. Retry this run.', retryable=True) from None
-        raise ProviderFailure('Provider output did not meet the rule contract. No rules from this batch were accepted.') from None
+        raise provider_failure(exc) from None

@@ -44,6 +44,8 @@ The local reviewer name is self-declared, not authenticated identity. Shared dep
 
 `make check` is intended for commit checkpoints: production frontend build, deterministic/backend integration tests, and Git whitespace checks. Database integration tests create isolated records inside rollback-only transactions. Provider responses are mocked in tests; those tests do not establish live provider access or extraction quality. Live Claude/OpenAI and ShipHero acceptance requires user-supplied credentials and representative guides/orders. Use an authentic older/newer guide pair before claiming update-extraction quality.
 
+On October 12, 2026, a live Ulta cover-page request succeeded with `claude-opus-5-5` using automatic tool selection and the existing local rule validation. The model returned page 1 as `no_rules`. This verifies that request path, not extraction quality across the remaining 74 pages. Claude uses automatic tool selection because newer models reject forced tool calls. Responses without the expected extraction tool result remain unaccepted. Only confirmed input-size errors trigger smaller batches; model, billing and request-configuration errors stop with distinct messages and a provider request ID when available. To retry an existing failed AI run, select it in the Analysis menu, then choose Resume saved progress; a manual-review run is separate.
+
 Official integration references consulted:
 
 - [Anthropic vision](https://platform.claude.com/docs/en/build-with-claude/vision)
