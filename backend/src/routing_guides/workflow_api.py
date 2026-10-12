@@ -19,7 +19,7 @@ from routing_guides.review import compare_rules, duplicate_titles, individual_re
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
 from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
-from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification
+from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification, canonical_consumption_points
 from routing_guides.classification_provider import PROMPT_VERSION as CLASSIFICATION_PROMPT_VERSION
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
 
@@ -155,6 +155,18 @@ class BulkApproval(VersionedAction):
 
 class ClassifyRules(BulkApproval):
     purpose: Literal['general_guidance', 'shipment_validation']
+    operational_category: OperationalCategory | None = None
+    consumption_points: list[ConsumptionPoint] | None = None
+
+    @model_validator(mode='after')
+    def complete_taxonomy(self):
+        # Legacy clients may change rule use alone. Full categorization needs both dimensions.
+        supplied = {'operational_category', 'consumption_points'} & self.model_fields_set
+        if supplied:
+            if self.operational_category in (None, 'unclassified') or not self.consumption_points:
+                raise ValueError('Choose an operational category and at least one consuming workflow.')
+            self.consumption_points = canonical_consumption_points(self.consumption_points)
+        return self
 
 
 class StartClassification(VersionedAction):
@@ -467,13 +479,17 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
             if rule['revision'] != revision or rule['status'] != 'pending':
                 raise HTTPException(409, 'Classify only current pending revisions. Edit approved rules to change their use.')
             selected.append(rule)
+        updates = {'purpose': body.purpose}
+        if body.operational_category is not None:
+            updates.update(schema_version='1.1', operational_category=body.operational_category,
+                           consumption_points=body.consumption_points)
         batch_id = str(uuid4())
         for rule in selected:
-            if rule['spec'].get('purpose') == body.purpose:
+            if all(rule['spec'].get(key) == value for key, value in updates.items()):
                 continue
             before = deepcopy(rule)
-            rule['spec']['purpose'] = body.purpose
-            rule.update(revision=rule['revision'] + 1, review=None, classification={'method': 'manual', 'reason': body.note or 'Rule use selected by reviewer.', 'actor': body.actor},
+            rule['spec'].update(updates)
+            rule.update(revision=rule['revision'] + 1, review=None, classification={'method': 'manual', 'reason': body.note or ('Category, workflows and rule use selected by reviewer.' if body.operational_category else 'Rule use selected by reviewer.'), 'actor': body.actor},
                         carried_from_release_id=None, carried_from_rule_id=None)
             audit(session, run.id, body.actor, 'rule_classified',
                   {'before': before, 'after': rule, 'note': body.note, 'batch_id': batch_id})

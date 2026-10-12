@@ -353,6 +353,43 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(edited['payload']['rules'][0]['status'], 'pending')
         self.assertIsNone(edited['payload']['rules'][0]['review'])
 
+    async def test_full_categorization_resolves_missing_dimensions_even_when_use_unchanged(self):
+        run = await self.add_candidate(1, rule(purpose='general_guidance', operational_category='unclassified', consumption_points=[]))
+        run = await self.add_candidate(run['version'], rule(title='Second rule', purpose='general_guidance', operational_category='unclassified', consumption_points=[]))
+        first, second = run['payload']['rules']
+        url = f'/api/analysis/{self.rid}/classify'
+        body = {'version': run['version'], 'actor': 'Reviewer', 'purpose': 'general_guidance',
+                'operational_category': 'business_administration',
+                'consumption_points': ['supplier_management', 'supplier_onboarding'],
+                'revisions': {first['id']: 1, second['id']: 1}}
+        for invalid in ({'operational_category': 'unclassified'}, {'operational_category': 'invented'},
+                        {'consumption_points': []}, {'consumption_points': None},
+                        {'consumption_points': ['invented']},
+                        {'consumption_points': ['supplier_management', 'supplier_management']}):
+            await self.send('POST', url, {**body, **invalid}, 422)
+        await self.send('POST', url, {k: v for k, v in body.items() if k != 'operational_category'}, 422)
+        await self.send('POST', url, {**body, 'revisions': {first['id']: 1, second['id']: 99}}, 409)
+        async with self.sessions() as session:
+            unchanged = await session.get(AnalysisRun, self.rid)
+            self.assertEqual([r['revision'] for r in unchanged.payload['rules']], [1, 1])
+            self.assertTrue(all(workflow_api.needs_classification(r['spec']) for r in unchanged.payload['rules']))
+        categorized = await self.send('POST', url, body)
+        for candidate in categorized['payload']['rules']:
+            self.assertEqual(candidate['revision'], 2)
+            self.assertEqual(candidate['status'], 'pending')
+            self.assertIsNone(candidate['review'])
+            self.assertEqual(candidate['spec']['purpose'], 'general_guidance')
+            self.assertEqual(candidate['spec']['operational_category'], 'business_administration')
+            self.assertEqual(candidate['spec']['consumption_points'], ['supplier_management', 'supplier_onboarding'])
+            self.assertFalse(workflow_api.needs_classification(candidate['spec']))
+            self.assertEqual(candidate['spec']['evidence'], first['spec']['evidence'])
+        repeated = await self.send('POST', url, {**body, 'version': categorized['version'],
+                                  'consumption_points': list(reversed(body['consumption_points'])),
+                                  'revisions': {first['id']: 2, second['id']: 2}})
+        self.assertEqual([r['revision'] for r in repeated['payload']['rules']], [2, 2])
+        audits = (await self.client.get(f'/api/audit/{self.rid}')).json()
+        self.assertEqual(len([a for a in audits if a['action'] == 'rule_classified']), 2)
+
     async def test_guidance_remains_in_release_exports_but_not_shipment_results(self):
         run = await self.add_candidate(1, rule(title='Respond to OpenText onboarding invitation', purpose='general_guidance',
                                               verification='external_evidence', assertion=None))

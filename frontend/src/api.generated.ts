@@ -723,6 +723,10 @@ export interface components {
              * @enum {string}
              */
             purpose: "general_guidance" | "shipment_validation";
+            /** Operational Category */
+            operational_category?: ("warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified") | null;
+            /** Consumption Points */
+            consumption_points?: ("mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes")[] | null;
         };
         /** ComparisonView */
         ComparisonView: {

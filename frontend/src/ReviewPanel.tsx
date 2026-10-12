@@ -3,6 +3,7 @@ import { ArrowRight, Check, ChevronDown, ChevronUp, Pencil, Plus, Search, Slider
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run } from './api';
 import RuleEditor, { Evidence } from './RuleEditor';
+import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { operationalCategoryLabels, consumptionPointLabels, needsClassification } from './ruleTaxonomy';
 import { rulePurposeLabels, shipmentCheckMode } from './rulePurpose';
 
@@ -28,6 +29,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [search, setSearch] = useState('');
   const [moreFilters, setMoreFilters] = useState(false);
   const [bulkOptions, setBulkOptions] = useState(false);
+  const [categorizing, setCategorizing] = useState<{ rules: Candidate[]; version: number } | null>(null);
   const [bulkNote, setBulkNote] = useState('');
   const [scopeConfirmed, setScopeConfirmed] = useState(false);
   const [message, setMessage] = useState('');
@@ -68,7 +70,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   };
   const query = search.trim().toLowerCase();
   const filtered = run.payload.rules.filter(r =>
-    (operationalCategory === 'all' || (r.spec.operational_category || 'unclassified') === operationalCategory) &&
+    (operationalCategory === 'all' || (operationalCategory === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === operationalCategory)) &&
     (consumptionPoint === 'all' || r.spec.consumption_points?.some(p => p === consumptionPoint)) &&
     (filter === 'all' || (filter === 'individual' ? r.status === 'pending' && !!r.individual_review_reasons.length : r.status === filter)) &&
     (type === 'all' || r.spec.subject === type) &&
@@ -104,12 +106,6 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     const done = await action(adding ? `/api/analysis/${run.id}/rules` : `/api/analysis/${run.id}/rules/${current!.id}`,
       adding ? { version: run.version, actor, spec } : { version: run.version, actor, spec, note: correctionNote, action: 'save' }, adding ? 'POST' : 'PUT');
     if (done) { setEditing(false); setAdding(false); setMessage('Draft saved. Review the updated rule before approving.'); }
-  };
-  const classify = async (nextPurpose: 'general_guidance' | 'shipment_validation') => {
-    if (await action(`/api/analysis/${run.id}/classify`, { version: run.version, actor, revisions: checked, purpose: nextPurpose })) {
-      setMessage(`${selectedCount} rules classified as ${rulePurposeLabels[nextPurpose].toLowerCase()}. They remain pending approval.`);
-      setChecked({}); setBulkOptions(false);
-    }
   };
   const bulkApprove = async () => {
     if (await action(`/api/analysis/${run.id}/bulk-approve`, { version: run.version, actor, note: bulkNote, revisions: checked })) {
@@ -151,7 +147,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         <legend className="visually-hidden">Filter rules</legend>
         <div className="review-categories" role="group" aria-label="Operational category">
           {[['all', 'All rules'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <button key={value} aria-pressed={operationalCategory === value} className={operationalCategory === value ? 'selected' : ''} onClick={() => { resetView(); setOperationalCategory(value); setConsumptionPoint('all'); }}>
-            {label}<span>{run.payload.rules.filter(r => value === 'all' || (r.spec.operational_category || 'unclassified') === value).length}</span></button>)}
+            {label}<span>{run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length}</span></button>)}
         </div>
         <div className="review-filter-row">
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
@@ -166,6 +162,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <button className="text-button" onClick={resetFilters}>Reset filters</button>
         </div>}
       </fieldset>
+      {operationalCategory === 'unclassified' && <p className="notice">These rules are missing an operational category, a consuming workflow, or a rule use. Select a rule and choose <strong>Categorize</strong> to complete all three. Categorization does not approve the rule.</p>}
       <div className="review-list-toolbar"><span role="status">{filtered.length} {filtered.length === 1 ? 'rule' : 'rules'} shown</span>
         {editable && <div><button className="text-button" disabled={busy || editing || !eligible.length} onClick={() => selectRules(eligible)}>Select {eligible.length} ready to approve</button>
           <button className="text-button" disabled={busy || editing || !pendingInView.length} onClick={() => selectRules(pendingInView)}>Select all pending</button></div>}</div>
@@ -179,14 +176,14 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
               {editable && r.status === 'pending' && <input type="checkbox" className="rule-select" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const updated = { ...previous }; if (e.target.checked) updated[r.id] = r.revision; else delete updated[r.id]; return updated; })}/>}
               <button className="review-row-toggle" ref={expanded ? activeHeading : undefined} aria-expanded={expanded} aria-controls={`rule-detail-${r.id}`} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>
                 <span className="review-row-content"><strong>{r.spec.title}</strong><span className="review-row-preview">{r.spec.instruction}</span>
-                  <span className="review-row-meta"><span>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span><span>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Workflow not assigned'}</span><span>Page {[...new Set(r.spec.evidence.map(e => e.page))].join(', ') || 'not assigned'}</span></span>
+                  <span className="review-row-meta"><span>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span><span>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Workflow not assigned'}</span><span>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</span><span>Page {[...new Set(r.spec.evidence.map(e => e.page))].join(', ') || 'not assigned'}</span></span>
                 </span><span className="review-row-state"><span className={`status-badge ${r.status}`}>{r.status === 'pending' ? 'Awaiting review' : r.status}</span>{r.status === 'pending' && r.individual_review_reasons.length > 0 && <span className="review-flag-label">Needs individual review</span>}{expanded ? <ChevronUp size={17}/> : <ChevronDown size={17}/>}</span>
               </button>
             </div>
             {expanded && <div className="review-inline-detail" id={`rule-detail-${r.id}`}>
               {editing ? <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={() => setEditing(false)} busy={busy}/> : <>
                 <div className="review-inline-columns"><div className="rule-interpretation">
-                  <div className="review-detail-heading"><h3>What this rule requires</h3><button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button></div>
+                  <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button></div>
                   <p className="instruction">{r.spec.instruction}</p>
                   <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
                   {(r.spec.exceptions || []).map((e, i) => <p key={i}><strong>Exception:</strong> {e.description}</p>)}
@@ -214,14 +211,19 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
       </div>
       {selectedCount > 0 && editable && <div className="review-selection-bar" role="region" aria-label="Selected rule actions">
         <div className="review-selection-main"><strong>{selectedCount} selected</strong><button className="text-button" disabled={busy} onClick={() => { setChecked({}); setBulkOptions(false); }}>Clear</button>
+          <button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
           <button className="secondary" disabled={busy || editing} aria-expanded={bulkOptions} onClick={() => setBulkOptions(!bulkOptions)}>More actions <ChevronDown size={14}/></button>
           <button className="primary" disabled={busy || editing || !actor.trim() || selectedFlagged > 0} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button></div>
         {!actor.trim() && <div className="review-selection-identity">{reviewerInput}<span className="muted">Enter your name to record approvals.</span></div>}
         {actor.trim() && <p className="review-selection-help">Reviewing as {actor} · Read each selected rule and its source before approving.</p>}
         {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule needs' : 'rules need'} individual review. <button className="text-button" disabled={busy || editing} onClick={() => selectRules(selectedRules.filter(r => !r.individual_review_reasons.length && !needsClassification(r.spec) && !r.evidence_issues?.length))}>Deselect flagged rules</button></p>}
-        {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label><div className="action-row"><button className="secondary" disabled={busy || editing || !actor.trim()} onClick={() => classify('general_guidance')}>Classify as general guidance</button><button className="secondary" disabled={busy || editing || !actor.trim()} onClick={() => classify('shipment_validation')}>Classify as shipment validation</button></div><p className="muted">Classification changes the intended use; it does not approve rules.</p></div>}
+        {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label></div>}
         {error && <p className="error" role="alert">{error}</p>}
       </div>}
     </>}
+    {categorizing && <CategorizeRulesDialog runId={run.id} version={categorizing.version} rules={categorizing.rules} actor={actor} onActorChange={onActorChange} onClose={() => setCategorizing(null)} onSave={changed => {
+      setMessage(changed ? `${changed} ${changed === 1 ? 'rule categorized' : 'rules categorized'}. Complete categories leave “Needs categorization”; the rules remain awaiting approval.` : 'Categorization was already complete. No rules changed.');
+      setCategorizing(null); setChecked({}); setSelected(''); setNote(''); setBulkOptions(false); reload();
+    }}/>}
   </div>;
 }

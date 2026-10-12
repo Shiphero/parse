@@ -511,3 +511,10 @@ input[type=checkbox] { accent-color: var(--accent); }
   .review-selection-identity label { width:100%; max-width:none; }
   .review-tools>summary span { display:block; margin-left:0; }
 }
+
+.categorize-dialog { width:min(680px,calc(100vw - 32px)); }
+.categorize-fields { border:0; margin:0; padding:0; min-width:0; }
+.categorize-fields>.consumption-points { margin:0 0 18px; gap:7px; }
+.workflow .categorize-fields .consumption-points .checkbox-label { margin:0!important; font-weight:400; }
+.categorize-fields>.muted { margin-top:-4px; margin-bottom:18px; }
+.categorize-dialog .dialog-footer { position:sticky; bottom:-24px; background:var(--surface); padding:16px 0; }
