@@ -27,7 +27,8 @@ class ExactComparisonTests(unittest.TestCase):
     def test_flags_and_visual_descriptions_cannot_be_bulk_approved_or_carried(self):
         specs = [rule(unresolved_questions=['Which cartons?']), rule(verification='unresolved'),
                  rule(exceptions=[{'description': 'Except promotional items', 'condition': None}]),
-                 rule(evidence=[{'page': 1, 'quote': 'Label in lower corner', 'kind': 'visual'}])]
+                 rule(evidence=[{'page': 1, 'quote': 'Label in lower corner', 'kind': 'visual'}]),
+                 rule(evidence=[{'page': 1, 'quote': '50 lb', 'kind': 'text', 'region': [0, 0, .5, .5]}])]
         for spec in specs:
             with self.subTest(spec=spec):
                 self.assertTrue(individual_review_reasons(spec))

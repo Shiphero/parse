@@ -2,10 +2,11 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run } from './api';
+import { describeCondition } from './ConditionBuilder';
 import RuleEditor, { Evidence } from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { operationalCategoryLabels, consumptionPointLabels, needsClassification } from './ruleTaxonomy';
-import { rulePurposeLabels, shipmentCheckMode } from './rulePurpose';
+import { rulePurposeLabels, shipmentCheckMode, shipmentCheckLabel } from './rulePurpose';
 
 const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
   { value: 'shipment', label: 'Shipments' }, { value: 'order', label: 'Orders' },
@@ -39,6 +40,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [initialRule, setInitialRule] = useState<RuleSpec|undefined>();
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -136,7 +138,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
 
   return <div className="review-panel review-workspace">
     <div className="section-heading"><div><h2>Review rules</h2><p>{pending} awaiting review · {run.payload.rules.length - pending} decided · {run.payload.rules.length} total</p></div>
-      <button className="secondary" disabled={!editable || busy || editing || adding} onClick={() => setAdding(true)}><Plus size={16}/> Add rule</button></div>
+      <button className="secondary" disabled={!editable || busy || editing || adding} onClick={() => { setInitialRule(undefined); setAdding(true); }}><Plus size={16}/> Add rule</button></div>
     {!editable && <p className="notice">{['running', 'queued'].includes(run.status) ? 'Analysis is still running. You can read the rules now; decisions become available when it finishes.' : ['failed', 'cancelled'].includes(run.status) ? 'Analysis stopped before completion. Read the saved proposals here, or resume in Analyze before making decisions.' : 'This analysis is read-only. Select a completed draft to make review decisions.'}</p>}
     {message && <p className="notice" role="status">{message}</p>}
     {error && !current && !selectedCount && <div className="error" role="alert">{error}</div>}
@@ -161,7 +163,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
     {run.payload.warnings.length>0&&<details className="coverage"><summary>Analysis notes · {run.payload.warnings.length}</summary><ul>{run.payload.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></details>}
     </details>
-    {adding ? <>{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
+    {adding ? <>{initialRule&&<p className="notice">This is a separate draft copied from an existing rule. Adjust its conditions, instruction and image. The original remains unchanged. Check that variant ranges do not overlap and explicitly decide how boundaries such as exactly 7 inches should be handled.</p>}{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor initial={initialRule} guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
       <fieldset className="review-filter-controls" disabled={editing || busy}>
         <legend className="visually-hidden">Filter rules</legend>
         <div className="review-filter-row">
@@ -184,9 +186,9 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <button className="text-button" disabled={busy || editing || !pendingInView.length} onClick={() => selectRules(pendingInView)}>Select all pending</button></div>}</div>
       <div className="review-table-scroll" role="region" aria-label="Review rules table" tabIndex={0}>
         <table className="review-table" ref={tableHeading}>
-          <caption className="visually-hidden">Rules with category, consuming workflow, use, source page and review status. Open a rule to inspect the full instruction and evidence.</caption>
-          <colgroup><col className="selection-column"/><col className="title-column"/><col className="category-column"/><col className="consumer-column"/><col className="use-column"/><col className="source-column"/><col className="status-column"/></colgroup>
-          <thead><tr><th scope="col">{editable ? <input ref={pageCheckbox} type="checkbox" aria-label="Select pending rules on this page" disabled={busy || editing || !pagePending.length} checked={pagePending.length > 0 && pageSelectedCount === pagePending.length} onChange={e => setChecked(previous => { const next = { ...previous }; pagePending.forEach(r => { if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; }); return next; })}/> : <span className="visually-hidden">Selection</span>}</th><th scope="col">Rule</th><th scope="col">Category</th><th scope="col">Consumed by</th><th scope="col">Use</th><th scope="col">Page</th><th scope="col">Status</th></tr></thead>
+          <caption className="visually-hidden">Rules with category, consuming workflow, use, check method, source page and review status. Open a rule to inspect the full instruction and evidence.</caption>
+          <colgroup><col className="selection-column"/><col className="title-column"/><col className="category-column"/><col className="consumer-column"/><col className="use-column"/><col className="check-column"/><col className="source-column"/><col className="status-column"/></colgroup>
+          <thead><tr><th scope="col">{editable ? <input ref={pageCheckbox} type="checkbox" aria-label="Select pending rules on this page" disabled={busy || editing || !pagePending.length} checked={pagePending.length > 0 && pageSelectedCount === pagePending.length} onChange={e => setChecked(previous => { const next = { ...previous }; pagePending.forEach(r => { if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; }); return next; })}/> : <span className="visually-hidden">Selection</span>}</th><th scope="col">Rule</th><th scope="col">Category</th><th scope="col">Consumed by</th><th scope="col">Use</th><th scope="col">Check</th><th scope="col">Page</th><th scope="col">Status</th></tr></thead>
           <tbody>
         {visibleRules.map(r => {
           const expanded = selected === r.id;
@@ -201,16 +203,17 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
               <td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
               <td><span className="table-cell-text" title={consumers}>{consumers}</span></td>
               <td><span className="table-cell-text" title={rulePurposeLabels[r.spec.purpose || 'unclassified']}>{r.spec.purpose === 'general_guidance' ? 'Guidance' : r.spec.purpose === 'shipment_validation' ? 'Shipment check' : 'Unclassified'}</span></td>
+              <td><span className={`check-method ${r.spec.purpose === 'shipment_validation' ? r.spec.verification : 'not-applicable'}`} title={shipmentCheckMode(r.spec)}>{shipmentCheckLabel(r.spec)}</span></td>
               <td><span className="table-cell-text" title={`PDF pages ${pages}`}>{pages}</span></td>
               <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
             </tr>
-            {expanded && <tr className="review-detail-row"><td colSpan={7}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
+            {expanded && <tr className="review-detail-row"><td colSpan={8}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
               <h3 className="review-expanded-title">{r.spec.title}</h3>
               {editing ? <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={() => setEditing(false)} busy={busy}/> : <>
                 <div className="review-inline-columns"><div className="rule-interpretation">
-                  <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button></div>
+                  <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button><button className="text-button" disabled={!editable || busy || r.source_guide_id!==run.guide_id} title={r.source_guide_id!==run.guide_id?'Create variants in the source guide to preserve image references.':'Copy this rule into a new pending draft; adjust its conditions, instruction and image.'} onClick={()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}}>Create variant</button></div>
                   <p className="instruction">{r.spec.instruction}</p>
-                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
+                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
                   {(r.spec.exceptions || []).map((e, i) => <p key={i}><strong>Exception:</strong> {e.description}</p>)}
                   {(r.spec.unresolved_questions || []).map((q, i) => <p className="error" key={i}>{q}</p>)}
                   {r.individual_review_reasons.length > 0 && <div className="review-card-flags"><strong>Check before approving</strong><ul>{r.individual_review_reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>}
@@ -232,7 +235,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
             </div></td></tr>}
           </Fragment>;
         })}
-        {!filtered.length && <tr><td colSpan={7}><div className="review-empty"><Check size={24}/><h3>{pending === 0 && filter === 'pending' && run.payload.rules.length ? 'All rules have a decision' : 'No matching rules'}</h3><p>{run.payload.rules.length ? 'Adjust the filters to see other rules.' : 'Rules will appear here as the guide is analyzed.'}</p><button className="secondary" onClick={resetFilters}>Reset filters</button></div></td></tr>}
+        {!filtered.length && <tr><td colSpan={8}><div className="review-empty"><Check size={24}/><h3>{pending === 0 && filter === 'pending' && run.payload.rules.length ? 'All rules have a decision' : 'No matching rules'}</h3><p>{run.payload.rules.length ? 'Adjust the filters to see other rules.' : 'Rules will appear here as the guide is analyzed.'}</p><button className="secondary" onClick={resetFilters}>Reset filters</button></div></td></tr>}
           </tbody>
         </table>
       </div>

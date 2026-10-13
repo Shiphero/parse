@@ -17,7 +17,7 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
         reasons.append('Unresolved interpretation requires individual review.')
     if spec.exceptions:
         reasons.append('Review the exceptions individually.')
-    if any(e.kind == 'visual' for e in spec.evidence):
+    if any(e.kind == 'visual' or e.region is not None for e in spec.evidence):
         reasons.append('Inspect visual source evidence individually.')
     return reasons
 

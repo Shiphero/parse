@@ -515,6 +515,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .review-table .category-column { width:18%; }
 .review-table .consumer-column { width:18%; }
 .review-table .use-column { width:118px; }
+.review-table .check-column { width:92px; }
 .review-table .source-column { width:48px; }
 .review-table .status-column { width:84px; }
 .review-table thead th { background:var(--surface-muted); color:var(--text-muted); font-size:11px; font-weight:500; padding:8px; text-align:left; border-bottom:1px solid var(--border); }
@@ -591,3 +592,26 @@ input[type=checkbox] { accent-color: var(--accent); }
   .review-workspace>.section-heading>button { white-space:nowrap; }
   .review-detail-row .review-inline-detail { max-width:calc(100vw - 60px); }
 }
+
+.review-table .check-method { white-space:nowrap; font-size:11px; color:var(--text-muted); }
+.review-table .check-method.data { color:var(--accent); }
+.review-table .check-method.unresolved { color:var(--warning); }
+
+/* Source-backed rule authoring. Crops retain the original page coordinates. */
+.condition-builder { min-width:0; margin:16px 0; padding:14px; border:1px solid var(--border); border-radius:6px; }
+.condition-builder legend { font-weight:600; padding:0 5px; }
+.condition-builder .condition-builder { background:var(--surface); }
+.condition-fields { display:flex; gap:10px; flex-wrap:wrap; }
+.condition-fields label { flex:1; min-width:100px; }
+.condition-summary { font-size:12px; line-height:1.6; overflow-wrap:anywhere; color:var(--text-muted); }
+.region-canvas { position:relative; cursor:crosshair; touch-action:none; user-select:none; }
+.region-canvas img { display:block; width:100%; pointer-events:none; }
+.region-canvas .evidence-region { pointer-events:none; }
+.region-coordinates { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:10px; }
+.region-coordinates input { min-width:0; width:100%; }
+.source-illustration { margin:14px 0; max-width:560px; }
+.source-crop { position:relative; overflow:hidden; background:white; }
+.source-crop img { position:absolute; max-width:none; height:auto; display:block; }
+.source-illustration figcaption { font-size:12px; color:var(--text-muted); margin-top:6px; }
+.scenario-illustrations { display:flex; gap:20px; flex-wrap:wrap; }
+.scenario-illustrations .source-illustration { width:320px; max-width:100%; }

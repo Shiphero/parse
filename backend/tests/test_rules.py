@@ -56,6 +56,36 @@ class EvaluationTests(unittest.TestCase):
         r=rule(verification='human', assertion=None)
         self.assertEqual(evaluate_rule('r',r,{'cartons':[{}]})['outcome'],'cannot_determine')
 
+    def test_height_variants_select_each_carton_without_approving_placement(self):
+        # Synthetic non-overlapping interpretation, not approved retailer boundaries.
+        ranges = [
+            {'op': 'lt', 'path': 'height', 'value': 4.5, 'unit': 'in'},
+            {'op': 'all', 'children': [
+                {'op': 'gte', 'path': 'height', 'value': 4.5, 'unit': 'in'},
+                {'op': 'lt', 'path': 'height', 'value': 7, 'unit': 'in'}]},
+            {'op': 'gt', 'path': 'height', 'value': 7, 'unit': 'in'},
+        ]
+        cartons = [{'id': name, 'height': {'value': height, 'unit': unit}}
+                   for name, height, unit in [('small', 4, 'in'), ('boundary', 4.5, 'in'),
+                                             ('middle', 15.24, 'cm'), ('undefined', 7, 'in'),
+                                             ('tall', 8, 'in')]] + [{'id': 'unknown'}]
+        matches = []
+        for condition in ranges:
+            spec = rule(title='Label placement', verification='human', assertion=None,
+                        applicability=condition,
+                        evidence=[{'page': 30, 'kind': 'visual', 'quote': 'Synthetic diagram',
+                                   'region': [0.1, 0.2, 0.3, 0.4]}])
+            result = evaluate_rule('variant', spec, {'cartons': cartons})
+            by_id = {row['subject']: row['outcome'] for row in result['subjects']}
+            self.assertNotIn('pass', by_id.values())
+            self.assertEqual(by_id['undefined'], 'not_applicable')
+            self.assertEqual(by_id['unknown'], 'cannot_determine')
+            matches.append({key for key, outcome in by_id.items()
+                            if outcome == 'cannot_determine' and key != 'unknown'})
+            restored = RuleSpec.model_validate(spec.model_dump(mode='json'))
+            self.assertEqual(restored.evidence[0].region, [0.1, 0.2, 0.3, 0.4])
+        self.assertEqual(matches, [{'small'}, {'boundary', 'middle'}, {'tall'}])
+
     def test_language_rejects_arbitrary_code(self):
         with self.assertRaises(ValidationError):
             Expression(op='python',path='eval(x)',value=1)
