@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { jsonRequest } from './api';
 import type { Candidate, RuleSpec, Run } from './api';
-import { consumptionPointLabels, operationalCategoryLabels } from './ruleTaxonomy';
+import { consumptionPointOptions, operationalCategoryLabels } from './ruleTaxonomy';
 import { rulePurposeLabels } from './rulePurpose';
 
 type Category = NonNullable<RuleSpec['operational_category']>;
@@ -40,7 +40,7 @@ export default function CategorizeRulesDialog({ runId, version, rules, actor, on
     <p className="notice">Choose all three: the activity, where the rule is consumed, and how it is used. General guidance is a rule use, not an operational category.</p>
     <fieldset disabled={busy} className="categorize-fields">
       <label>Operational category<select value={category} onChange={e => setCategory(e.target.value as Category)}><option value="unclassified" disabled>Choose the activity</option>{Object.entries(operationalCategoryLabels).filter(([key]) => key !== 'unclassified').map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-      <fieldset className="consumption-points"><legend>Consumed by · choose at least one</legend>{Object.entries(consumptionPointLabels).map(([key, label]) => <label className="checkbox-label" key={key}><input type="checkbox" checked={consumers.includes(key as Consumer)} onChange={e => setConsumers(previous => e.target.checked ? [...previous, key as Consumer] : previous.filter(value => value !== key))}/>{label}</label>)}</fieldset>
+      <fieldset className="consumption-points"><legend>Consumed by · choose at least one</legend>{consumptionPointOptions.map(([key, label]) => <label className="checkbox-label" key={key}><input type="checkbox" checked={consumers.includes(key as Consumer)} onChange={e => setConsumers(previous => e.target.checked ? [...previous, key as Consumer] : previous.filter(value => value !== key))}/>{label}</label>)}</fieldset>
       <label>Rule use<select value={purpose} onChange={e => setPurpose(e.target.value as RuleSpec['purpose'])}><option value="unclassified" disabled>Choose how this rule is used</option>{Object.entries(rulePurposeLabels).filter(([key]) => key !== 'unclassified').map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <p className="muted">General guidance stays in user instructions and is excluded from shipment checks. Saving complete categorization removes the rule from “Needs categorization”; it remains awaiting approval.</p>
       <label>Reviewer name<input value={actor} onChange={e => onActorChange(e.target.value)} autoComplete="name" placeholder="Your name"/></label>

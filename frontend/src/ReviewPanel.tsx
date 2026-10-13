@@ -5,7 +5,7 @@ import type { Candidate, Comparison, RuleSpec, Run } from './api';
 import { describeCondition } from './ConditionBuilder';
 import RuleEditor, { Evidence } from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
-import { operationalCategoryLabels, consumptionPointLabels, needsClassification } from './ruleTaxonomy';
+import { operationalCategoryLabels, consumptionPointLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
 import { rulePurposeLabels, shipmentCheckMode, shipmentCheckLabel } from './rulePurpose';
 
 const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
@@ -169,7 +169,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         <div className="review-filter-row">
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
           <label>Category<select value={operationalCategory} onChange={e => { resetView(); setOperationalCategory(e.target.value); setConsumptionPoint('all'); }}>{[['all', 'All categories'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <option key={value} value={value}>{label} ({run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length})</option>)}</select></label>
-          <label>Consumed by<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option>{Object.entries(consumptionPointLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Consumed by<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
           <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
         </div>
@@ -194,7 +194,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
           const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
-          const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).join(', ') || 'Not assigned';
+          const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') || 'Not assigned';
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
             <tr className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
@@ -213,7 +213,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                 <div className="review-inline-columns"><div className="rule-interpretation">
                   <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button><button className="text-button" disabled={!editable || busy || r.source_guide_id!==run.guide_id} title={r.source_guide_id!==run.guide_id?'Create variants in the source guide to preserve image references.':'Copy this rule into a new pending draft; adjust its conditions, instruction and image.'} onClick={()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}}>Create variant</button></div>
                   <p className="instruction">{r.spec.instruction}</p>
-                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
+                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
                   {(r.spec.exceptions || []).map((e, i) => <p key={i}><strong>Exception:</strong> {e.description}</p>)}
                   {(r.spec.unresolved_questions || []).map((q, i) => <p className="error" key={i}>{q}</p>)}
                   {r.individual_review_reasons.length > 0 && <div className="review-card-flags"><strong>Check before approving</strong><ul>{r.individual_review_reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>}

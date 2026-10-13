@@ -18,5 +18,7 @@ export const consumptionPointLabels: Record<NonNullable<RuleSpec['consumption_po
   product_setup: 'Product setup', order_management: 'Order management',
   billing: 'Billing', compliance_disputes: 'Compliance & disputes',
 };
+export const consumptionPointOptions = Object.entries(consumptionPointLabels)
+  .sort(([, left], [, right]) => left.localeCompare(right));
 export const needsClassification = (spec: RuleSpec) => (spec.purpose || 'unclassified') === 'unclassified'
   || (spec.operational_category || 'unclassified') === 'unclassified' || !spec.consumption_points?.length;
