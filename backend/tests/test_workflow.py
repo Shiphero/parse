@@ -221,7 +221,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(approvals[0]['payload']['batch_id'], approvals[1]['payload']['batch_id'])
         await self.send('POST', url, {**body, 'version': result['version']}, 409)
 
-    async def test_flagged_batch_rejected_and_single_approval_notes_are_conditional(self):
+    async def test_flagged_rules_can_be_individually_approved_without_notes(self):
         run = await self.add_candidate(1)
         good = run['payload']['rules'][0]['id']
         run = await self.add_candidate(run['version'], rule(title='Unresolved rule', unresolved_questions=['Check applicability']))
@@ -238,9 +238,14 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(run['payload']['rules'][1]['status'], 'pending')
         body['version'] = run['version']
         endpoint = f'/api/analysis/{self.rid}/rules/{flagged}'
-        await self.send('PUT', endpoint, {**body, 'action': 'approve'}, 422)
-        run = await self.send('PUT', endpoint, {**body, 'action': 'approve', 'note': 'Retained as unresolved; needs operational evidence'})
-        self.assertEqual(run['payload']['rules'][1]['status'], 'approved')
+        await self.send('PUT', endpoint, {**body, 'action': 'reject', 'note': '   '}, 422)
+        run = await self.send('PUT', endpoint, {**body, 'action': 'approve'})
+        approved = run['payload']['rules'][1]
+        self.assertEqual(approved['status'], 'approved')
+        self.assertEqual(approved['review']['note'], '')
+        self.assertEqual(approved['review']['actor'], 'Reviewer')
+        self.assertEqual(approved['review']['revision'], approved['revision'])
+        self.assertTrue(approved['individual_review_reasons'])
 
     async def test_foreign_retailer_release_and_foreign_draft_rule_are_rejected(self):
         run = await self.add_candidate(1)

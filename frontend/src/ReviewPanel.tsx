@@ -191,7 +191,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         {visibleRules.map(r => {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
-          const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : r.individual_review_reasons.length && !note.trim() ? 'Add a decision note addressing the flagged items to approve.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
+          const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
           const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).join(', ') || 'Not assigned';
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
@@ -221,7 +221,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                   {r.carried_from_release_id && <p className="muted">Approval carried forward from the previous release.</p>}
                 </div><Evidence guideId={r.source_guide_id} spec={r.spec} collapsibleImage/></div>
                 {editable && <div className="review-decision">
-                  <div className="review-decision-fields">{reviewerInput}<label>Decision note {r.individual_review_reasons.length ? '(required)' : '(optional for approval)'}<textarea rows={2} value={note} disabled={busy} onChange={e => setNote(e.target.value)} placeholder="Required when rejecting or resolving flagged items"/></label></div>
+                  <div className="review-decision-fields">{reviewerInput}<label>Decision note (optional for approval)<textarea rows={2} value={note} disabled={busy} onChange={e => setNote(e.target.value)} placeholder="Optional context; required only when rejecting"/></label></div>
                   {blocked && <p className="muted">{blocked}</p>}
                   <div className="review-decision-actions"><button className="secondary" disabled={busy || !note.trim() || !actor.trim()} onClick={() => decision(r, 'reject')}><X size={15}/> Reject</button>
                     {next && <button className="text-button" disabled={busy} onClick={() => openRule(next.id, true)}>Skip for now <ArrowRight size={15}/></button>}

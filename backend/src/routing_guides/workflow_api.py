@@ -403,8 +403,8 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             await check_evidence(session, run, body.spec)
             rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], classification=None, carried_from_release_id=None, carried_from_rule_id=None)
         else:
-            if (body.action == 'reject' or individual_review_reasons(RuleSpec.model_validate(rule['spec']), rule.get('evidence_issues', []), rule['spec']['title'].strip().casefold() in duplicate_titles(data['rules']))) and not body.note.strip():
-                raise HTTPException(422, 'Add a note for rejections or rules requiring individual review.')
+            if body.action == 'reject' and not body.note.strip():
+                raise HTTPException(422, 'Add a note before rejecting a rule.')
             if body.action == 'approve':
                 if needs_classification(rule['spec']):
                     raise HTTPException(422, 'Choose rule use, operational category and consumption points before approving.')
