@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, ChevronUp, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run } from './api';
 import RuleEditor, { Evidence } from './RuleEditor';
@@ -27,6 +27,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [checkMode, setCheckMode] = useState('all');
   const [type, setType] = useState<RuleSpec['subject'] | 'all'>('all');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const tableHeading = useRef<HTMLTableElement>(null);
+  const pageCheckbox = useRef<HTMLInputElement>(null);
   const [moreFilters, setMoreFilters] = useState(false);
   const [bulkOptions, setBulkOptions] = useState(false);
   const [categorizing, setCategorizing] = useState<{ rules: Candidate[]; version: number } | null>(null);
@@ -63,7 +67,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     }
   }, [selected]);
 
-  const resetView = () => { setSelected(''); setNote(''); setChecked({}); setError(''); };
+  const resetView = () => { setPage(0); setSelected(''); setNote(''); setChecked({}); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
     setFilter('pending'); setType('all'); setPurpose('all'); setCheckMode('all');
@@ -77,6 +81,18 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     (purpose === 'all' || (r.spec.purpose || 'unclassified') === purpose) &&
     (checkMode === 'all' || (r.spec.purpose === 'shipment_validation' && (checkMode === 'automatic' ? r.spec.verification === 'data' : r.spec.verification !== 'data'))) &&
     (!query || [r.spec.title, r.spec.instruction, r.spec.applicability_text, ...r.spec.evidence.map(e => e.quote)].join(' ').toLowerCase().includes(query)));
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleRules = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const pagePending = visibleRules.filter(r => r.status === 'pending');
+  const pageSelectedCount = pagePending.filter(r => checked[r.id] === r.revision).length;
+  useEffect(() => {
+    if (pageCheckbox.current) pageCheckbox.current.indeterminate = pageSelectedCount > 0 && pageSelectedCount < pagePending.length;
+  }, [pageSelectedCount, pagePending.length]);
+  const changePage = (next: number) => {
+    setPage(next); setSelected(''); setNote(''); setError('');
+    tableHeading.current?.scrollIntoView({ block: 'start' });
+  };
   const eligible = filtered.filter(r => r.status === 'pending' && !r.individual_review_reasons.length && !needsClassification(r.spec) && !r.evidence_issues?.length);
   const pendingInView = filtered.filter(r => r.status === 'pending');
   const selectedRules = run.payload.rules.filter(r => checked[r.id] === r.revision && r.status === 'pending');
@@ -85,7 +101,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const extraFilterCount = [type, purpose, checkMode].filter(v => v !== 'all').length;
   const selectRules = (rules: Candidate[]) => setChecked(Object.fromEntries(rules.map(r => [r.id, r.revision])));
   const openRule = (id: string, focus = false) => {
-    focusAfterNavigation.current = focus; setSelected(id); setNote(''); setError('');
+    focusAfterNavigation.current = focus;
+    const index = filtered.findIndex(r => r.id === id);
+    if (index >= 0) setPage(Math.floor(index / pageSize));
+    setSelected(id); setNote(''); setError('');
   };
   const action = async (url: string, body: unknown, method = 'POST') => {
     setBusy(true); setError('');
@@ -145,12 +164,9 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     {adding ? <>{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
       <fieldset className="review-filter-controls" disabled={editing || busy}>
         <legend className="visually-hidden">Filter rules</legend>
-        <div className="review-categories" role="group" aria-label="Operational category">
-          {[['all', 'All rules'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <button key={value} aria-pressed={operationalCategory === value} className={operationalCategory === value ? 'selected' : ''} onClick={() => { resetView(); setOperationalCategory(value); setConsumptionPoint('all'); }}>
-            {label}<span>{run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length}</span></button>)}
-        </div>
         <div className="review-filter-row">
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
+          <label>Category<select value={operationalCategory} onChange={e => { resetView(); setOperationalCategory(e.target.value); setConsumptionPoint('all'); }}>{[['all', 'All categories'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <option key={value} value={value}>{label} ({run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length})</option>)}</select></label>
           <label>Consumed by<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option>{Object.entries(consumptionPointLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
           <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
@@ -162,25 +178,34 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <button className="text-button" onClick={resetFilters}>Reset filters</button>
         </div>}
       </fieldset>
-      {operationalCategory === 'unclassified' && <p className="notice">These rules are missing an operational category, a consuming workflow, or a rule use. Select a rule and choose <strong>Categorize</strong> to complete all three. Categorization does not approve the rule.</p>}
+      {operationalCategory === 'unclassified' && <p className="muted compact-review-hint">Missing category, workflow or rule use. Select a rule → <strong>Categorize</strong>.</p>}
       <div className="review-list-toolbar"><span role="status">{filtered.length} {filtered.length === 1 ? 'rule' : 'rules'} shown</span>
         {editable && <div><button className="text-button" disabled={busy || editing || !eligible.length} onClick={() => selectRules(eligible)}>Select {eligible.length} ready to approve</button>
           <button className="text-button" disabled={busy || editing || !pendingInView.length} onClick={() => selectRules(pendingInView)}>Select all pending</button></div>}</div>
-      <div className="review-inbox">
-        {filtered.map(r => {
+      <div className="review-table-scroll" role="region" aria-label="Review rules table" tabIndex={0}>
+        <table className="review-table" ref={tableHeading}>
+          <caption className="visually-hidden">Rules with category, consuming workflow, use, source page and review status. Open a rule to inspect the full instruction and evidence.</caption>
+          <colgroup><col className="selection-column"/><col className="title-column"/><col className="category-column"/><col className="consumer-column"/><col className="use-column"/><col className="source-column"/><col className="status-column"/></colgroup>
+          <thead><tr><th scope="col">{editable ? <input ref={pageCheckbox} type="checkbox" aria-label="Select pending rules on this page" disabled={busy || editing || !pagePending.length} checked={pagePending.length > 0 && pageSelectedCount === pagePending.length} onChange={e => setChecked(previous => { const next = { ...previous }; pagePending.forEach(r => { if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; }); return next; })}/> : <span className="visually-hidden">Selection</span>}</th><th scope="col">Rule</th><th scope="col">Category</th><th scope="col">Consumed by</th><th scope="col">Use</th><th scope="col">Page</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+        {visibleRules.map(r => {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
           const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : r.individual_review_reasons.length && !note.trim() ? 'Add a decision note addressing the flagged items to approve.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
-          return <article className={`review-inbox-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`} key={r.id}>
-            <div className="review-row-heading">
-              {editable && r.status === 'pending' && <input type="checkbox" className="rule-select" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const updated = { ...previous }; if (e.target.checked) updated[r.id] = r.revision; else delete updated[r.id]; return updated; })}/>}
-              <button className="review-row-toggle" ref={expanded ? activeHeading : undefined} aria-expanded={expanded} aria-controls={`rule-detail-${r.id}`} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>
-                <span className="review-row-content"><strong>{r.spec.title}</strong><span className="review-row-preview">{r.spec.instruction}</span>
-                  <span className="review-row-meta"><span>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span><span>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).join(', ') : 'Workflow not assigned'}</span><span>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</span><span>Page {[...new Set(r.spec.evidence.map(e => e.page))].join(', ') || 'not assigned'}</span></span>
-                </span><span className="review-row-state"><span className={`status-badge ${r.status}`}>{r.status === 'pending' ? 'Awaiting review' : r.status}</span>{r.status === 'pending' && r.individual_review_reasons.length > 0 && <span className="review-flag-label">Needs individual review</span>}{expanded ? <ChevronUp size={17}/> : <ChevronDown size={17}/>}</span>
-              </button>
-            </div>
-            {expanded && <div className="review-inline-detail" id={`rule-detail-${r.id}`}>
+          const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).join(', ') || 'Not assigned';
+          const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
+          return <Fragment key={r.id}>
+            <tr className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
+              <td>{editable && r.status === 'pending' && <input type="checkbox" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const next = { ...previous }; if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; return next; })}/>}</td>
+              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button></th>
+              <td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
+              <td><span className="table-cell-text" title={consumers}>{consumers}</span></td>
+              <td><span className="table-cell-text" title={rulePurposeLabels[r.spec.purpose || 'unclassified']}>{r.spec.purpose === 'general_guidance' ? 'Guidance' : r.spec.purpose === 'shipment_validation' ? 'Shipment check' : 'Unclassified'}</span></td>
+              <td><span className="table-cell-text" title={`PDF pages ${pages}`}>{pages}</span></td>
+              <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
+            </tr>
+            {expanded && <tr className="review-detail-row"><td colSpan={7}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
+              <h3 className="review-expanded-title">{r.spec.title}</h3>
               {editing ? <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={() => setEditing(false)} busy={busy}/> : <>
                 <div className="review-inline-columns"><div className="rule-interpretation">
                   <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button></div>
@@ -204,11 +229,14 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                 </div>}
               </>}
               {error && <div className="error" role="alert">{error}</div>}
-            </div>}
-          </article>;
+            </div></td></tr>}
+          </Fragment>;
         })}
-        {!filtered.length && <div className="review-empty"><Check size={24}/><h3>{pending === 0 && filter === 'pending' && run.payload.rules.length ? 'All rules have a decision' : 'No matching rules'}</h3><p>{run.payload.rules.length ? 'Adjust the filters to see other rules.' : 'Rules will appear here as the guide is analyzed.'}</p><button className="secondary" onClick={resetFilters}>Reset filters</button></div>}
+        {!filtered.length && <tr><td colSpan={7}><div className="review-empty"><Check size={24}/><h3>{pending === 0 && filter === 'pending' && run.payload.rules.length ? 'All rules have a decision' : 'No matching rules'}</h3><p>{run.payload.rules.length ? 'Adjust the filters to see other rules.' : 'Rules will appear here as the guide is analyzed.'}</p><button className="secondary" onClick={resetFilters}>Reset filters</button></div></td></tr>}
+          </tbody>
+        </table>
       </div>
+      <div className="review-pagination"><span>{filtered.length ? currentPage * pageSize + 1 : 0}–{Math.min((currentPage + 1) * pageSize, filtered.length)} of {filtered.length}</span><label>Rows<select aria-label="Rules per page" value={pageSize} disabled={editing || busy} onChange={e => { setPageSize(Number(e.target.value)); changePage(0); }}><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label><button className="icon-button" aria-label="Previous rules page" disabled={editing || busy || currentPage === 0} onClick={() => changePage(currentPage - 1)}><ChevronLeft size={16}/></button><span>Page {currentPage + 1} of {pageCount}</span><button className="icon-button" aria-label="Next rules page" disabled={editing || busy || currentPage + 1 >= pageCount} onClick={() => changePage(currentPage + 1)}><ChevronRight size={16}/></button></div>
       {selectedCount > 0 && editable && <div className="review-selection-bar" role="region" aria-label="Selected rule actions">
         <div className="review-selection-main"><strong>{selectedCount} selected</strong><button className="text-button" disabled={busy} onClick={() => { setChecked({}); setBulkOptions(false); }}>Clear</button>
           <button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
