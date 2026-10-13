@@ -3,6 +3,7 @@ import json
 from collections import Counter, defaultdict
 
 from routing_guides.rules import RuleSpec
+from routing_guides.check_catalog import check_definition, needs_check_mapping
 
 
 def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
@@ -15,6 +16,10 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
         reasons.append('Possible duplicate or conflict: review matching titles together.')
     if spec.unresolved_questions or spec.verification == 'unresolved':
         reasons.append('Unresolved interpretation requires individual review.')
+    if needs_check_mapping(spec):
+        reasons.append('Map this requirement to a standard verification check before approval.')
+    if spec.standard_check and check_definition(spec.standard_check).availability == 'not_implemented':
+        reasons.append('Automatic check is not implemented; approval records the requirement, not execution readiness.')
     if spec.exceptions:
         reasons.append('Review the exceptions individually.')
     if any(e.kind == 'visual' or e.region is not None for e in spec.evidence):

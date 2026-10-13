@@ -24,7 +24,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.temp=TemporaryDirectory(); self.directory=Path(self.temp.name)
         (self.directory/'page-0.png').write_bytes(b'synthetic image bytes, not a retailer document')
-        self.extraction=Extraction(rules=[rule()],coverage=[{'page':1,'outcome':'rules_found','note':'Test'}],warnings=[])
+        self.extraction=Extraction(rules=[rule(schema_version='1.2',verification='unresolved',assertion=None)],coverage=[{'page':1,'outcome':'rules_found','note':'Test'}],warnings=[])
         self.secret=patch('routing_guides.analysis_provider.connection',return_value={'key':'synthetic-key','model':'test'})
         self.secret.start()
     def tearDown(self):self.secret.stop();self.temp.cleanup()

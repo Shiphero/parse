@@ -17,6 +17,7 @@ from routing_guides.evaluator import evaluate_release
 from routing_guides.models import AnalysisRun, AuditEvent, Evaluation, Guide, GuidePage, ReleaseHead, RuleRelease, Scenario
 from routing_guides.review import compare_rules, duplicate_titles, individual_review_reasons
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
+from routing_guides.check_catalog import CATALOG, CheckDefinition, CheckStatus, check_status, check_summary, needs_check_mapping
 from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
 from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification, canonical_consumption_points
@@ -24,6 +25,11 @@ from routing_guides.classification_provider import PROMPT_VERSION as CLASSIFICAT
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
+
+
+@router.get('/check-catalog', response_model=list[CheckDefinition])
+async def verification_catalog():
+    return sorted(CATALOG.values(), key=lambda entry: entry.label)
 
 
 class Candidate(BaseModel):
@@ -37,6 +43,11 @@ class Candidate(BaseModel):
     classification: dict[str, Any] | None = None
     carried_from_release_id: str | None = None
     carried_from_rule_id: str | None = None
+
+    @computed_field
+    @property
+    def check_status(self) -> CheckStatus:
+        return check_status(self.spec)
 
     _duplicate: bool = PrivateAttr(default=False)
 
@@ -81,6 +92,11 @@ class ReleaseRule(BaseModel):
     source_guide_id: str
     draft_id: str
     review: dict[str, Any]
+
+    @computed_field
+    @property
+    def check_status(self) -> CheckStatus:
+        return check_status(self.spec)
 
 
 class ReleasePayload(BaseModel):
@@ -410,7 +426,10 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
                     raise HTTPException(422, 'Choose rule use, operational category and consumption points before approving.')
                 if rule.get('evidence_issues'):
                     raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
-                await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
+                spec = RuleSpec.model_validate(rule['spec'])
+                if needs_check_mapping(spec):
+                    raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
+                await check_evidence(session, run, spec)
             rule.update(carried_from_release_id=None, carried_from_rule_id=None, status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
@@ -481,7 +500,7 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
             selected.append(rule)
         updates = {'purpose': body.purpose}
         if body.operational_category is not None:
-            updates.update(schema_version='1.1', operational_category=body.operational_category,
+            updates.update(operational_category=body.operational_category,
                            consumption_points=body.consumption_points)
         batch_id = str(uuid4())
         for rule in selected:
@@ -489,6 +508,11 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
                 continue
             before = deepcopy(rule)
             rule['spec'].update(updates)
+            if body.operational_category is not None and rule['spec'].get('schema_version') != '1.2':
+                rule['spec']['schema_version'] = '1.1'
+            if rule['spec'].get('schema_version') == '1.2' and body.purpose == 'shipment_validation' and not rule['spec'].get('standard_check'):
+                rule['spec'].update(verification='unresolved', assertion=None)
+            rule['spec'] = RuleSpec.model_validate(rule['spec']).model_dump(mode='json')
             rule.update(revision=rule['revision'] + 1, review=None, classification={'method': 'manual', 'reason': body.note or ('Category, workflows and rule use selected by reviewer.' if body.operational_category else 'Rule use selected by reviewer.'), 'actor': body.actor},
                         carried_from_release_id=None, carried_from_rule_id=None)
             audit(session, run.id, body.actor, 'rule_classified',
@@ -605,6 +629,8 @@ def assemble_release(run, base, body):
     if any(r['status'] == 'pending' for r in rules):
         raise HTTPException(409, 'Review every candidate before publishing.')
     approved = {r['id']: r for r in rules if r['status'] == 'approved'}
+    if any(needs_check_mapping(RuleSpec.model_validate(r['spec'])) for r in approved.values()):
+        raise HTTPException(409, 'Map approved shipment requirements to the standard check catalog before publishing.')
     if any(r.get('evidence_issues') for r in approved.values()):
         raise HTTPException(409, 'Approved rules cannot contain unresolved source evidence issues.')
     if any(p['outcome'] == 'needs_review' for p in run.payload['coverage']) or run.payload['pending_batches']:
@@ -641,6 +667,8 @@ def assemble_release(run, base, body):
     for rid, r in approved.items():
         if rid not in used:
             result.append(dict(stable_id=rid, spec=r['spec'], source_guide_id=r['source_guide_id'], draft_id=rid, review=r['review']))
+    if any(needs_check_mapping(RuleSpec.model_validate(r['spec'])) for r in result):
+        raise HTTPException(409, 'Map shipment requirements to the standard check catalog before publication.')
     if any(needs_classification(r['spec']) for r in result):
         raise HTTPException(409, 'Choose rule use, operational category and consumption points for every rule before publication.')
     body.decisions = decisions
@@ -728,6 +756,9 @@ async def export_release(release_id: UUID, format: Literal['json','markdown'] = 
     lines = [f'# {value.name}', f'Effective: {value.effective_date}', f'Scope: {value.payload.scope}', '']
     for r in value.payload.rules:
         lines += [f'## {r.spec.title}', r.spec.instruction, f'Use: {r.spec.purpose}; obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Operational category: {r.spec.operational_category}', f'Consumption points: {", ".join(r.spec.consumption_points)}', f'Applies: {r.spec.applicability_text}']
+        lines += [f'Standard check: {check_summary(r.spec)}']
+        if r.spec.standard_check:
+            lines += [f'Check parameters: {r.spec.standard_check.parameters.model_dump_json()}']
         lines += [f'Exception: {e.description}' for e in r.spec.exceptions]
         lines += [f'Source: guide {r.source_guide_id}, PDF page {e.page}: {e.quote}' for e in r.spec.evidence]
         lines += ['']

@@ -2,8 +2,9 @@
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from routing_guides.rules import Expression, RuleSpec
+from routing_guides.check_catalog import check_definition, needs_check_mapping
 
-VERSION = '1.1'
+VERSION = '1.2'
 MISSING = object()
 UNITS = {'oz': ('mass', Decimal('28.349523125')), 'lb': ('mass', Decimal('453.59237')),
          'g': ('mass', Decimal(1)), 'kg': ('mass', Decimal(1000)),
@@ -129,6 +130,20 @@ def evaluate_rule(rule_id: str, rule: RuleSpec, snapshot: dict) -> dict[str, Any
                 why = 'An exception cannot be determined from the supplied facts.'
             elif rule.unresolved_questions:
                 why = 'Unresolved: ' + '; '.join(rule.unresolved_questions)
+            elif needs_check_mapping(rule):
+                why = 'Needs mapping to a standard verification check.'
+            elif rule.standard_check is not None:
+                definition = check_definition(rule.standard_check)
+                if definition.availability == 'not_implemented':
+                    why = f'{definition.label} v{definition.version} is not implemented. No automatic check ran.'
+                elif definition.availability in {'manual', 'external'}:
+                    why = f'{definition.label} requires human inspection or external confirmation; no automatic pass is inferred.'
+                elif rule.standard_check.check_id == 'package_measurement_limit':
+                    params = rule.standard_check.parameters
+                    result, why = expression(Expression(op=params.comparison, path=params.measurement, value=params.threshold, unit=params.unit), facts)
+                    outcome = 'pass' if result is True else 'fail' if result is False else 'cannot_determine'
+                else:
+                    why = 'No evaluator is registered for this check version.'
             elif rule.verification != 'data' or rule.assertion is None:
                 why = 'Requires human inspection or external evidence; no automated pass is inferred.'
             else:

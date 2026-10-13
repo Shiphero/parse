@@ -86,3 +86,27 @@ The field dropdown offers subject-appropriate dimensions and weight for cartons/
 Each source reference supports **Select diagram / image region**. Drag a rectangle or enter percentage bounds to select the relevant diagram. The saved representation is the existing PDF page plus normalized `region` coordinates; no source pixels are modified. A selected region requires individual visual review and cannot carry approval forward from a text-only match. Review and scenario results show the selected image region with its caption and PDF page. Published JSON and consuming-workflow responses retain these references and `source_guide_id`, allowing consumers to retrieve the page image. Separate uploaded images and standalone cropped-image download endpoints are not implemented.
 
 Use one rule per conditional instruction/image. These rules are evaluated independently: there is no implicit first-match ordering, overlap resolution or fallback. Check exact boundaries and overlaps before approval. For example, headings saying greater than 7 and less than 7 do not establish what happens at exactly 7; less than 4.5 also overlaps less than 7. Missing height remains Cannot determine, and matching a manual rule never produces an automatic pass. Scenario results list the outcome for each carton and hide diagrams only when the rule is definitively not applicable to every subject.
+
+
+## Shared verification catalog (schema 1.2)
+
+New rules use a standard check selected from `GET /api/check-catalog`. The owned catalog defines a stable ID/version, semantic meaning, allowed subjects, verification method, required data and a strict parameter schema. AI and reviewers select from the same catalog. Unknown IDs, versions, extra parameters, incompatible units, or conflicting assertions are rejected. Availability is derived by the application, never supplied by the model or reviewer. Rule JSON, consuming-workflow responses and exports preserve the binding and parameters. Changing a definition's meaning requires a new version.
+
+Initial entries:
+
+| Check ID (version 1) | Method | Availability |
+| --- | --- | --- |
+| `package_measurement_limit` | Automatic | Implemented with the existing per-package unit-aware evaluator |
+| `po_line_fulfillment` | Automatic | Not implemented |
+| `carton_sku_limit` | Automatic | Not implemented |
+| `label_placement` | Manual inspection | Human confirmation required |
+| `asn_reconciliation` | Automatic | Not implemented |
+| `document_confirmation` | External evidence | External confirmation required |
+
+For PO fulfillment, `required_percent` is a positive percentage up to 100, `quantity_basis` is picked/packed/shipped, and `order_basis` is original_order/approved_current_order. Version 1 requires each PO line independently to reach **at least** the percentage. It does not prohibit overfills; that would be a separate requirement. A complete ordered-line set, stable line allocation, verified UOM conversions and authoritative approved revisions are required. Shortage on one line cannot be offset by excess on another. Substitutions cannot receive credit without explicit allocation. These inputs are not currently mapped into an executable fulfillment validator; a published requirement therefore reports Cannot determine, even if a snapshot contains an arbitrary fulfilled=true flag.
+
+New shipment requirements without a matching catalog entry remain `standard_check: null` and `verification: unresolved`, labeled **Needs mapping**, and cannot be approved/published. New check types are added centrally, with versioned schemas and evaluator coverage. Unimplemented automatic checks require individual review; approval records acceptance of the requirement but does not make it executable. Applicable manual/external checks remain Cannot determine until their evidence/confirmation workflow exists. Applicability and exceptions still run before verification.
+
+Schema 1.0/1.1 rules and published releases retain their existing behavior; no automatic semantic migration or approval changes are performed. The builder labels unmapped legacy verification explicitly and lets a reviewer map it through a normal audited edit. Existing custom expression checks stay editable until explicitly mapped. General guidance remains excluded from shipment checks. Catalog bindings may be retained when a rule is reclassified as guidance, but are not executed. Classification preserves schema 1.2 and its check binding.
+
+Extraction prompt 1.6 supplies the catalog and requests schema 1.2. Ambiguous parameters (including whether "filled" means picked, packed or shipped) remain unmapped rather than guessed. Retained older provider responses remain readable through the legacy contract. Live-provider acceptance of the expanded schema requires a separately initiated analysis; local tests use mocked providers.

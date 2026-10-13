@@ -69,3 +69,6 @@ export type PublishAction = components['schemas']['PublishAction'];
 export function jsonRequest<T>(url: string, body: unknown, method = 'POST') { return request<T>(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
 
 export type Comparison = components['schemas']['ComparisonView'];
+
+export type CheckDefinition = components['schemas']['CheckDefinition'];
+export type CheckStatus = components['schemas']['CheckStatus'];

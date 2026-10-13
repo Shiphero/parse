@@ -2,6 +2,7 @@
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from routing_guides.check_catalog import StandardCheck, check_definition
 from routing_guides.taxonomy import OperationalCategory, ConsumptionPoint, canonical_consumption_points
 
 
@@ -72,7 +73,7 @@ class ExceptionRule(StrictModel):
 
 
 class RuleSpec(StrictModel):
-    schema_version: Literal['1.0', '1.1'] = '1.1'
+    schema_version: Literal['1.0', '1.1', '1.2'] = '1.1'
     operational_category: OperationalCategory = Field(default='unclassified', description='Primary operational activity; independent of purpose and verification.')
     consumption_points: list[ConsumptionPoint] = Field(default_factory=list, description='Workflows enforcing or presenting this obligation, not upstream data sources.')
     purpose: Literal['general_guidance', 'shipment_validation', 'unclassified'] = Field(default='unclassified', description='Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.')
@@ -85,6 +86,7 @@ class RuleSpec(StrictModel):
     applicability: Expression | None = None
     exceptions: list[ExceptionRule] = Field(default_factory=list)
     assertion: Expression | None = Field(default=None, description='True means compliance, even for prohibited obligations')
+    standard_check: StandardCheck | None = Field(default=None, description='Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.')
     evidence: list[EvidenceRef] = Field(min_length=1)
     unresolved_questions: list[str] = Field(default_factory=list)
 
@@ -95,7 +97,18 @@ class RuleSpec(StrictModel):
 
     @model_validator(mode='after')
     def executable(self):
-        if self.verification == 'data' and self.assertion is None:
+        if self.standard_check is not None:
+            definition = check_definition(self.standard_check)
+            if self.schema_version != '1.2':
+                raise ValueError('Catalog checks require rule schema 1.2.')
+            if self.subject not in definition.subjects or self.verification != definition.verification:
+                raise ValueError('Subject and verification must match the selected catalog check.')
+            if self.assertion is not None:
+                raise ValueError('Catalog checks cannot also contain a custom assertion.')
+        elif self.schema_version == '1.2' and self.purpose == 'shipment_validation':
+            if self.verification != 'unresolved' or self.assertion is not None:
+                raise ValueError('Unmapped catalog rules must use unresolved verification with no assertion.')
+        if self.verification == 'data' and self.assertion is None and self.standard_check is None:
             raise ValueError('Data verification requires a compliance assertion.')
         return self
 

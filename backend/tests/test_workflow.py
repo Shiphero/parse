@@ -50,6 +50,55 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code,status,response.text)
         return response.json()
 
+    async def test_catalog_binding_survives_review_classification_release_and_export(self):
+        from test_check_catalog import fulfillment
+        response=await self.client.get('/api/check-catalog')
+        self.assertEqual(response.status_code,200)
+        catalog={entry['id']:entry for entry in response.json()}
+        self.assertEqual(catalog['po_line_fulfillment']['availability'],'not_implemented')
+        spec=fulfillment().model_dump(mode='json')
+        run=await self.send('POST',f'/api/analysis/{self.rid}/rules',{'version':1,'actor':'Reviewer','spec':spec})
+        candidate=run['payload']['rules'][0]
+        run=await self.send('POST',f'/api/analysis/{self.rid}/classify',{
+            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:1},
+            'purpose':'shipment_validation','operational_category':'warehouse_operations',
+            'consumption_points':['mobile_packing','mobile_picking']})
+        candidate=run['payload']['rules'][0]
+        self.assertEqual(candidate['spec']['schema_version'],'1.2')
+        self.assertEqual(candidate['spec']['standard_check'],spec['standard_check'])
+        self.assertEqual(candidate['check_status']['availability'],'not_implemented')
+        await self.send('POST',f'/api/analysis/{self.rid}/bulk-approve',{
+            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:candidate['revision']}},422)
+        run=await self.send('PUT',f'/api/analysis/{self.rid}/rules/{candidate["id"]}',{
+            'version':run['version'],'actor':'Reviewer','action':'approve'})
+        release=await self.send('POST',f'/api/analysis/{self.rid}/publish',{
+            'version':run['version'],'actor':'Reviewer','note':'Synthetic coverage',
+            'name':'Catalog fixture','effective_date':'2026-01-01','scope':'Synthetic only',
+            'coverage_confirmed':True,'impact_confirmed':True,'decisions':{},'base_release_id':None})
+        self.assertEqual(release['payload']['rules'][0]['check_status']['availability'],'not_implemented')
+        exported=await self.client.get(f'/api/releases/{release["id"]}/export')
+        self.assertEqual(exported.json()['payload']['rules'][0]['spec']['standard_check'],spec['standard_check'])
+        markdown=await self.client.get(f'/api/releases/{release["id"]}/export?format=markdown')
+        self.assertIn('PO line fulfillment v1',markdown.text)
+        self.assertIn('quantity_basis',markdown.text)
+        scenario=await self.send('POST','/api/scenarios',{'retailer_id':self.retailer,'name':'Synthetic',
+            'raw':{'schema_version':'1.0','shipment':{'fulfilled':True}}})
+        evaluation=await self.send('POST',f'/api/scenarios/{scenario["id"]}/evaluate/{release["id"]}',{})
+        self.assertEqual(evaluation['items'][0]['outcome'],'cannot_determine')
+
+    async def test_unmapped_standard_requirement_cannot_be_approved(self):
+        spec=rule(schema_version='1.2',purpose='general_guidance',verification='human',assertion=None).model_dump(mode='json')
+        run=await self.send('POST',f'/api/analysis/{self.rid}/rules',{'version':1,'actor':'Reviewer','spec':spec})
+        candidate=run['payload']['rules'][0]
+        run=await self.send('POST',f'/api/analysis/{self.rid}/classify',{
+            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:1},'purpose':'shipment_validation'})
+        candidate=run['payload']['rules'][0]
+        self.assertEqual(candidate['spec']['schema_version'],'1.2')
+        self.assertEqual(candidate['spec']['verification'],'unresolved')
+        self.assertEqual(candidate['check_status']['availability'],'needs_mapping')
+        await self.send('PUT',f'/api/analysis/{self.rid}/rules/{candidate["id"]}',{
+            'version':run['version'],'actor':'Reviewer','action':'approve'},422)
+
     async def test_review_publish_evaluate_and_immutable_revision(self):
         actor='Test reviewer'
         run=await self.send('POST',f'/api/analysis/{self.rid}/rules',{'version':1,'actor':actor,'spec':rule().model_dump(mode='json')})

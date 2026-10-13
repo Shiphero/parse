@@ -76,3 +76,7 @@ Local research includes ten text extracts and 54 illustrative examples, never au
 ### Operational rule delivery (rule schema 1.1)
 
 Operational category and explicit consumption points are independent of rule purpose and verification. The four categories are warehouse operations, transportation/scheduling, electronic documents/EDI, and business administration. Consumers request approved immutable release rules for their specific workflow (for example mobile packing versus ASN generation). The review UI, AI extraction, draft backfill, corrections, exact comparisons, and exports carry this metadata. Missing legacy routing is visible and blocks new approval/publication; published data is never silently backfilled. See `docs/workflow.md` for semantics and the consumer endpoint.
+
+## Standard verification contracts
+
+Rule schema 1.2 adds the shared, versioned `standard_check` catalog. The builder and extraction prompt use the same API-owned definitions and typed parameters. Measurement checks execute with the existing evaluator; other initial automatic contracts are visibly unavailable until implemented. New unmatched shipment requirements need mapping before approval, and legacy rules remain readable without implicit migration. See [workflow.md](workflow.md#shared-verification-catalog-schema-12) for contracts and limitations.

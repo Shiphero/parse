@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run } from './api';
+import { availabilityLabels } from './StandardCheckEditor';
 import { describeCondition } from './ConditionBuilder';
 import RuleEditor, { Evidence } from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
@@ -193,7 +194,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         {visibleRules.map(r => {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
-          const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
+          const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.check_status?.availability==='needs_mapping' ? 'Choose a standard verification check before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
           const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') || 'Not assigned';
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
@@ -203,7 +204,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
               <td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
               <td><span className="table-cell-text" title={consumers}>{consumers}</span></td>
               <td><span className="table-cell-text" title={rulePurposeLabels[r.spec.purpose || 'unclassified']}>{r.spec.purpose === 'general_guidance' ? 'Guidance' : r.spec.purpose === 'shipment_validation' ? 'Shipment check' : 'Unclassified'}</span></td>
-              <td><span className={`check-method ${r.spec.purpose === 'shipment_validation' ? r.spec.verification : 'not-applicable'}`} title={shipmentCheckMode(r.spec)}>{shipmentCheckLabel(r.spec)}</span></td>
+              <td><span className={`check-method ${r.spec.purpose === 'shipment_validation' ? r.spec.verification : 'not-applicable'}`} title={shipmentCheckMode(r.spec, r.check_status)}>{shipmentCheckLabel(r.spec, r.check_status)}</span></td>
               <td><span className="table-cell-text" title={`PDF pages ${pages}`}>{pages}</span></td>
               <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
             </tr>
@@ -213,11 +214,13 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                 <div className="review-inline-columns"><div className="rule-interpretation">
                   <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button><button className="text-button" disabled={!editable || busy || r.source_guide_id!==run.guide_id} title={r.source_guide_id!==run.guide_id?'Create variants in the source guide to preserve image references.':'Copy this rule into a new pending draft; adjust its conditions, instruction and image.'} onClick={()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}}>Create variant</button></div>
                   <p className="instruction">{r.spec.instruction}</p>
-                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
+                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec, r.check_status)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
                   {(r.spec.exceptions || []).map((e, i) => <p key={i}><strong>Exception:</strong> {e.description}</p>)}
                   {(r.spec.unresolved_questions || []).map((q, i) => <p className="error" key={i}>{q}</p>)}
                   {r.individual_review_reasons.length > 0 && <div className="review-card-flags"><strong>Check before approving</strong><ul>{r.individual_review_reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>}
                   {!!r.evidence_issues?.length && <div className="evidence-warning"><strong>Source evidence needs correction</strong><ul>{r.evidence_issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul></div>}
+                  {r.check_status&&<p><strong>Standard check:</strong> {r.check_status.label} · {availabilityLabels[r.check_status.availability]}</p>}
+                  {r.spec.standard_check&&<details><summary>Check parameters</summary><pre>{JSON.stringify(r.spec.standard_check.parameters,null,2)}</pre></details>}
                   {r.spec.assertion && <details><summary>Automatic check</summary><pre>{JSON.stringify(r.spec.assertion, null, 2)}</pre></details>}
                   {!!r.classification?.reason && <details><summary>Why this classification?</summary><p>{String(r.classification.reason)}</p></details>}
                   {r.review && <p className="review-note">Reviewed by {String(r.review.actor)}{r.review.note ? `: ${String(r.review.note)}` : ''}</p>}

@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/check-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verification Catalog */
+        get: operations["verification_catalog_api_check_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/connections": {
         parameters: {
             query?: never;
@@ -621,6 +638,28 @@ export interface components {
             note: string;
             spec: components["schemas"]["RuleSpec-Input"];
         };
+        /** AsnCheck */
+        AsnCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "asn_reconciliation";
+            parameters: components["schemas"]["AsnParameters"];
+        };
+        /** AsnParameters */
+        AsnParameters: {
+            /**
+             * Reconcile By
+             * @enum {string}
+             */
+            reconcile_by: "po_line" | "carton";
+        };
         /** Body_upload_guide_api_guides_post */
         Body_upload_guide_api_guides_post: {
             /** File */
@@ -681,6 +720,7 @@ export interface components {
             carried_from_release_id?: string | null;
             /** Carried From Rule Id */
             carried_from_rule_id?: string | null;
+            readonly check_status: components["schemas"]["CheckStatus"];
             /** Individual Review Reasons */
             readonly individual_review_reasons: string[];
         };
@@ -702,6 +742,45 @@ export interface components {
             base_release_id: string;
             /** Scope Confirmed */
             scope_confirmed: boolean;
+        };
+        /** CheckDefinition */
+        CheckDefinition: {
+            /** Id */
+            id: string;
+            /** Version */
+            version: number;
+            /** Label */
+            label: string;
+            /**
+             * Verification
+             * @enum {string}
+             */
+            verification: "data" | "human" | "external_evidence";
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "implemented" | "not_implemented" | "manual" | "external";
+            /** Subjects */
+            subjects: string[];
+            /** Description */
+            description: string;
+            /** Required Data */
+            required_data: string[];
+            /** Parameters Schema */
+            parameters_schema: {
+                [key: string]: unknown;
+            };
+        };
+        /** CheckStatus */
+        CheckStatus: {
+            /** Label */
+            label: string;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "implemented" | "not_implemented" | "manual" | "external" | "needs_mapping" | "legacy" | "guidance";
         };
         /** ClassifyRules */
         ClassifyRules: {
@@ -820,6 +899,33 @@ export interface components {
              * @enum {string}
              */
             outcome: "rules_found" | "no_rules";
+        };
+        /** DocumentCheck */
+        DocumentCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "document_confirmation";
+            parameters: components["schemas"]["DocumentParameters"];
+        };
+        /** DocumentParameters */
+        DocumentParameters: {
+            /**
+             * Document Type
+             * @enum {string}
+             */
+            document_type: "bill_of_lading" | "packing_list" | "asn";
+            /**
+             * Milestone
+             * @enum {string}
+             */
+            milestone: "before_dispatch" | "before_arrival";
         };
         /** EvaluationItem */
         EvaluationItem: {
@@ -948,6 +1054,35 @@ export interface components {
             /** Children */
             children?: components["schemas"]["Expression-Output"][];
         };
+        /** FulfillmentCheck */
+        FulfillmentCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "po_line_fulfillment";
+            parameters: components["schemas"]["FulfillmentParameters"];
+        };
+        /** FulfillmentParameters */
+        FulfillmentParameters: {
+            /** Required Percent */
+            required_percent: number;
+            /**
+             * Quantity Basis
+             * @enum {string}
+             */
+            quantity_basis: "picked" | "packed" | "shipped";
+            /**
+             * Order Basis
+             * @enum {string}
+             */
+            order_basis: "original_order" | "approved_current_order";
+        };
         /** GuideDetail */
         GuideDetail: {
             /**
@@ -1072,6 +1207,40 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** MeasurementCheck */
+        MeasurementCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "package_measurement_limit";
+            parameters: components["schemas"]["MeasurementParameters"];
+        };
+        /** MeasurementParameters */
+        MeasurementParameters: {
+            /**
+             * Measurement
+             * @enum {string}
+             */
+            measurement: "weight" | "height" | "width" | "length";
+            /**
+             * Comparison
+             * @enum {string}
+             */
+            comparison: "lte" | "gte";
+            /** Threshold */
+            threshold: number;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "oz" | "lb" | "g" | "kg" | "in" | "cm" | "mm";
+        };
         /** PageCoverage */
         PageCoverage: {
             /** Page */
@@ -1083,6 +1252,25 @@ export interface components {
             outcome: "rules_found" | "no_rules" | "needs_review";
             /** Note */
             note: string;
+        };
+        /** PlacementCheck */
+        PlacementCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "label_placement";
+            parameters: components["schemas"]["PlacementParameters"];
+        };
+        /** PlacementParameters */
+        PlacementParameters: {
+            /** Required Checks */
+            required_checks: ("correct_face" | "clearance" | "no_seam_overlap" | "barcode_readable" | "no_obstruction")[];
         };
         /** ProviderStatus */
         ProviderStatus: {
@@ -1169,6 +1357,7 @@ export interface components {
             review: {
                 [key: string]: unknown;
             };
+            readonly check_status: components["schemas"]["CheckStatus"];
         };
         /** ReleaseView */
         ReleaseView: {
@@ -1250,7 +1439,7 @@ export interface components {
              * @default 1.1
              * @enum {string}
              */
-            schema_version: "1.0" | "1.1";
+            schema_version: "1.0" | "1.1" | "1.2";
             /**
              * Operational Category
              * @description Primary operational activity; independent of purpose and verification.
@@ -1296,6 +1485,11 @@ export interface components {
             exceptions?: components["schemas"]["ExceptionRule-Input"][];
             /** @description True means compliance, even for prohibited obligations */
             assertion?: components["schemas"]["Expression-Input"] | null;
+            /**
+             * Standard Check
+             * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
+             */
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
@@ -1308,7 +1502,7 @@ export interface components {
              * @default 1.1
              * @enum {string}
              */
-            schema_version: "1.0" | "1.1";
+            schema_version: "1.0" | "1.1" | "1.2";
             /**
              * Operational Category
              * @description Primary operational activity; independent of purpose and verification.
@@ -1354,6 +1548,11 @@ export interface components {
             exceptions?: components["schemas"]["ExceptionRule-Output"][];
             /** @description True means compliance, even for prohibited obligations */
             assertion?: components["schemas"]["Expression-Output"] | null;
+            /**
+             * Standard Check
+             * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
+             */
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
@@ -1464,6 +1663,25 @@ export interface components {
             retailer_id: string;
             /** Order Id */
             order_id: string;
+        };
+        /** SkuCheck */
+        SkuCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "carton_sku_limit";
+            parameters: components["schemas"]["SkuParameters"];
+        };
+        /** SkuParameters */
+        SkuParameters: {
+            /** Maximum Unique Skus */
+            maximum_unique_skus: number;
         };
         /** StartAnalysis */
         StartAnalysis: {
@@ -1815,6 +2033,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verification_catalog_api_check_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckDefinition"][];
                 };
             };
         };

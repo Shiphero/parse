@@ -65,7 +65,10 @@ async def run_classification(run_id, job_id):
                         spec['operational_category'] = classified.operational_category
                     if not spec.get('consumption_points'):
                         spec['consumption_points'] = classified.consumption_points
-                    spec['schema_version'] = '1.1'
+                    if spec.get('schema_version') != '1.2':
+                        spec['schema_version'] = '1.1'
+                    elif spec['purpose'] == 'shipment_validation' and not spec.get('standard_check'):
+                        spec.update(verification='unresolved', assertion=None)
                     rule['spec'] = RuleSpec.model_validate(spec).model_dump(mode='json')
                     rule.update(revision=rule['revision']+1, review=None, carried_from_release_id=None, carried_from_rule_id=None,
                                 classification={'method': 'ai', 'reason': classified.reason, 'provider': settings['provider'],
