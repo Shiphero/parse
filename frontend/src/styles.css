@@ -626,3 +626,43 @@ input[type=checkbox] { accent-color: var(--accent); }
 .delivery-preview article { padding:12px 0; border-top:1px solid var(--border,#e2e8f0); }
 .delivery-preview pre { max-height:400px; overflow:auto; }
 @media(max-width:700px) { .placement-table { display:block; overflow-x:auto; } }
+
+/* Compact authoring: show the instruction, disclose the configuration. */
+.compact-rule-editor { grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr); gap:24px; }
+.compact-rule-editor .editor-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 14px; }
+.compact-rule-editor .editor-heading h3 { margin:0; font-size:15px; }
+.compact-rule-editor .editor-heading span { font-size:11px; }
+.compact-rule-editor .rule-form>label { margin-bottom:12px; }
+.workflow .editor-section { margin:0; border-bottom:1px solid var(--border); color:var(--text); }
+.workflow .editor-section>summary { display:grid; grid-template-columns:12px minmax(140px,.7fr) minmax(0,1fr); align-items:center; gap:8px; padding:12px 2px; line-height:1.4; list-style:none; }
+.editor-section>summary::-webkit-details-marker { display:none; }
+.editor-section>summary:before { content:'›'; color:var(--text-muted); font-size:18px; line-height:1; }
+.editor-section[open]>summary:before { transform:rotate(90deg); }
+.editor-section>summary>span { font-size:13px; font-weight:600; }
+.editor-section>summary>small { color:var(--text-muted); font-size:12px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.editor-section-body { padding:6px 0 16px 22px; }
+.workflow .editor-section-body label { font-size:12px; margin:0 0 10px; }
+.editor-section-body .field-hint { color:var(--text-muted); font-size:12px; line-height:1.5; margin:4px 0 12px; }
+.editor-section-body>.condition-builder { margin:8px 0; }
+.workflow .editor-help { margin:8px 0; font-size:12px; }
+.editor-help p { margin:6px 0; }
+.workflow-selection { margin:12px 0; }
+.field-label { display:block; font-size:12px; font-weight:500; margin-bottom:6px; }
+.workflow-chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; font-size:12px; }
+.workflow-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 7px; border:1px solid var(--border); border-radius:5px; background:var(--surface); color:var(--text-secondary); }
+.workflow-chip button { background:none; color:var(--text-muted); padding:2px 4px; font-size:16px; line-height:1; }
+.workflow-chip button:hover { color:var(--danger); }
+.editor-save-bar { position:sticky; bottom:0; background:var(--surface); border-top:1px solid var(--border); padding:12px; margin-top:12px; border-radius:6px; z-index:2; }
+.workflow .editor-save-bar label { margin:0 0 10px; font-size:12px; }
+.editor-save-actions { display:flex; gap:8px; align-items:center; }
+.editor-save-actions small { flex:1; font-size:11px; }
+.compact-rule-editor .rule-evidence { padding:14px; }
+.compact-rule-editor .source-page-preview { margin-bottom:0; }
+@media(max-width:1000px) { .compact-rule-editor { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) {
+  .workflow .editor-section>summary { grid-template-columns:12px minmax(0,1fr); gap:3px 8px; }
+  .editor-section>summary>small { grid-column:2; }
+  .editor-section-body { padding-left:0; }
+  .editor-save-actions { flex-wrap:wrap; }
+  .editor-save-actions small { flex-basis:100%; }
+}
