@@ -30,6 +30,10 @@ class SkuParameters(Parameters):
     maximum_unique_skus: int = Field(ge=1, strict=True)
 
 
+class PoParameters(Parameters):
+    maximum_unique_pos: int = Field(ge=1, strict=True)
+
+
 class PlacementParameters(Parameters):
     required_checks: list[Literal['correct_face', 'clearance', 'no_seam_overlap', 'barcode_readable', 'no_obstruction']] = Field(min_length=1)
 
@@ -76,6 +80,11 @@ class SkuCheck(CheckBinding):
     parameters: SkuParameters
 
 
+class PoCheck(CheckBinding):
+    check_id: Literal['carton_po_limit']
+    parameters: PoParameters
+
+
 class PlacementCheck(CheckBinding):
     check_id: Literal['label_placement']
     parameters: PlacementParameters
@@ -91,7 +100,7 @@ class DocumentCheck(CheckBinding):
     parameters: DocumentParameters
 
 
-StandardCheck = Annotated[Union[MeasurementCheck, FulfillmentCheck, SkuCheck, PlacementCheck, AsnCheck, DocumentCheck], Field(discriminator='check_id')]
+StandardCheck = Annotated[Union[MeasurementCheck, FulfillmentCheck, SkuCheck, PoCheck, PlacementCheck, AsnCheck, DocumentCheck], Field(discriminator='check_id')]
 
 
 class CheckDefinition(BaseModel):
@@ -108,6 +117,12 @@ class CheckDefinition(BaseModel):
 
 # Version 1 semantics are immutable. A changed meaning requires a new version.
 CATALOG = {
+    'carton_po_limit': CheckDefinition(
+        id='carton_po_limit', version=1, label='Carton PO limit',
+        verification='data', availability='not_implemented', subjects=['carton'],
+        description='Count distinct canonical PO identities in each complete carton and compare with the maximum. Never infer carton PO membership from the shipment or order header.',
+        required_data=['Complete carton contents with authoritative PO identities on every allocation.'],
+        parameters_schema=PoParameters.model_json_schema()),
     'package_measurement_limit': CheckDefinition(
         id='package_measurement_limit', version=1, label='Package measurement limit',
         verification='data', availability='implemented', subjects=['carton', 'pallet'],
@@ -157,7 +172,8 @@ def check_definition(binding):
 
 
 def needs_check_mapping(spec):
-    return spec.schema_version == '1.2' and spec.purpose == 'shipment_validation' and spec.standard_check is None
+    from routing_guides.rule_catalog import instruction_only_check
+    return not instruction_only_check(spec) and spec.schema_version == '1.2' and spec.purpose == 'shipment_validation' and spec.standard_check is None
 
 
 def check_summary(spec):
@@ -166,6 +182,9 @@ def check_summary(spec):
     if spec.standard_check:
         check = check_definition(spec.standard_check)
         return f'{check.label} v{check.version} · {check.availability.replace("_", " ")}'
+    from routing_guides.rule_catalog import instruction_only_check
+    if instruction_only_check(spec):
+        return 'Standard instruction · ' + spec.verification.replace('_', ' ')
     return 'Needs mapping' if needs_check_mapping(spec) else 'Legacy verification · not mapped to catalog'
 
 
@@ -180,6 +199,9 @@ def check_status(spec) -> CheckStatus:
     if spec.standard_check:
         definition = check_definition(spec.standard_check)
         return CheckStatus(label=f'{definition.label} v{definition.version}', availability=definition.availability)
+    from routing_guides.rule_catalog import instruction_only_check
+    if instruction_only_check(spec):
+        return CheckStatus(label='Standard instruction · manual verification', availability='manual' if spec.verification == 'human' else 'external')
     if needs_check_mapping(spec):
         return CheckStatus(label='Needs mapping to the shared catalog', availability='needs_mapping')
     return CheckStatus(label='Existing verification — not mapped to catalog', availability='legacy')

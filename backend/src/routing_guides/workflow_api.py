@@ -6,7 +6,7 @@ import json
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, computed_field, field_validator, model_validator, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, computed_field, field_validator, model_validator, PrivateAttr
 import psycopg
 from sqlalchemy import select
 from routing_guides.analysis_jobs import validate_evidence
@@ -22,6 +22,8 @@ from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
 from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification, canonical_consumption_points
 from routing_guides.classification_provider import PROMPT_VERSION as CLASSIFICATION_PROMPT_VERSION
+from routing_guides.rule_catalog import RULE_TYPES, RuleTypeDefinition, Placement, delivery_label
+from routing_guides.delivery import DeliveryRequest, DeliveredSubject, subjects_for, selected_placements, validate_selection
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
@@ -30,6 +32,11 @@ router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
 @router.get('/check-catalog', response_model=list[CheckDefinition])
 async def verification_catalog():
     return sorted(CATALOG.values(), key=lambda entry: entry.label)
+
+
+@router.get('/rule-types', response_model=list[RuleTypeDefinition])
+async def rule_type_catalog():
+    return sorted(RULE_TYPES.values(), key=lambda entry: entry.label)
 
 
 class Candidate(BaseModel):
@@ -128,6 +135,27 @@ class ConsumerRulesView(BaseModel):
     consumption_point: ConsumptionPoint
     rules: list[ReleaseRule]
     unclassified_rule_count: int
+    routing_complete: bool
+
+
+class DeliveredRule(BaseModel):
+    rule: ReleaseRule
+    type_label: str
+    placement: Placement
+    subjects: list[DeliveredSubject]
+
+
+class DeliveryView(BaseModel):
+    contract_version: Literal['1.0'] = '1.0'
+    release_id: UUID
+    retailer_id: str
+    effective_date: date
+    scope: str
+    workflow: ConsumptionPoint
+    area: str | None
+    rules: list[DeliveredRule]
+    unmapped_rule_ids: list[str]
+    disabled_placement_count: int
     routing_complete: bool
 
 
@@ -510,9 +538,12 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
             rule['spec'].update(updates)
             if body.operational_category is not None and rule['spec'].get('schema_version') != '1.2':
                 rule['spec']['schema_version'] = '1.1'
-            if rule['spec'].get('schema_version') == '1.2' and body.purpose == 'shipment_validation' and not rule['spec'].get('standard_check'):
+            if rule['spec'].get('schema_version') == '1.2' and body.purpose == 'shipment_validation' and not rule['spec'].get('standard_check') and not rule['spec'].get('rule_type'):
                 rule['spec'].update(verification='unresolved', assertion=None)
-            rule['spec'] = RuleSpec.model_validate(rule['spec']).model_dump(mode='json')
+            try:
+                rule['spec'] = RuleSpec.model_validate(rule['spec']).model_dump(mode='json')
+            except ValidationError:
+                raise HTTPException(422, 'This change conflicts with the standard rule type or placement behavior. Use Edit rule to update them together.') from None
             rule.update(revision=rule['revision'] + 1, review=None, classification={'method': 'manual', 'reason': body.note or ('Category, workflows and rule use selected by reviewer.' if body.operational_category else 'Rule use selected by reviewer.'), 'actor': body.actor},
                         carried_from_release_id=None, carried_from_rule_id=None)
             audit(session, run.id, body.actor, 'rule_classified',
@@ -746,6 +777,32 @@ async def consumer_rules(release_id: UUID, consumption_point: ConsumptionPoint, 
                              rules=rules, unclassified_rule_count=missing, routing_complete=missing == 0)
 
 
+@router.post('/releases/{release_id}/delivery', response_model=DeliveryView)
+async def deliver_rules(release_id: UUID, body: DeliveryRequest):
+    """Read-only resolution for this local single-user app. Never selects a release by date."""
+    try:
+        validate_selection(body)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    async with sessions() as session:
+        value = ReleaseView.model_validate(await required(session, RuleRelease, release_id))
+    unmapped = [r.stable_id for r in value.payload.rules
+                if r.spec.rule_type is None or needs_classification(r.spec.model_dump())]
+    delivered = []
+    disabled = 0
+    for rule in value.payload.rules:
+        for placement in selected_placements(rule.spec, body):
+            if not placement.enabled:
+                disabled += 1
+                continue
+            delivered.append(DeliveredRule(rule=rule, type_label=delivery_label(rule.spec), placement=placement,
+                                           subjects=subjects_for(rule.spec, placement, body.snapshot)))
+    delivered.sort(key=lambda item: (item.placement.area, item.rule.spec.rule_type.id, item.rule.stable_id))
+    return DeliveryView(release_id=value.id, retailer_id=value.retailer_id, effective_date=value.effective_date,
+                        scope=value.payload.scope, workflow=body.workflow, area=body.area, rules=delivered,
+                        unmapped_rule_ids=unmapped, disabled_placement_count=disabled, routing_complete=not unmapped)
+
+
 @router.get('/releases/{release_id}/export')
 async def export_release(release_id: UUID, format: Literal['json','markdown'] = 'json'):
     async with sessions() as session:
@@ -756,7 +813,8 @@ async def export_release(release_id: UUID, format: Literal['json','markdown'] = 
     lines = [f'# {value.name}', f'Effective: {value.effective_date}', f'Scope: {value.payload.scope}', '']
     for r in value.payload.rules:
         lines += [f'## {r.spec.title}', r.spec.instruction, f'Use: {r.spec.purpose}; obligation: {r.spec.obligation}; verification: {r.spec.verification}', f'Operational category: {r.spec.operational_category}', f'Consumption points: {", ".join(r.spec.consumption_points)}', f'Applies: {r.spec.applicability_text}']
-        lines += [f'Standard check: {check_summary(r.spec)}']
+        lines += [f'Standard check: {check_summary(r.spec)}', f'Rule type: {delivery_label(r.spec)}']
+        lines += [f'Placement: {p.workflow} / {p.area}; {p.behavior}; enabled={p.enabled}' for p in r.spec.placements]
         if r.spec.standard_check:
             lines += [f'Check parameters: {r.spec.standard_check.parameters.model_dump_json()}']
         lines += [f'Exception: {e.description}' for e in r.spec.exceptions]

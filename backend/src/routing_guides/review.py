@@ -20,6 +20,10 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
         reasons.append('Map this requirement to a standard verification check before approval.')
     if spec.standard_check and check_definition(spec.standard_check).availability == 'not_implemented':
         reasons.append('Automatic check is not implemented; approval records the requirement, not execution readiness.')
+    if any(not p.enabled for p in spec.placements):
+        reasons.append('A workflow placement is disabled; confirm the omission before approving.')
+    if any(p.behavior == 'block' for p in spec.placements):
+        reasons.append('This rule can block completion in a consumer; review its conditions and check.')
     if spec.exceptions:
         reasons.append('Review the exceptions individually.')
     if any(e.kind == 'visual' or e.region is not None for e in spec.evidence):

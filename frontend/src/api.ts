@@ -72,3 +72,6 @@ export type Comparison = components['schemas']['ComparisonView'];
 
 export type CheckDefinition = components['schemas']['CheckDefinition'];
 export type CheckStatus = components['schemas']['CheckStatus'];
+
+export type RuleTypeDefinition = components['schemas']['RuleTypeDefinition'];
+export type DeliveryView = components['schemas']['DeliveryView'];

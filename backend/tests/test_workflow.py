@@ -1,6 +1,7 @@
 """Integration checks use a rollback-only transaction, never the user's guide records."""
 import unittest
 from copy import deepcopy
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -49,6 +50,56 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         response=await self.client.request(method,path,json=body)
         self.assertEqual(response.status_code,status,response.text)
         return response.json()
+
+    async def test_typed_delivery_publication_export_and_revision(self):
+        from test_delivery import mapped
+        response=await self.client.get('/api/rule-types')
+        self.assertEqual(response.status_code,200)
+        self.assertIn('carton.po_mixing',[entry['id'] for entry in response.json()])
+        spec=mapped().model_dump(mode='json')
+        run=await self.send('POST',f'/api/analysis/{self.rid}/rules',{'version':1,'actor':'Reviewer','spec':spec})
+        candidate=run['payload']['rules'][0]
+        await self.send('POST',f'/api/analysis/{self.rid}/classify',{
+            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:1},
+            'purpose':'shipment_validation','operational_category':'electronic_documents_edi',
+            'consumption_points':['asn_generation']},422)
+        run=await self.send('PUT',f'/api/analysis/{self.rid}/rules/{candidate["id"]}',{
+            'version':run['version'],'actor':'Reviewer','action':'approve'})
+        release=await self.send('POST',f'/api/analysis/{self.rid}/publish',{
+            'version':run['version'],'actor':'Reviewer','note':'Synthetic coverage',
+            'name':'Delivery fixture','effective_date':'2026-01-01','scope':'Synthetic cartons only',
+            'coverage_confirmed':True,'impact_confirmed':True,'decisions':{},'base_release_id':None})
+        url=f'/api/releases/{release["id"]}/delivery'
+        result=await self.send('POST',url,{'workflow':'mobile_packing','area':'carton_selection',
+            'snapshot':{'cartons':[{'id':'c1','weight':{'value':51,'unit':'lb'}},{}]}})
+        self.assertTrue(result['routing_complete'])
+        self.assertEqual(result['scope'],'Synthetic cartons only')
+        self.assertEqual(result['rules'][0]['rule']['spec']['rule_type'],spec['rule_type'])
+        self.assertEqual([s['action'] for s in result['rules'][0]['subjects']],['block','needs_information'])
+        await self.send('POST',url,{'workflow':'mobile_packing','area':'made_up'},422)
+        await self.send('POST',f'/api/releases/{uuid4()}/delivery',{'workflow':'mobile_packing'},404)
+        exported=(await self.client.get(f'/api/releases/{release["id"]}/export')).json()
+        self.assertEqual(exported['payload']['rules'][0]['spec']['placements'],spec['placements'])
+        markdown=await self.client.get(f'/api/releases/{release["id"]}/export?format=markdown')
+        self.assertIn('carton_selection; block; enabled=True',markdown.text)
+
+    async def test_delivery_reports_legacy_gaps_and_disabled_placements(self):
+        from test_delivery import mapped
+        release_id=uuid4()
+        def released(identifier,spec):
+            return dict(stable_id=identifier,spec=spec.model_dump(mode='json'),source_guide_id=str(self.gid),draft_id=identifier,review={'actor':'Fixture'})
+        disabled=mapped(placements=[{'workflow':'mobile_packing','area':'carton_selection','enabled':False,'behavior':'block'}])
+        async with self.sessions.begin() as session:
+            session.add(RuleRelease(id=release_id,retailer_id=self.retailer,run_id=self.rid,name='Synthetic legacy mix',effective_date=date(2026,1,1),
+                payload=dict(rules=[released('legacy',rule()),released('disabled',disabled)],base_release_id=None,decisions={},scope='Synthetic',coverage_note='Fixture',actor='Fixture',run_version=1)))
+        result=await self.send('POST',f'/api/releases/{release_id}/delivery',{'workflow':'mobile_packing'})
+        self.assertEqual(result['rules'],[])
+        self.assertEqual(result['unmapped_rule_ids'],['legacy'])
+        self.assertFalse(result['routing_complete'])
+        self.assertEqual(result['disabled_placement_count'],1)
+        response=await self.client.get(f'/api/releases/{release_id}/rules?consumption_point=mobile_packing')
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(len(response.json()['rules']),2)
 
     async def test_catalog_binding_survives_review_classification_release_and_export(self):
         from test_check_catalog import fulfillment

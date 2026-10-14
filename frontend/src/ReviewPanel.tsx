@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
-import type { Candidate, Comparison, RuleSpec, Run } from './api';
+import type { Candidate, Comparison, RuleSpec, Run, RuleTypeDefinition } from './api';
+import { behaviorLabels } from './RuleDeliveryEditor';
 import { availabilityLabels } from './StandardCheckEditor';
 import { describeCondition } from './ConditionBuilder';
 import RuleEditor, { Evidence } from './RuleEditor';
@@ -19,6 +20,7 @@ const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
 export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   run: Run; actor: string; onActorChange: (value: string) => void; reload: () => void;
 }) {
+  const typeCatalog = useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const comparison = useRemote<Comparison>(`/api/analysis/${run.id}/comparison`, 0, run.version);
   const [checked, setChecked] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState('');
@@ -26,6 +28,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [operationalCategory, setOperationalCategory] = useState('all');
   const [consumptionPoint, setConsumptionPoint] = useState('all');
   const [purpose, setPurpose] = useState('all');
+  const [standardType,setStandardType]=useState('all');
   const [checkMode, setCheckMode] = useState('all');
   const [type, setType] = useState<RuleSpec['subject'] | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -73,10 +76,11 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const resetView = () => { setPage(0); setSelected(''); setNote(''); setChecked({}); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
-    setFilter('pending'); setType('all'); setPurpose('all'); setCheckMode('all');
+    setFilter('pending'); setType('all'); setPurpose('all'); setCheckMode('all'); setStandardType('all');
   };
   const query = search.trim().toLowerCase();
   const filtered = run.payload.rules.filter(r =>
+    (standardType==='all'||(standardType==='unmapped'?!r.spec.rule_type:r.spec.rule_type?.id===standardType)) &&
     (operationalCategory === 'all' || (operationalCategory === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === operationalCategory)) &&
     (consumptionPoint === 'all' || r.spec.consumption_points?.some(p => p === consumptionPoint)) &&
     (filter === 'all' || (filter === 'individual' ? r.status === 'pending' && !!r.individual_review_reasons.length : r.status === filter)) &&
@@ -101,7 +105,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const selectedRules = run.payload.rules.filter(r => checked[r.id] === r.revision && r.status === 'pending');
   const selectedCount = selectedRules.length;
   const selectedFlagged = selectedRules.filter(r => r.individual_review_reasons.length || needsClassification(r.spec) || r.evidence_issues?.length).length;
-  const extraFilterCount = [type, purpose, checkMode].filter(v => v !== 'all').length;
+  const extraFilterCount = [type, purpose, checkMode, standardType].filter(v => v !== 'all').length;
   const selectRules = (rules: Candidate[]) => setChecked(Object.fromEntries(rules.map(r => [r.id, r.revision])));
   const openRule = (id: string, focus = false) => {
     focusAfterNavigation.current = focus;
@@ -176,7 +180,8 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         </div>
         {moreFilters && <div className="review-extra-filters" id="review-extra-filters">
           <label>Subject<select value={type} onChange={e => { resetView(); setType(e.target.value as typeof type); }}><option value="all">All subjects</option>{ruleTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
-          <label>Rule use<select value={purpose} onChange={e => { resetView(); setPurpose(e.target.value); setCheckMode('all'); }}><option value="all">All uses</option>{Object.entries(rulePurposeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Rule use<select value={purpose} onChange={e => { resetView(); setPurpose(e.target.value); setCheckMode('all'); setStandardType('all'); }}><option value="all">All uses</option>{Object.entries(rulePurposeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Standard rule type<select value={standardType} onChange={e=>{resetView();setStandardType(e.target.value);}}><option value="all">All standard types</option><option value="unmapped">Needs rule type mapping</option>{typeCatalog.data?.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select></label>
           <label>Shipment check method<select value={checkMode} onChange={e => { resetView(); setCheckMode(e.target.value); if (e.target.value !== 'all') setPurpose('shipment_validation'); }}><option value="all">All methods</option><option value="automatic">Automatic checks</option><option value="manual">Inspection / evidence</option></select></label>
           <button className="text-button" onClick={resetFilters}>Reset filters</button>
         </div>}
@@ -219,6 +224,8 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                   {(r.spec.unresolved_questions || []).map((q, i) => <p className="error" key={i}>{q}</p>)}
                   {r.individual_review_reasons.length > 0 && <div className="review-card-flags"><strong>Check before approving</strong><ul>{r.individual_review_reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>}
                   {!!r.evidence_issues?.length && <div className="evidence-warning"><strong>Source evidence needs correction</strong><ul>{r.evidence_issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul></div>}
+                  <p><strong>Standard rule type:</strong> {typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id)?.label||r.spec.rule_type?.id||'Needs rule type mapping'}</p>
+                  {!!r.spec.placements?.length&&<ul>{r.spec.placements.map(p=><li key={`${p.workflow}:${p.area}`}>{consumptionPointLabels[p.workflow]} → {typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id)?.allowed_placements.find(a=>a.workflow===p.workflow&&a.area===p.area)?.label||p.area}: {behaviorLabels[p.behavior||'display']}{p.enabled===false?' · Disabled':''}</li>)}</ul>}
                   {r.check_status&&<p><strong>Standard check:</strong> {r.check_status.label} · {availabilityLabels[r.check_status.availability]}</p>}
                   {r.spec.standard_check&&<details><summary>Check parameters</summary><pre>{JSON.stringify(r.spec.standard_check.parameters,null,2)}</pre></details>}
                   {r.spec.assertion && <details><summary>Automatic check</summary><pre>{JSON.stringify(r.spec.assertion, null, 2)}</pre></details>}

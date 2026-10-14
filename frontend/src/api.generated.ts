@@ -124,6 +124,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rule-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rule Type Catalog */
+        get: operations["rule_type_catalog_api_rule_types_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/connections": {
         parameters: {
             query?: never;
@@ -444,6 +461,26 @@ export interface paths {
         get: operations["consumer_rules_api_releases__release_id__rules_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/releases/{release_id}/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deliver Rules
+         * @description Read-only resolution for this local single-user app. Never selects a release by date.
+         */
+        post: operations["deliver_rules_api_releases__release_id__delivery_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -900,6 +937,88 @@ export interface components {
              */
             outcome: "rules_found" | "no_rules";
         };
+        /** DeliveredRule */
+        DeliveredRule: {
+            rule: components["schemas"]["ReleaseRule"];
+            /** Type Label */
+            type_label: string;
+            placement: components["schemas"]["Placement"];
+            /** Subjects */
+            subjects: components["schemas"]["DeliveredSubject"][];
+        };
+        /** DeliveredSubject */
+        DeliveredSubject: {
+            /** Subject Id */
+            subject_id: string;
+            /**
+             * Applicability
+             * @enum {string}
+             */
+            applicability: "applicable" | "not_applicable" | "unknown";
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "display" | "confirm" | "warn" | "block" | "none" | "needs_information";
+            /** Check Outcome */
+            check_outcome?: ("pass" | "fail" | "cannot_determine" | "not_applicable") | null;
+            /** Reason */
+            reason: string;
+        };
+        /** DeliveryRequest */
+        DeliveryRequest: {
+            /**
+             * Workflow
+             * @enum {string}
+             */
+            workflow: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+            /** Area */
+            area?: string | null;
+            /** Rule Type */
+            rule_type?: string | null;
+            /** Snapshot */
+            snapshot?: {
+                [key: string]: unknown;
+            };
+        };
+        /** DeliveryView */
+        DeliveryView: {
+            /**
+             * Contract Version
+             * @default 1.0
+             * @constant
+             */
+            contract_version: "1.0";
+            /**
+             * Release Id
+             * Format: uuid
+             */
+            release_id: string;
+            /** Retailer Id */
+            retailer_id: string;
+            /**
+             * Effective Date
+             * Format: date
+             */
+            effective_date: string;
+            /** Scope */
+            scope: string;
+            /**
+             * Workflow
+             * @enum {string}
+             */
+            workflow: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+            /** Area */
+            area: string | null;
+            /** Rules */
+            rules: components["schemas"]["DeliveredRule"][];
+            /** Unmapped Rule Ids */
+            unmapped_rule_ids: string[];
+            /** Disabled Placement Count */
+            disabled_placement_count: number;
+            /** Routing Complete */
+            routing_complete: boolean;
+        };
         /** DocumentCheck */
         DocumentCheck: {
             /**
@@ -1253,6 +1372,27 @@ export interface components {
             /** Note */
             note: string;
         };
+        /** Placement */
+        Placement: {
+            /**
+             * Workflow
+             * @enum {string}
+             */
+            workflow: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+            /** Area */
+            area: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Behavior
+             * @default display
+             * @enum {string}
+             */
+            behavior: "display" | "confirm" | "warn" | "block";
+        };
         /** PlacementCheck */
         PlacementCheck: {
             /**
@@ -1271,6 +1411,25 @@ export interface components {
         PlacementParameters: {
             /** Required Checks */
             required_checks: ("correct_face" | "clearance" | "no_seam_overlap" | "barcode_readable" | "no_obstruction")[];
+        };
+        /** PoCheck */
+        PoCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "carton_po_limit";
+            parameters: components["schemas"]["PoParameters"];
+        };
+        /** PoParameters */
+        PoParameters: {
+            /** Maximum Unique Pos */
+            maximum_unique_pos: number;
         };
         /** ProviderStatus */
         ProviderStatus: {
@@ -1459,6 +1618,12 @@ export interface components {
              * @enum {string}
              */
             purpose: "general_guidance" | "shipment_validation" | "unclassified";
+            rule_type?: components["schemas"]["RuleTypeBinding"] | null;
+            /**
+             * Placements
+             * @description Versioned consumer configuration; disabling a placement does not remove the retailer requirement.
+             */
+            placements?: components["schemas"]["Placement"][];
             /** Title */
             title: string;
             /** Instruction */
@@ -1489,7 +1654,7 @@ export interface components {
              * Standard Check
              * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
              */
-            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
@@ -1522,6 +1687,12 @@ export interface components {
              * @enum {string}
              */
             purpose: "general_guidance" | "shipment_validation" | "unclassified";
+            rule_type?: components["schemas"]["RuleTypeBinding"] | null;
+            /**
+             * Placements
+             * @description Versioned consumer configuration; disabling a placement does not remove the retailer requirement.
+             */
+            placements?: components["schemas"]["Placement"][];
             /** Title */
             title: string;
             /** Instruction */
@@ -1552,11 +1723,48 @@ export interface components {
              * Standard Check
              * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
              */
-            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
             unresolved_questions?: string[];
+        };
+        /** RuleTypeBinding */
+        RuleTypeBinding: {
+            /** Id */
+            id: string;
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+        };
+        /** RuleTypeDefinition */
+        RuleTypeDefinition: {
+            /** Id */
+            id: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified";
+            /** Subjects */
+            subjects: string[];
+            /** Check Ids */
+            check_ids: string[];
+            /** Allowed Placements */
+            allowed_placements: components["schemas"]["WorkflowArea"][];
+            /** Default Placements */
+            default_placements: components["schemas"]["Placement"][];
         };
         /** RunPayload */
         RunPayload: {
@@ -1763,6 +1971,18 @@ export interface components {
              * @default
              */
             note: string;
+        };
+        /** WorkflowArea */
+        WorkflowArea: {
+            /**
+             * Workflow
+             * @enum {string}
+             */
+            workflow: "mobile_picking" | "mobile_packing" | "label_generation" | "label_application" | "pallet_building" | "warehouse_loading" | "transport_planning" | "pickup_scheduling" | "delivery_scheduling" | "document_generation" | "document_transmission" | "asn_generation" | "edi_transmission" | "supplier_onboarding" | "supplier_management" | "product_setup" | "order_management" | "billing" | "compliance_disputes";
+            /** Area */
+            area: string;
+            /** Label */
+            label: string;
         };
         /** WorkflowView */
         WorkflowView: {
@@ -2053,6 +2273,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CheckDefinition"][];
+                };
+            };
+        };
+    };
+    rule_type_catalog_api_rule_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleTypeDefinition"][];
                 };
             };
         };
@@ -2678,6 +2918,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsumerRulesView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deliver_rules_api_releases__release_id__delivery_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                release_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryView"];
                 };
             };
             /** @description Validation Error */

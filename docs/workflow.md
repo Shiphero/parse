@@ -110,3 +110,50 @@ New shipment requirements without a matching catalog entry remain `standard_chec
 Schema 1.0/1.1 rules and published releases retain their existing behavior; no automatic semantic migration or approval changes are performed. The builder labels unmapped legacy verification explicitly and lets a reviewer map it through a normal audited edit. Existing custom expression checks stay editable until explicitly mapped. General guidance remains excluded from shipment checks. Catalog bindings may be retained when a rule is reclassified as guidance, but are not executed. Classification preserves schema 1.2 and its check binding.
 
 Extraction prompt 1.6 supplies the catalog and requests schema 1.2. Ambiguous parameters (including whether "filled" means picked, packed or shipped) remain unmapped rather than guessed. Retained older provider responses remain readable through the legacy contract. Live-provider acceptance of the expanded schema requires a separately initiated analysis; local tests use mocked providers.
+
+## Standard rule types and workflow delivery
+
+The additive `rule_type` and `placements` fields normalize requirements across retailers. They are optional on existing schema 1.0–1.2 records; no saved rule, approval or release is silently migrated. The binding has an immutable catalog ID and version (`{"id":"carton.po_mixing","version":1}`), separate from the instance's stable release ID. A changed type meaning requires a new version. The shared verification binding continues to hold typed parameters (for example `carton_po_limit` v1 with `maximum_unique_pos: 1`). That new PO-count check is a contract only; its executor is not yet implemented.
+
+`GET /api/rule-types` supplies labels, meaning, compatible subjects/checks, category, allowed workflow areas and conservative display defaults. The seed catalog covers carton contents, measurements, protection, physical labels/documents, pallet measurements/stacking/wrapping/labels, PO fulfillment, transport scheduling, ASN reconciliation/contents, EDI transmission, document confirmation and back-office requirements. Unsupported requirements remain unmapped. Catalog IDs do not depend on retailer wording. A type's allowed areas describe the workflows that actually use it, not every system providing data.
+
+In **Edit rule → Rule type & workflow placement**, selecting a type supplies its category, default area and permitted checks. An incompatible prior check/custom assertion is cleared explicitly by this action; review the new verification before saving. The compact placement table configures:
+
+- `workflow` and `area`: validated, predefined logical destinations. Multiple different areas are supported; the consuming app owns screen layout.
+- `enabled`: includes/omits this placement from the new delivery API. Disabling does not waive, reject, delete or exclude the requirement from scenario checks. Disabled placements remain in the full JSON export and require individual review.
+- `behavior`: `display`, `confirm`, `warn` or `block`. Display and confirmation do not imply compliance. Warnings/blocking require a supported automatic check; blocking additionally requires a required/prohibited obligation. Blocking configurations require individual review. Missing facts never imply success.
+
+Instruction-only types with no compatible automatic/check contract can use human inspection or external evidence without inventing a numerical assertion. Such requirements remain `cannot_determine` in automatic scenarios. Types with a check contract still require that check before shipment-rule approval. Category and consuming workflows must agree with the mapping; use the full editor to change them together. All edits use the existing revision, approval invalidation and audit controls. Optional reviewer notes for approval remain unchanged.
+
+New extraction prompt `routing-extraction-1.7` proposes rule types and **display-only** default placements using the same registry. It cannot invent catalog types or areas. The classification-only job does not backfill type mappings; existing drafts can be mapped through the editor. Live AI mapping quality has not been verified. The catalog is a seed, not a claim of complete retailer coverage.
+
+### Consumer contract
+
+`POST /api/releases/{release_id}/delivery` is a read-only resolver for an explicitly selected immutable release:
+
+```json
+{
+  "workflow": "mobile_packing",
+  "area": "carton_selection",
+  "rule_type": "carton.measurement",
+  "snapshot": {
+    "shipment": {},
+    "cartons": [{"id": "c1", "weight": {"value": 51, "unit": "lb"}}]
+  }
+}
+```
+
+Only `workflow` is required. Omit `area`/`rule_type` to include all supported mappings in the workflow. `snapshot` uses canonical scenario facts, not raw ShipHero GraphQL responses. Subject-relative fields, explicit units and `shipment.*`/`evidence.*` retain evaluator semantics. Shipment/document/label/order subjects currently use the shipment context; carton/pallet/item subjects use their corresponding arrays. Missing or malformed subject collections return `needs_information`.
+
+The result includes contract version, exact release ID, retailer, effective date, scope, full source-backed rules, type labels, placements and per-subject decisions. Each decision reports `applicability`, `action`, optional `check_outcome` and reason:
+
+- Known-false conditions or known-true exceptions: `not_applicable` / `none`.
+- Unknown conditions/exceptions or unresolved questions: `unknown` / `needs_information`.
+- Applicable display/manual-confirmation placement: `display` or `confirm`, without a fabricated check result.
+- Applicable automatic placement: failed check produces `warn` or `block`; pass produces `none`; missing/invalid evidence produces `needs_information`.
+
+Consumers must handle `needs_information` explicitly; it is not permission to proceed. Confirmation capture, acknowledgement storage and enforcement inside a warehouse application are not implemented by this resolver. There is no silent winner among overlapping applicable variants; all are returned for the consumer. Conditional image variants keep their own applicability and original page/region evidence.
+
+The response reports release-wide `unmapped_rule_ids` and `routing_complete`, as an unmapped rule's relevance cannot safely be inferred. It also counts disabled placements for the requested selection. An empty result is not evidence of no requirements if routing is incomplete. The existing `/rules?consumption_point=...` endpoint retains its prior classification-only behavior, including disabled placements; adopt `/delivery` to honor the new configuration. Full JSON/Markdown exports preserve both requirements and configuration.
+
+Use **Changes & publish → Release history → Preview delivery** to inspect these decisions with pasted canonical facts. Synthetic examples are explicitly labeled. Previewing does not edit rules, record confirmations, or save a scenario. The local app remains single-user without authentication; IDs select releases, not tenant authorization. Shared deployment still requires authenticated scope enforcement; no production WMS/ShipHero integration was added here.

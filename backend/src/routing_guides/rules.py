@@ -3,6 +3,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from routing_guides.check_catalog import StandardCheck, check_definition
+from routing_guides.rule_catalog import RuleTypeBinding, Placement, validate_delivery, instruction_only_check
 from routing_guides.taxonomy import OperationalCategory, ConsumptionPoint, canonical_consumption_points
 
 
@@ -77,6 +78,8 @@ class RuleSpec(StrictModel):
     operational_category: OperationalCategory = Field(default='unclassified', description='Primary operational activity; independent of purpose and verification.')
     consumption_points: list[ConsumptionPoint] = Field(default_factory=list, description='Workflows enforcing or presenting this obligation, not upstream data sources.')
     purpose: Literal['general_guidance', 'shipment_validation', 'unclassified'] = Field(default='unclassified', description='Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.')
+    rule_type: RuleTypeBinding | None = None
+    placements: list[Placement] = Field(default_factory=list, description="Versioned consumer configuration; disabling a placement does not remove the retailer requirement.")
     title: str = Field(min_length=1, max_length=250)
     instruction: str = Field(min_length=1)
     subject: Literal['shipment', 'order', 'pallet', 'carton', 'item', 'label', 'document']
@@ -97,6 +100,7 @@ class RuleSpec(StrictModel):
 
     @model_validator(mode='after')
     def executable(self):
+        validate_delivery(self)
         if self.standard_check is not None:
             definition = check_definition(self.standard_check)
             if self.schema_version != '1.2':
@@ -105,7 +109,7 @@ class RuleSpec(StrictModel):
                 raise ValueError('Subject and verification must match the selected catalog check.')
             if self.assertion is not None:
                 raise ValueError('Catalog checks cannot also contain a custom assertion.')
-        elif self.schema_version == '1.2' and self.purpose == 'shipment_validation':
+        elif self.schema_version == '1.2' and self.purpose == 'shipment_validation' and not instruction_only_check(self):
             if self.verification != 'unresolved' or self.assertion is not None:
                 raise ValueError('Unmapped catalog rules must use unresolved verification with no assertion.')
         if self.verification == 'data' and self.assertion is None and self.standard_check is None:

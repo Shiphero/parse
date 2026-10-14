@@ -1,10 +1,10 @@
 import { useRemote } from './api';
-import type { RuleSpec, CheckDefinition } from './api';
+import type { RuleSpec, CheckDefinition, RuleTypeDefinition } from './api';
 
 const words = (value:string) => value.replaceAll('_',' ').replace(/^./,letter=>letter.toUpperCase());
 const fieldLabels: Record<string,string> = {
   required_percent:'Required fulfillment (%)', quantity_basis:'Compare ordered quantity against',
-  order_basis:'Ordered quantity source', maximum_unique_skus:'Maximum distinct SKUs per carton',
+  order_basis:'Ordered quantity source', maximum_unique_skus:'Maximum distinct SKUs per carton', maximum_unique_pos:'Maximum distinct POs per carton',
   required_checks:'Required label inspections', reconcile_by:'Reconcile ASN by',
 };
 const optionLabels: Record<string,string> = {lte:'At most (≤)',gte:'At least (≥)',original_order:'Original PO quantities',approved_current_order:'Approved current PO revision'};
@@ -14,10 +14,13 @@ export const availabilityLabels = {implemented:'Automatic · implemented',not_im
 
 export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onChange:(spec:RuleSpec)=>void}) {
   const catalog=useRemote<CheckDefinition[]>('/api/check-catalog');
+  const types=useRemote<RuleTypeDefinition[]>('/api/rule-types');
+  const type=types.data?.find(entry=>entry.id===spec.rule_type?.id);
   const selected=catalog.data?.find(entry=>entry.id===spec.standard_check?.check_id && entry.version===spec.standard_check.version);
   const properties=(selected?.parameters_schema.properties||{}) as Record<string,Property>;
   const parameters=(spec.standard_check?.parameters||{}) as Record<string,unknown>;
   const changeParameter=(key:string,value:unknown)=>onChange({...spec,standard_check:{...spec.standard_check!,parameters:{...parameters,[key]:value}} as Binding});
+  if(type&&type.check_ids.length===0)return <fieldset className="condition-builder"><legend>Verification</legend><p className="muted">This standard type uses instructions and evidence; no automatic validator is registered.</p><label>Verification method<select value={spec.verification} onChange={e=>onChange({...spec,verification:e.target.value as RuleSpec['verification'],standard_check:null,assertion:null})}><option value="human">Human inspection</option><option value="external_evidence">External confirmation</option><option value="unresolved">Needs interpretation</option></select></label></fieldset>;
   return <fieldset className="condition-builder standard-check-editor"><legend>Standard verification check</legend>
     {catalog.error&&<p className="error" role="alert">{catalog.error} <button className="text-button" onClick={catalog.reload}>Retry catalog</button></p>}
     <label>Check type<select value={spec.standard_check?.check_id||(spec.schema_version==='1.2'?'':'__legacy')} disabled={!catalog.data} onChange={e=>{
@@ -29,7 +32,7 @@ export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onCh
     }}>
       {spec.schema_version!=='1.2'&&!spec.standard_check&&<option value="__legacy">Existing verification (not mapped)</option>}
       <option value="">Needs mapping — select a standard check</option>
-      {catalog.data?.map(check=><option key={`${check.id}:${check.version}`} value={check.id}>{check.label} · v{check.version}</option>)}
+      {catalog.data?.filter(check=>!type||type.check_ids.includes(check.id)).map(check=><option key={`${check.id}:${check.version}`} value={check.id}>{check.label} · v{check.version}</option>)}
     </select></label>
     {selected?<>
       <p><strong>{availabilityLabels[selected.availability]}</strong> · Evaluates {selected.subjects.join(' / ')}</p>

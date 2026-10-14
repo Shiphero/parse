@@ -80,3 +80,7 @@ Operational category and explicit consumption points are independent of rule pur
 ## Standard verification contracts
 
 Rule schema 1.2 adds the shared, versioned `standard_check` catalog. The builder and extraction prompt use the same API-owned definitions and typed parameters. Measurement checks execute with the existing evaluator; other initial automatic contracts are visibly unavailable until implemented. New unmatched shipment requirements need mapping before approval, and legacy rules remain readable without implicit migration. See [workflow.md](workflow.md#shared-verification-catalog-schema-12) for contracts and limitations.
+
+## Normalized consumer delivery
+
+Optional, versioned rule-type bindings and validated workflow-area placements extend existing rule records without migrating stored rules. A shared catalog supplies stable semantics across retailers and conservative display defaults. Verification parameters stay in the typed check catalog; consumer enablement and display/confirmation/warning/blocking behavior are distinct from retailer obligation and approval. Read-only delivery resolves an explicitly selected release against canonical facts, retaining unknown scope and unavailable data as needs-information outcomes. Legacy consumer reads remain compatible. The editor, review filters/details, AI extraction, exports and published-release delivery preview expose these contracts. See [workflow.md](workflow.md#standard-rule-types-and-workflow-delivery) for consumer integration semantics and limits.
