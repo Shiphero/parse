@@ -6,7 +6,7 @@ from routing_guides.rules import Expression
 from routing_guides.check_catalog import needs_check_mapping, check_status
 from routing_guides.rule_catalog import RULE_TYPES
 from routing_guides.delivery import DeliveryRequest, subjects_for, selected_placements, validate_selection
-from routing_guides.evaluator import evaluate_rule
+from routing_guides.evaluator import evaluate_rule, evaluate_release
 
 
 def mapped(**changes):
@@ -99,3 +99,20 @@ class DeliveryTests(unittest.TestCase):
                         DeliveryRequest(workflow='mobile_packing',rule_type='asn.contents')]:
             with self.assertRaises(ValueError):validate_selection(request)
         validate_selection(DeliveryRequest(workflow='mobile_packing',area='carton_selection',rule_type='carton.measurement'))
+
+    def test_general_guidance_is_reference_only(self):
+        entry = RULE_TYPES['general.guidance']
+        fields = dict(schema_version='1.2', purpose='general_guidance', subject='shipment',
+            operational_category=entry.category, consumption_points=['supplier_management'],
+            rule_type={'id':entry.id,'version':1}, placements=[p.model_dump() for p in entry.default_placements],
+            standard_check=None, assertion=None, verification='human')
+        spec = rule(**fields)
+        self.assertFalse(needs_check_mapping(spec))
+        result = evaluate_release([{'stable_id':'general','spec':spec.model_dump(mode='json')}], {})
+        self.assertEqual(result['items'], [])
+        self.assertEqual(result['guidance_count'], 1)
+        for change in [dict(purpose='shipment_validation'), dict(verification='data'),
+                       dict(assertion={'op':'exists','path':'id'}),
+                       *[dict(placements=[{'workflow':'supplier_management','area':'general_guidance','behavior':b}]) for b in ('confirm','warn','block')]]:
+            with self.subTest(change=change), self.assertRaises(ValidationError):
+                rule(**{**fields, **change})

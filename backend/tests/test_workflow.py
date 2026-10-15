@@ -670,3 +670,37 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             path=Path(self.temp.name)/'connections.json'
             self.assertEqual(path.stat().st_mode & 0o777,0o600)
             self.assertIn('synthetic-test-secret',path.read_text())
+
+    async def test_ignore_is_audited_reversible_and_excluded_from_publication(self):
+        from sqlalchemy import select
+        from routing_guides.models import AuditEvent
+        spec = rule().model_dump(mode='json')
+        run = await self.send('POST', f'/api/analysis/{self.rid}/rules', {'version':1,'actor':'Reviewer','spec':spec})
+        candidate = run['payload']['rules'][0]
+        path = f'/api/analysis/{self.rid}/rules/{candidate["id"]}'
+        ignored = await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','action':'ignore'})
+        stored = ignored['payload']['rules'][0]
+        self.assertEqual(stored['status'], 'ignored')
+        self.assertEqual(stored['revision'], candidate['revision'])
+        self.assertEqual(stored['spec'], spec)
+        self.assertEqual(ignored['payload']['coverage'], run['payload']['coverage'])
+        await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','action':'restore'},409)
+        await self.send('PUT', path, {'version':ignored['version'],'actor':'Reviewer','action':'approve'},422)
+        restored = await self.send('PUT', path, {'version':ignored['version'],'actor':'Reviewer','action':'restore'})
+        self.assertEqual(restored['payload']['rules'][0]['status'], 'pending')
+        self.assertEqual(restored['payload']['rules'][0]['spec'], spec)
+        await self.send('PUT', path, {'version':restored['version'],'actor':'Reviewer','action':'restore'},422)
+        ignored = await self.send('PUT', path, {'version':restored['version'],'actor':'Reviewer','action':'ignore'})
+        release = await self.send('POST', f'/api/analysis/{self.rid}/publish', {
+            'version':ignored['version'],'actor':'Reviewer','note':'Synthetic ignored proposal',
+            'name':'Ignore fixture','effective_date':'2026-01-01','scope':'Synthetic',
+            'coverage_confirmed':True,'impact_confirmed':True,'decisions':{},'base_release_id':None})
+        self.assertEqual(release['payload']['rules'], [])
+        # Publication freezes the draft, including its ignored decisions.
+        await self.send('PUT', path, {'version':ignored['version'],'actor':'Reviewer','action':'restore'},409)
+        async with self.sessions() as session:
+            events = (await session.scalars(select(AuditEvent).where(AuditEvent.entity_id==self.rid))).all()
+            ignored_event = next(e for e in events if e.action=='ignore')
+            self.assertEqual(ignored_event.payload['before']['status'], 'pending')
+            self.assertEqual(ignored_event.payload['after']['status'], 'ignored')
+            self.assertTrue(any(e.action=='restore' for e in events))

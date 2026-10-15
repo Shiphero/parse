@@ -739,7 +739,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "approved" | "rejected";
+            status: "pending" | "approved" | "rejected" | "ignored";
             spec: components["schemas"]["RuleSpec-Output"];
             /** Source Guide Id */
             source_guide_id: string;
@@ -1588,7 +1588,7 @@ export interface components {
              * Action
              * @enum {string}
              */
-            action: "save" | "approve" | "reject";
+            action: "save" | "approve" | "reject" | "ignore" | "restore";
             spec?: components["schemas"]["RuleSpec-Input"] | null;
         };
         /** RuleSpec */
@@ -1757,6 +1757,8 @@ export interface components {
              * @enum {string}
              */
             category: "warehouse_operations" | "transportation_scheduling" | "electronic_documents_edi" | "business_administration" | "unclassified";
+            /** Required Purpose */
+            required_purpose?: "general_guidance" | null;
             /** Subjects */
             subjects: string[];
             /** Check Ids */

@@ -25,7 +25,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
   const check=checks.data?.find(c=>c.id===spec.standard_check?.check_id);
   const workflows=consumptionPointOptions.filter(([id])=>spec.consumption_points?.includes(id as NonNullable<RuleSpec['consumption_points']>[number]));
   const classificationSummary=[ruleType?.label||(spec.rule_type?.id||'Type not mapped'),...workflows.map(([,label])=>label)].join(' · ');
-  const verificationSummary=check?`${check.label} · ${availabilityLabels[check.availability]}`:spec.verification==='data'?'Existing automatic check':spec.verification==='human'?'Manual inspection':spec.verification==='external_evidence'?'External confirmation':'Needs interpretation';
+  const verificationSummary=spec.rule_type?.id==='general.guidance'?'Reference only · no shipment check':check?`${check.label} · ${availabilityLabels[check.availability]}`:spec.verification==='data'?'Existing automatic check':spec.verification==='human'?'Manual inspection':spec.verification==='external_evidence'?'External confirmation':'Needs interpretation';
   const [advanced,setAdvanced] = useState<string|null>(null);
   const [advancedError,setAdvancedError] = useState('');
   const advancedValue = JSON.stringify({applicability:spec.applicability, exceptions:spec.exceptions, assertion:spec.assertion, unresolved_questions:spec.unresolved_questions},null,2);
@@ -81,7 +81,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
           <label>Add workflow<select value="" onChange={e=>{if(e.target.value)set('consumption_points',[...(spec.consumption_points||[]),e.target.value as NonNullable<RuleSpec['consumption_points']>[number]]);}}><option value="">Choose a workflow…</option>{consumptionPointOptions.filter(([id])=>!spec.consumption_points?.includes(id as NonNullable<RuleSpec['consumption_points']>[number])).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
         </div>
       </>}
-      <div className="form-row"><label>Rule use<select value={spec.purpose||'unclassified'} onChange={e=>setSpec(s=>({...s,purpose:e.target.value as RuleSpec['purpose'],...(s.schema_version==='1.2'&&!s.standard_check&&!s.rule_type&&e.target.value==='shipment_validation'?{verification:'unresolved',assertion:null}:{})}))}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
+      <div className="form-row"><label>Rule use<select disabled={spec.rule_type?.id==='general.guidance'} value={spec.purpose||'unclassified'} onChange={e=>setSpec(s=>({...s,purpose:e.target.value as RuleSpec['purpose'],...(s.schema_version==='1.2'&&!s.standard_check&&!s.rule_type&&e.target.value==='shipment_validation'?{verification:'unresolved',assertion:null}:{})}))}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
       <label>Obligation<select value={spec.obligation} onChange={e=>set('obligation',e.target.value as RuleSpec['obligation'])}>{['required','prohibited','recommended','informational'].map(v=><option key={v}>{v}</option>)}</select></label></div>
       <p className="field-hint">Guidance appears in instructions; shipment rules can also be checked.</p>
     </div></details>
@@ -95,8 +95,9 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
     </div></details>
 
     <details className="editor-section"><summary><span>Verification</span><small title={verificationSummary}>{verificationSummary}</small></summary><div className="editor-section-body">
+      {spec.rule_type?.id==='general.guidance'&&<p className="field-hint">Reference only. General guidance is displayed as instructions and is excluded from shipment checks.</p>}
       {spec.purpose!=='general_guidance'&&<StandardCheckEditor spec={spec} onChange={setSpec}/>}
-      {!spec.standard_check&&(spec.schema_version!=='1.2'||spec.purpose==='general_guidance')&&<label>Verification method<select value={spec.verification} onChange={e=>set('verification',e.target.value as RuleSpec['verification'])}><option value="data">Automatic data check</option><option value="human">Human inspection</option><option value="external_evidence">External evidence required</option><option value="unresolved">Unresolved interpretation</option></select></label>}
+      {spec.rule_type?.id!=='general.guidance'&&!spec.standard_check&&(spec.schema_version!=='1.2'||spec.purpose==='general_guidance')&&<label>Verification method<select value={spec.verification} onChange={e=>set('verification',e.target.value as RuleSpec['verification'])}><option value="data">Automatic data check</option><option value="human">Human inspection</option><option value="external_evidence">External evidence required</option><option value="unresolved">Unresolved interpretation</option></select></label>}
       {spec.verification==='data'&&!spec.standard_check&&spec.schema_version!=='1.2'&&<ConditionBuilder subject={spec.subject} label="Automatic check passes when" value={spec.assertion} onChange={value=>set('assertion',value)}/>}
     </div></details>
 

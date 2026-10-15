@@ -119,11 +119,11 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     catch (e) { setError((e as Error).message); return false; }
     finally { setBusy(false); }
   };
-  const decision = async (candidate: Candidate, kind: 'approve' | 'reject') => {
+  const decision = async (candidate: Candidate, kind: 'approve' | 'reject' | 'ignore' | 'restore') => {
     const index = filtered.findIndex(r => r.id === candidate.id);
     const next = [...filtered.slice(index + 1), ...filtered.slice(0, index)].find(r => r.status === 'pending');
     if (await action(`/api/analysis/${run.id}/rules/${candidate.id}`, { version: run.version, actor, note, action: kind }, 'PUT')) {
-      setMessage(`“${candidate.spec.title}” ${kind === 'approve' ? 'approved' : 'rejected'}.`);
+      setMessage(`“${candidate.spec.title}” ${{approve:'approved',reject:'rejected',ignore:'ignored. Excluded from publication; restore it using Status → Ignored',restore:'restored to review'}[kind]}.`);
       setChecked(previous => { const updated = { ...previous }; delete updated[candidate.id]; return updated; });
       openRule(next?.id || '', true);
     }
@@ -175,7 +175,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
           <label>Category<select value={operationalCategory} onChange={e => { resetView(); setOperationalCategory(e.target.value); setConsumptionPoint('all'); }}>{[['all', 'All categories'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <option key={value} value={value}>{label} ({run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length})</option>)}</select></label>
           <label>Consumed by<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All statuses</option></select></label>
+          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Ignored</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
         </div>
         {moreFilters && <div className="review-extra-filters" id="review-extra-filters">
@@ -234,11 +234,11 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                   {r.carried_from_release_id && <p className="muted">Approval carried forward from the previous release.</p>}
                 </div><Evidence guideId={r.source_guide_id} spec={r.spec} collapsibleImage/></div>
                 {editable && <div className="review-decision">
-                  <div className="review-decision-fields">{reviewerInput}<label>Decision note (optional for approval)<textarea rows={2} value={note} disabled={busy} onChange={e => setNote(e.target.value)} placeholder="Optional context; required only when rejecting"/></label></div>
-                  {blocked && <p className="muted">{blocked}</p>}
-                  <div className="review-decision-actions"><button className="secondary" disabled={busy || !note.trim() || !actor.trim()} onClick={() => decision(r, 'reject')}><X size={15}/> Reject</button>
+                  <div className="review-decision-fields">{reviewerInput}<label>Decision note (optional unless rejecting)<textarea rows={2} value={note} disabled={busy} onChange={e => setNote(e.target.value)} placeholder="Optional context; required only when rejecting"/></label></div>
+                  {r.status==='ignored'?<p className="muted">Ignored rules are excluded from publication. Restore to review before approving.</p>:blocked&&<p className="muted">{blocked}</p>}
+                  <div className="review-decision-actions">{r.status==='ignored'?<button className="secondary" disabled={busy||!actor.trim()} onClick={()=>decision(r,'restore')}>Restore to review</button>:<button className="secondary" disabled={busy||!actor.trim()} title="Exclude from publication and shipment checks. You can restore it from Status → Ignored." onClick={()=>decision(r,'ignore')}>Ignore rule</button>}<button className="secondary" disabled={busy || !note.trim() || !actor.trim()} onClick={() => decision(r, 'reject')}><X size={15}/> Reject</button>
                     {next && <button className="text-button" disabled={busy} onClick={() => openRule(next.id, true)}>Skip for now <ArrowRight size={15}/></button>}
-                    <button className="primary" disabled={busy || !!blocked} onClick={() => decision(r, 'approve')}><Check size={15}/>{busy ? 'Saving…' : pendingInView.some(candidate => candidate.id !== r.id) ? 'Approve & next' : 'Approve rule'}</button></div>
+                    <button className="primary" disabled={busy || !!blocked || r.status==='ignored'} onClick={() => decision(r, 'approve')}><Check size={15}/>{busy ? 'Saving…' : pendingInView.some(candidate => candidate.id !== r.id) ? 'Approve & next' : 'Approve rule'}</button></div>
                 </div>}
               </>}
               {error && <div className="error" role="alert">{error}</div>}

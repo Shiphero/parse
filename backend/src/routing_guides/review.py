@@ -32,7 +32,7 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
 
 
 def duplicate_titles(rules):
-    counts = Counter(r['spec']['title'].strip().casefold() for r in rules if r.get('status') != 'rejected')
+    counts = Counter(r['spec']['title'].strip().casefold() for r in rules if r.get('status') not in {'rejected', 'ignored'})
     return {title for title, count in counts.items() if count > 1}
 
 def exact_key(spec):
@@ -48,6 +48,7 @@ def exact_key(spec):
 
 
 def compare_rules(rules, previous):
+    rules = [r for r in rules if r.get('status') != 'ignored']
     duplicates = duplicate_titles(rules)
     old_keys, new_keys = defaultdict(list), defaultdict(list)
     for old in previous:

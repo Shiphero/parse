@@ -42,7 +42,7 @@ async def rule_type_catalog():
 class Candidate(BaseModel):
     id: str
     revision: int
-    status: Literal['pending', 'approved', 'rejected']
+    status: Literal['pending', 'approved', 'rejected', 'ignored']
     spec: RuleSpec
     source_guide_id: str
     review: dict[str, Any] | None = None
@@ -77,7 +77,7 @@ class RunPayload(BaseModel):
     def flag_duplicates(self):
         duplicates = duplicate_titles([{'spec': {'title': r.spec.title}, 'status': r.status} for r in self.rules])
         for rule in self.rules:
-            rule._duplicate = rule.status != 'rejected' and rule.spec.title.strip().casefold() in duplicates
+            rule._duplicate = rule.status not in {'rejected', 'ignored'} and rule.spec.title.strip().casefold() in duplicates
         return self
 
 
@@ -234,7 +234,7 @@ class ComparisonView(BaseModel):
 
 
 class ReviewAction(VersionedAction):
-    action: Literal['save', 'approve', 'reject']
+    action: Literal['save', 'approve', 'reject', 'ignore', 'restore']
     spec: RuleSpec | None = None
 
 
@@ -447,6 +447,10 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             await check_evidence(session, run, body.spec)
             rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], classification=None, carried_from_release_id=None, carried_from_rule_id=None)
         else:
+            if body.action == 'restore' and rule['status'] != 'ignored':
+                raise HTTPException(422, 'Only ignored rules can be restored to review.')
+            if body.action == 'approve' and rule['status'] == 'ignored':
+                raise HTTPException(422, 'Restore the ignored rule to review before approving.')
             if body.action == 'reject' and not body.note.strip():
                 raise HTTPException(422, 'Add a note before rejecting a rule.')
             if body.action == 'approve':
@@ -458,7 +462,7 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
                 if needs_check_mapping(spec):
                     raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
                 await check_evidence(session, run, spec)
-            rule.update(carried_from_release_id=None, carried_from_rule_id=None, status='approved' if body.action == 'approve' else 'rejected', review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
+            rule.update(carried_from_release_id=None, carried_from_rule_id=None, status={'approve': 'approved', 'reject': 'rejected', 'ignore': 'ignored', 'restore': 'pending'}[body.action], review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
         return RunView.model_validate(run)

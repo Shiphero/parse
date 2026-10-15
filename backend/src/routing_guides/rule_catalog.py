@@ -40,6 +40,7 @@ class RuleTypeDefinition(CatalogModel):
     label: str
     description: str
     category: OperationalCategory
+    required_purpose: Literal['general_guidance'] | None = None
     subjects: list[str]
     check_ids: list[str]
     allowed_placements: list[WorkflowArea]
@@ -50,9 +51,9 @@ def area(workflow, identifier, label):
     return WorkflowArea(workflow=workflow, area=identifier, label=label)
 
 
-def definition(identifier, label, description, category, subjects, checks, areas):
+def definition(identifier, label, description, category, subjects, checks, areas, required_purpose=None):
     return RuleTypeDefinition(id=identifier, label=label, description=description, category=category,
-        subjects=subjects, check_ids=checks, allowed_placements=areas,
+        subjects=subjects, check_ids=checks, allowed_placements=areas, required_purpose=required_purpose,
         # Extraction proposes display only; reviewers explicitly configure stronger behavior.
         default_placements=[Placement(workflow=areas[0].workflow, area=areas[0].area)])
 
@@ -61,6 +62,7 @@ PACK_CONTENTS = area('mobile_packing', 'carton_contents', 'Carton contents')
 PACK_SELECTION = area('mobile_packing', 'carton_selection', 'Carton selection')
 LABELS = [area('label_application', 'carton_labels', 'Carton labels'), area('mobile_packing', 'carton_labels', 'Carton labels')]
 RULE_TYPES = {entry.id: entry for entry in [
+    definition('general.guidance', 'General guidance', 'Broad expectations and reference policies, such as shipments arriving in excellent condition, on time and with proper documentation. Use specific types for measurable or actionable requirements.', 'business_administration', ['shipment', 'order', 'carton', 'pallet', 'item', 'label', 'document'], [], [area('supplier_management', 'general_guidance', 'General guidance')], required_purpose='general_guidance'),
     definition('carton.po_mixing', 'Carton PO mixing', 'Limits distinct purchase orders within each carton.', 'warehouse_operations', ['carton'], ['carton_po_limit'], [PACK_CONTENTS]),
     definition('carton.sku_mixing', 'Carton SKU mixing', 'Limits distinct products within each carton.', 'warehouse_operations', ['carton'], ['carton_sku_limit'], [PACK_CONTENTS]),
     definition('carton.measurement', 'Carton measurements', 'A weight or dimension limit for each carton.', 'warehouse_operations', ['carton'], ['package_measurement_limit'], [PACK_SELECTION]),
@@ -95,6 +97,10 @@ def validate_delivery(spec):
     entry = RULE_TYPES.get(spec.rule_type.id)
     if entry is None or entry.version != spec.rule_type.version:
         raise ValueError('Unknown rule type or version. Choose an entry from the catalog.')
+    if entry.required_purpose and spec.purpose != entry.required_purpose:
+        raise ValueError('General guidance is for reference, not shipment validation.')
+    if entry.required_purpose == 'general_guidance' and (spec.assertion is not None or spec.verification == 'data' or any(p.behavior != 'display' for p in spec.placements)):
+        raise ValueError('General guidance is display only and cannot contain an automatic check.')
     if spec.subject not in entry.subjects:
         raise ValueError(f'{entry.label} requires subject: {", ".join(entry.subjects)}.')
     if spec.standard_check and spec.standard_check.check_id not in entry.check_ids:

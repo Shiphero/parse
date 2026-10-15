@@ -1,5 +1,5 @@
 import unittest
-from routing_guides.review import compare_rules, individual_review_reasons
+from routing_guides.review import compare_rules, individual_review_reasons, duplicate_titles
 from test_rules import rule
 
 
@@ -35,3 +35,14 @@ class ExactComparisonTests(unittest.TestCase):
                 serialized = spec.model_dump(mode='json')
                 self.assertEqual(compare_rules([{'id': 'new', 'spec': serialized}],
                     [{'stable_id': 'old', 'spec': serialized, 'review': {'actor': 'Reviewer'}}])['unchanged'], {})
+
+    def test_ignored_rules_do_not_create_duplicates_or_change_suggestions(self):
+        spec = rule().model_dump(mode='json')
+        active = {'id':'active','status':'pending','spec':spec}
+        ignored = {'id':'ignored','status':'ignored','spec':spec}
+        previous = [{'stable_id':'old','spec':spec,'review':{'actor':'Reviewer'}}]
+        self.assertEqual(duplicate_titles([active, ignored]), set())
+        self.assertEqual(compare_rules([active, ignored], previous)['unchanged'], {'active':'old'})
+        comparison = compare_rules([ignored], previous)
+        self.assertEqual(comparison['added'], [])
+        self.assertEqual(comparison['missing'], ['old'])
