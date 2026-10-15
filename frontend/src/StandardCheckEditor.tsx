@@ -10,7 +10,7 @@ const fieldLabels: Record<string,string> = {
 const optionLabels: Record<string,string> = {lte:'At most (≤)',gte:'At least (≥)',original_order:'Original PO quantities',approved_current_order:'Approved current PO revision'};
 type Property = {type?:string;enum?:string[];items?:{enum?:string[]};minimum?:number;maximum?:number;exclusiveMinimum?:number};
 type Binding = NonNullable<RuleSpec['standard_check']>;
-export const availabilityLabels = {implemented:'Automatic · implemented',not_implemented:'Automatic · not implemented',manual:'Manual inspection',external:'External confirmation',needs_mapping:'Needs mapping',legacy:'Existing verification · not mapped',guidance:'General guidance'};
+export const availabilityLabels = {implemented:'Automatic verification',not_implemented:'Automatic verification · unavailable',manual:'Manual verification',external:'External confirmation',needs_mapping:'Verification not configured',legacy:'Existing verification · not mapped',guidance:'Guidance only'};
 
 export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onChange:(spec:RuleSpec)=>void}) {
   const catalog=useRemote<CheckDefinition[]>('/api/check-catalog');

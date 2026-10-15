@@ -4,8 +4,9 @@ import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
-import { operationalCategoryLabels, consumptionPointLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
-import { rulePurposeLabels, shipmentCheckMode, shipmentCheckLabel } from './rulePurpose';
+import { activeWorkflows, operationalCategoryLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
+import { rulePurposeLabels, verificationSummary } from './rulePurpose';
+import { VerificationBadge, WorkflowUsage } from './RuleUsage';
 
 const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
   { value: 'shipment', label: 'Shipments' }, { value: 'order', label: 'Orders' },
@@ -51,7 +52,9 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const current = run.payload.rules.find(r => r.id === selected);
   const classificationJob = run.payload.classification_job;
   const classifying = !!classificationJob && ['queued', 'running'].includes(String(classificationJob.status));
-  const unclassified = run.payload.rules.filter(r => r.status === 'pending' && needsClassification(r.spec)).length;
+  const unclassified = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && (needsClassification(r.spec)||!r.spec.rule_type)).length;
+  const untyped = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && !r.spec.rule_type).length;
+  const autoClassify = () => action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:run.config.provider==='openai'?'openai':'anthropic',model:typeof run.config.model==='string'?run.config.model:'',include_approved:true});
   const pending = run.payload.rules.filter(r => r.status === 'pending').length;
   const carryCount = run.payload.rules.filter(r => r.status === 'pending' && comparison.data?.unchanged?.[r.id]).length;
 
@@ -78,11 +81,11 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const filtered = run.payload.rules.filter(r =>
     (standardType==='all'||(standardType==='unmapped'?!r.spec.rule_type:r.spec.rule_type?.id===standardType)) &&
     (operationalCategory === 'all' || (operationalCategory === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === operationalCategory)) &&
-    (consumptionPoint === 'all' || r.spec.consumption_points?.some(p => p === consumptionPoint)) &&
+    (consumptionPoint === 'all' || (consumptionPoint === 'unassigned' ? !activeWorkflows(r.spec).length : activeWorkflows(r.spec).some(p => p === consumptionPoint))) &&
     (filter === 'all' || (filter === 'individual' ? r.status === 'pending' && !!r.individual_review_reasons.length : r.status === filter)) &&
     (type === 'all' || r.spec.subject === type) &&
     (purpose === 'all' || (r.spec.purpose || 'unclassified') === purpose) &&
-    (checkMode === 'all' || (r.spec.purpose === 'shipment_validation' && (checkMode === 'automatic' ? r.spec.verification === 'data' : r.spec.verification !== 'data'))) &&
+    (checkMode === 'all' || verificationSummary(r.spec,r.check_status).kind === checkMode) &&
     (!query || [r.spec.title, r.spec.instruction, r.spec.applicability_text, ...r.spec.evidence.map(e => e.quote)].join(' ').toLowerCase().includes(query)));
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
@@ -101,7 +104,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const selectedRules = run.payload.rules.filter(r => checked[r.id] === r.revision && r.status === 'pending');
   const selectedCount = selectedRules.length;
   const selectedFlagged = selectedRules.filter(r => r.individual_review_reasons.length || needsClassification(r.spec) || r.evidence_issues?.length).length;
-  const extraFilterCount = [type, purpose, checkMode, standardType].filter(v => v !== 'all').length;
+  const extraFilterCount = [type, purpose, operationalCategory, standardType].filter(v => v !== 'all').length;
   const selectRules = (rules: Candidate[]) => setChecked(Object.fromEntries(rules.map(r => [r.id, r.revision])));
   const openRule = (id: string, focus = false) => {
     focusAfterNavigation.current = focus;
@@ -153,24 +156,25 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         <button className="secondary" disabled={busy||!scopeConfirmed||!actor.trim()} onClick={async()=>{if(await action(`/api/analysis/${run.id}/carry-approvals`,{version:run.version,actor,base_release_id:comparison.data!.base_release_id,scope_confirmed:scopeConfirmed})){setMessage(`${carryCount} unchanged approvals carried forward. Review the remaining proposals and missing rules.`);}}}>Carry forward {carryCount} unchanged approvals</button></>}
       <p className="muted">Missing rules need a retain-or-retire decision in Changes & publish. Matching titles are only suggestions.</p>
     </div>}
-    {editable&&(unclassified>0||classificationJob)&&<section className="auto-classification"><div className="section-heading"><div><h3>Automatically classify rules</h3><p>Identify operational categories, consumption points and rule use from the instructions and source excerpts.</p></div></div>
+    {editable&&(unclassified>0||classificationJob)&&<section className="auto-classification"><div className="section-heading"><div><h3>Automatically classify rules</h3><p>Assign standard rule types and workflow placements from the instructions and source excerpts. Requirements without a matching type remain unmapped.</p></div></div>
       {classifying?<><p role="status">Classifying {String(classificationJob!.processed)} of {String(classificationJob!.total)} rules… Completed batches are saved.</p><button className="secondary" disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/cancel-classification`,{version:run.version,actor:actor.trim()||'User'})}>Stop classification</button></>:<>
         {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}
         {classificationJob?.status==='complete'&&<p className="muted">{String(classificationJob.applied)} rules classified · {String(classificationJob.skipped)} edited or decided rules left untouched.</p>}
-        {(unclassified>0||classificationJob?.status==='failed')&&<button className="primary" disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:run.config.provider==='openai'?'openai':'anthropic',model:typeof run.config.model==='string'?run.config.model:''})}>{classificationJob?.status==='failed'?'Resume automatic classification':`Auto-classify ${unclassified} remaining rules`}</button>}
+        {(unclassified>0||classificationJob?.status==='failed')&&<button className="primary" disabled={busy||editing} onClick={autoClassify}>{classificationJob?.status==='failed'?'Resume automatic classification':`Auto-classify ${unclassified} remaining rules`}</button>}
       </>}
-      <p className="muted">Uses the analysis provider and model. Sends rule text and excerpts, without rereading the PDF. API charges may apply. Existing classifications, edits and approvals are preserved.</p>
+      <p className="muted">Uses the analysis provider and model. Sends rule text and excerpts; API charges may apply. Existing type assignments stay in place. New types use display-only workflow defaults. Approved rules with changed metadata return to review.</p>
     </section>}
     <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
     {run.payload.warnings.length>0&&<details className="coverage"><summary>Analysis notes · {run.payload.warnings.length}</summary><ul>{run.payload.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></details>}
     </details>
+    {editable&&!adding&&(untyped>0||classifying)&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${untyped} rules need a standard type`}</span><button className="secondary" disabled={busy||editing||classifying} onClick={autoClassify}>{classifying?'Classification running…':classificationJob?.status==='failed'?'Resume classification':'Auto-classify rule types'}</button><small>Changed approved rules return to review.</small>{classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
     {adding ? <>{initialRule&&<p className="notice">This is a separate draft copied from an existing rule. Adjust its conditions, instruction and image. The original remains unchanged. Check that variant ranges do not overlap and explicitly decide how boundaries such as exactly 7 inches should be handled.</p>}{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor initial={initialRule} guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
       <fieldset className="review-filter-controls" disabled={editing || busy}>
         <legend className="visually-hidden">Filter rules</legend>
         <div className="review-filter-row">
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
-          <label>Category<select value={operationalCategory} onChange={e => { resetView(); setOperationalCategory(e.target.value); setConsumptionPoint('all'); }}>{[['all', 'All categories'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <option key={value} value={value}>{label} ({run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length})</option>)}</select></label>
-          <label>Consumed by<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+          <label>Verification<select value={checkMode} onChange={e => { resetView(); setCheckMode(e.target.value); }}><option value="all">All methods</option><option value="automatic">Automatic verification</option><option value="manual">Manual verification</option><option value="external">External confirmation</option><option value="unresolved">Not configured / classified</option><option value="guidance">Guidance only</option></select></label>
+          <label>Where it’s used<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option><option value="unassigned">No active workflow</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
           <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Ignored</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
         </div>
@@ -178,7 +182,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <label>Subject<select value={type} onChange={e => { resetView(); setType(e.target.value as typeof type); }}><option value="all">All subjects</option>{ruleTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></label>
           <label>Rule use<select value={purpose} onChange={e => { resetView(); setPurpose(e.target.value); setCheckMode('all'); setStandardType('all'); }}><option value="all">All uses</option>{Object.entries(rulePurposeLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
           <label>Standard rule type<select value={standardType} onChange={e=>{resetView();setStandardType(e.target.value);}}><option value="all">All standard types</option><option value="unmapped">Needs rule type mapping</option>{typeCatalog.data?.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select></label>
-          <label>Shipment check method<select value={checkMode} onChange={e => { resetView(); setCheckMode(e.target.value); if (e.target.value !== 'all') setPurpose('shipment_validation'); }}><option value="all">All methods</option><option value="automatic">Automatic checks</option><option value="manual">Inspection / evidence</option></select></label>
+          <label>Category<select value={operationalCategory} onChange={e => { resetView(); setOperationalCategory(e.target.value); }}>{[['all', 'All categories'], ...Object.entries(operationalCategoryLabels)].map(([value, label]) => <option key={value} value={value}>{label} ({run.payload.rules.filter(r => value === 'all' || (value === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === value)).length})</option>)}</select></label>
           <button className="text-button" onClick={resetFilters}>Reset filters</button>
         </div>}
       </fieldset>
@@ -188,24 +192,24 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
           <button className="text-button" disabled={busy || editing || !pendingInView.length} onClick={() => selectRules(pendingInView)}>Select all pending</button></div>}</div>
       <div className="review-table-scroll" role="region" aria-label="Review rules table" tabIndex={0}>
         <table className="review-table" ref={tableHeading}>
-          <caption className="visually-hidden">Rules with category, consuming workflow, use, check method, source page and review status. Open a rule to inspect the full instruction and evidence.</caption>
-          <colgroup><col className="selection-column"/><col className="title-column"/><col className="category-column"/><col className="consumer-column"/><col className="use-column"/><col className="check-column"/><col className="source-column"/><col className="status-column"/></colgroup>
-          <thead><tr><th scope="col">{editable ? <input ref={pageCheckbox} type="checkbox" aria-label="Select pending rules on this page" disabled={busy || editing || !pagePending.length} checked={pagePending.length > 0 && pageSelectedCount === pagePending.length} onChange={e => setChecked(previous => { const next = { ...previous }; pagePending.forEach(r => { if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; }); return next; })}/> : <span className="visually-hidden">Selection</span>}</th><th scope="col">Rule</th><th scope="col">Category</th><th scope="col">Consumed by</th><th scope="col">Use</th><th scope="col">Check</th><th scope="col">Page</th><th scope="col">Status</th></tr></thead>
+          <caption className="visually-hidden">Rules with verification method, where they are used, category, use, source page and review status. Open a rule to inspect the full instruction and evidence.</caption>
+          <colgroup><col className="selection-column"/><col className="title-column"/><col className="check-column"/><col className="consumer-column"/><col className="category-column"/><col className="use-column"/><col className="source-column"/><col className="status-column"/></colgroup>
+          <thead><tr><th scope="col">{editable ? <input ref={pageCheckbox} type="checkbox" aria-label="Select pending rules on this page" disabled={busy || editing || !pagePending.length} checked={pagePending.length > 0 && pageSelectedCount === pagePending.length} onChange={e => setChecked(previous => { const next = { ...previous }; pagePending.forEach(r => { if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; }); return next; })}/> : <span className="visually-hidden">Selection</span>}</th><th scope="col">Rule</th><th scope="col">Verification</th><th scope="col">Where it’s used</th><th scope="col">Category</th><th scope="col">Use</th><th scope="col">Page</th><th scope="col">Status</th></tr></thead>
           <tbody>
         {visibleRules.map(r => {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
+          const standardTypeLabel = typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id&&t.version===r.spec.rule_type.version)?.label || r.spec.rule_type?.id || 'Type not assigned';
 
-          const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') || 'Not assigned';
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
             <tr className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
               <td>{editable && r.status === 'pending' && <input type="checkbox" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const next = { ...previous }; if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; return next; })}/>}</td>
-              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button></th>
+              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span></th>
+              <td><VerificationBadge spec={r.spec} status={r.check_status} compact/></td>
+              <td><WorkflowUsage spec={r.spec}/></td>
               <td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
-              <td><span className="table-cell-text" title={consumers}>{consumers}</span></td>
               <td><span className="table-cell-text" title={rulePurposeLabels[r.spec.purpose || 'unclassified']}>{r.spec.purpose === 'general_guidance' ? 'Guidance' : r.spec.purpose === 'shipment_validation' ? 'Shipment check' : 'Unclassified'}</span></td>
-              <td><span className={`check-method ${r.spec.purpose === 'shipment_validation' ? r.spec.verification : 'not-applicable'}`} title={shipmentCheckMode(r.spec, r.check_status)}>{shipmentCheckLabel(r.spec, r.check_status)}</span></td>
               <td><span className="table-cell-text" title={`PDF pages ${pages}`}>{pages}</span></td>
               <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
             </tr>

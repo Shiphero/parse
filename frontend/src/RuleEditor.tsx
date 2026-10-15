@@ -4,12 +4,12 @@ import RuleDeliveryEditor from './RuleDeliveryEditor';
 import ConditionBuilder, { describeCondition } from './ConditionBuilder';
 import { SourceImage, RegionPicker } from './SourceImage';
 import { operationalCategoryLabels, consumptionPointOptions } from './ruleTaxonomy';
-import { rulePurposeLabels } from './rulePurpose';
+import { resolveCheckStatus, rulePurposeLabels, verificationSummary } from './rulePurpose';
+import RuleUsage from './RuleUsage';
 import { useRemote } from './api';
 import type { Candidate, RuleSpec, RuleTypeDefinition, CheckDefinition } from './api';
 import { reviewTasks } from './reviewReadiness';
 import type { ReviewSection } from './reviewReadiness';
-import { availabilityLabels } from './StandardCheckEditor';
 
 export const blankRule = (): RuleSpec => ({schema_version:'1.2',standard_check:null,rule_type:null,placements:[],operational_category:'unclassified',consumption_points:[],purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'unresolved',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
 
@@ -31,10 +31,11 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
   const types=useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const checks=useRemote<CheckDefinition[]>('/api/check-catalog');
   const ruleType=types.data?.find(t=>t.id===spec.rule_type?.id);
-  const check=checks.data?.find(c=>c.id===spec.standard_check?.check_id);
   const workflows=consumptionPointOptions.filter(([id])=>spec.consumption_points?.includes(id as NonNullable<RuleSpec['consumption_points']>[number]));
   const classificationSummary=[ruleType?.label||(spec.rule_type?.id||'Type not mapped'),...workflows.map(([,label])=>label)].join(' · ');
-  const verificationSummary=spec.rule_type?.id==='general.guidance'?'Reference only · no shipment check':check?`${check.label} · ${availabilityLabels[check.availability]}`:spec.verification==='data'?'Existing automatic check':spec.verification==='human'?'Manual inspection':spec.verification==='external_evidence'?'External confirmation':'Needs interpretation';
+  const checkStatus=resolveCheckStatus(spec,checks.data,types.data);
+  const verification=verificationSummary(spec,checkStatus);
+  const verificationDescription=`${verification.label} · ${verification.detail}`;
   const [advanced,setAdvanced] = useState<string|null>(null);
   const [advancedError,setAdvancedError] = useState('');
   const advancedValue = JSON.stringify({applicability:spec.applicability, exceptions:spec.exceptions, assertion:spec.assertion, unresolved_questions:spec.unresolved_questions},null,2);
@@ -103,13 +104,14 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
     </div>}
     <div className="rule-review-grid compact-rule-editor"><div className="rule-form">
     <fieldset className="review-editable-fields" disabled={busy||!!review&&(!review.editable||candidate?.status==='ignored')}>
+    <RuleUsage spec={spec} status={checkStatus} ruleType={ruleType} onEditVerification={()=>goTo('verification')} onEditWorkflows={()=>goTo('classification')}/>
     <div ref={el=>{sections.current.instruction=el;}}>
     <div className="editor-heading"><h3>{review?'Instruction':candidate?'Edit rule':'New rule'}</h3><span className="muted">{review?(dirty?'Unsaved changes':'Edit directly below'):'Changes need review'}</span></div>
     <label>Title<input maxLength={250} value={spec.title} onChange={e=>set('title',e.target.value)}/></label>
     <label>Instruction<textarea rows={3} value={spec.instruction} onChange={e=>set('instruction',e.target.value)}/></label>
 
     </div>
-    <details ref={el=>{sections.current.classification=el;}} open={review&&initialTasks.current.some(t=>t.section==='classification')} className="editor-section"><summary><span>Classification & workflows</span><small title={classificationSummary}>{classificationSummary}</small></summary><div className="editor-section-body">
+    <details ref={el=>{sections.current.classification=el;}} open={review&&initialTasks.current.some(t=>t.section==='classification')} className="editor-section"><summary><span>Where it’s used & rule type</span><small title={classificationSummary}>{classificationSummary}</small></summary><div className="editor-section-body">
       <RuleDeliveryEditor spec={spec} onChange={setSpec} compact={!!review}/>
       {!spec.rule_type&&<>
         <label>Category<select value={spec.operational_category||'unclassified'} onChange={e=>set('operational_category',e.target.value as RuleSpec['operational_category'])}>{Object.entries(operationalCategoryLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
@@ -130,7 +132,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
       {!!spec.exceptions?.length&&<p className="field-hint">Edit exception conditions in Advanced JSON.</p>}
     </div></details>
 
-    <details ref={el=>{sections.current.verification=el;}} open={review&&initialTasks.current.some(t=>t.section==='verification')} className="editor-section"><summary><span>Verification</span><small title={verificationSummary}>{verificationSummary}</small></summary><div className="editor-section-body">
+    <details ref={el=>{sections.current.verification=el;}} open={review&&initialTasks.current.some(t=>t.section==='verification')} className="editor-section"><summary><span>How it’s verified</span><small title={verificationDescription}>{verificationDescription}</small></summary><div className="editor-section-body">
       {spec.rule_type?.id==='general.guidance'&&<p className="field-hint">Reference only. General guidance is displayed as instructions and is excluded from shipment checks.</p>}
       {spec.purpose!=='general_guidance'&&<StandardCheckEditor spec={spec} onChange={setSpec}/>}
       {spec.rule_type?.id!=='general.guidance'&&!spec.standard_check&&(spec.schema_version!=='1.2'||spec.purpose==='general_guidance')&&<label>Verification method<select value={spec.verification} onChange={e=>set('verification',e.target.value as RuleSpec['verification'])}><option value="data">Automatic data check</option><option value="human">Human inspection</option><option value="external_evidence">External evidence required</option><option value="unresolved">Unresolved interpretation</option></select></label>}

@@ -1939,6 +1939,11 @@ export interface components {
              * @default
              */
             model: string;
+            /**
+             * Include Approved
+             * @default false
+             */
+            include_approved: boolean;
         };
         /** UploadResult */
         UploadResult: {

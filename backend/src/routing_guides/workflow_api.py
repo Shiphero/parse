@@ -22,6 +22,7 @@ from routing_guides.scenarios import normalize, MAPPING_VERSION
 from routing_guides.shiphero import fetch_order
 from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory, needs_classification, canonical_consumption_points
 from routing_guides.classification_provider import PROMPT_VERSION as CLASSIFICATION_PROMPT_VERSION
+from routing_guides.classification_mapping import needs_auto_classification
 from routing_guides.rule_catalog import RULE_TYPES, RuleTypeDefinition, Placement, delivery_label
 from routing_guides.delivery import DeliveryRequest, DeliveredSubject, subjects_for, selected_placements, validate_selection
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
@@ -216,6 +217,7 @@ class ClassifyRules(BulkApproval):
 class StartClassification(VersionedAction):
     provider: Literal['anthropic', 'openai'] = 'anthropic'
     model: str = Field(default='', max_length=150)
+    include_approved: bool = False
 
 
 class CarryApprovals(VersionedAction):
@@ -485,15 +487,15 @@ async def auto_classify(run_id: UUID, body: StartClassification):
         job = data.get('classification_job') or {}
         if job.get('status') in {'queued', 'running'}:
             raise HTTPException(409, 'Automatic classification is already running.')
-        if job.get('status') == 'failed' and job.get('provider') == body.provider and job.get('model') == model and job.get('prompt_version') == CLASSIFICATION_PROMPT_VERSION:
+        if job.get('status') == 'failed' and job.get('provider') == body.provider and job.get('model') == model and job.get('prompt_version') == CLASSIFICATION_PROMPT_VERSION and job.get('include_approved', False) == body.include_approved:
             job.update(status='queued', error=None, actor=body.actor)
         else:
-            pending = [{'id': r['id'], 'revision': r['revision']} for r in data['rules']
-                       if r['status'] == 'pending' and needs_classification(r['spec'])]
+            pending = [{'id': r['id'], 'revision': r['revision'], 'status': r['status'], 'review': r.get('review')} for r in data['rules']
+                       if r['status'] in (['pending', 'approved'] if body.include_approved else ['pending']) and needs_auto_classification(r['spec'])]
             if not pending:
-                raise HTTPException(409, 'No unclassified pending rules remain.')
+                raise HTTPException(409, 'No eligible rules need classification or rule type mapping.')
             job = {'id': str(uuid4()), 'prompt_version': CLASSIFICATION_PROMPT_VERSION, 'status': 'queued', 'provider': body.provider, 'model': model, 'actor': body.actor,
-                   'pending': pending, 'total': len(pending), 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
+                   'include_approved': body.include_approved, 'pending': pending, 'total': len(pending), 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
         data['classification_job'] = job
         await conn.execute('UPDATE analysis_runs SET payload=%s::jsonb, version=version+1 WHERE id=%s', (json.dumps(data), run_id))
         await classify_guide_rules.configure(connection=conn, lock=f'classification:{run_id}', queueing_lock=f'classification:{run_id}').defer_async(run_id=str(run_id), job_id=job['id'])

@@ -20,5 +20,12 @@ export const consumptionPointLabels: Record<NonNullable<RuleSpec['consumption_po
 };
 export const consumptionPointOptions = Object.entries(consumptionPointLabels)
   .sort(([, left], [, right]) => left.localeCompare(right));
+
+export function activeWorkflows(spec: RuleSpec) {
+  const workflows = spec.rule_type
+    ? (spec.placements || []).filter(p=>p.enabled!==false).map(p=>p.workflow)
+    : spec.consumption_points || [];
+  return [...new Set(workflows)].sort((a,b)=>consumptionPointLabels[a].localeCompare(consumptionPointLabels[b]));
+}
 export const needsClassification = (spec: RuleSpec) => (spec.purpose || 'unclassified') === 'unclassified'
   || (spec.operational_category || 'unclassified') === 'unclassified' || !spec.consumption_points?.length;

@@ -1,6 +1,6 @@
 import { useRemote } from './api';
 import type { RuleSpec, RuleTypeDefinition, CheckDefinition } from './api';
-import { consumptionPointLabels } from './ruleTaxonomy';
+import { activeWorkflows, consumptionPointLabels } from './ruleTaxonomy';
 
 type Placement = NonNullable<RuleSpec['placements']>[number];
 export const behaviorLabels:Record<Placement['behavior'],string>={display:'Display instructions',confirm:'Request confirmation',warn:'Warn on check failure',block:'Block on check failure'};
@@ -9,7 +9,7 @@ export default function RuleDeliveryEditor({spec,onChange,compact=false}:{spec:R
   const catalog=useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const checks=useRemote<CheckDefinition[]>('/api/check-catalog');
   const selected=catalog.data?.find(entry=>entry.id===spec.rule_type?.id);
-  const automatic=spec.purpose==='shipment_validation'&&checks.data?.some(check=>check.id===spec.standard_check?.check_id&&check.availability==='implemented');
+  const automatic=spec.purpose==='shipment_validation'&&checks.data?.some(check=>check.id===spec.standard_check?.check_id&&check.version===spec.standard_check.version&&check.availability==='implemented');
   const placements=spec.placements||[];
   const changePlacements=(value:Placement[])=>onChange({...spec,placements:value,consumption_points:[...new Set(value.map(p=>p.workflow))].sort()});
   return <div className="delivery-settings">
@@ -26,7 +26,7 @@ export default function RuleDeliveryEditor({spec,onChange,compact=false}:{spec:R
         verification:keepCheck?spec.verification:type.check_ids.length?'unresolved':'human'});
     }}><option value="">Needs rule type mapping</option>{catalog.data?.map(entry=><option key={entry.id} value={entry.id}>{entry.label} · v{entry.version}</option>)}</select></label>
     {!compact&&<p className="field-hint">Changing type resets workflow defaults and incompatible checks.</p>}
-    {selected&&<details className="placement-disclosure" open={!compact}><summary>Used in {placements.map(p=>consumptionPointLabels[p.workflow]).join(', ')||'No workflows'} <small>· Adjust placement</small></summary>
+    {selected&&<details className="placement-disclosure" open><summary>Used in {activeWorkflows(spec).map(id=>consumptionPointLabels[id]).join(', ')||'No active workflows'} <small>· Workflow settings</small></summary>
       <table className="placement-table"><thead><tr><th>Use</th><th>Workflow / area</th><th>Behavior</th><th/></tr></thead><tbody>{placements.map((p,i)=>{
         const area=selected.allowed_placements.find(a=>a.workflow===p.workflow&&a.area===p.area);
         return <tr key={`${p.workflow}:${p.area}`}><td><input type="checkbox" aria-label={`Use in ${consumptionPointLabels[p.workflow]} / ${area?.label||p.area}`} checked={p.enabled??true} onChange={e=>changePlacements(placements.map((old,j)=>j===i?{...old,enabled:e.target.checked}:old))}/></td>
