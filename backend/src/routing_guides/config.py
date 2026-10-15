@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     anthropic_model: str = ""
     openai_api_key: SecretStr = SecretStr("")
     openai_model: str = ""
+    jev_api_key: SecretStr = SecretStr("")
+    jev_model: str = "jev-1.14.0"
 
 
 @lru_cache

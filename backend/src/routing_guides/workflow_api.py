@@ -215,7 +215,7 @@ class ClassifyRules(BulkApproval):
 
 
 class StartClassification(VersionedAction):
-    provider: Literal['anthropic', 'openai'] = 'anthropic'
+    provider: Literal['anthropic', 'openai', 'jev'] = 'anthropic'
     model: str = Field(default='', max_length=150)
     include_approved: bool = False
 
@@ -334,7 +334,7 @@ async def connections():
 
 
 @router.put('/connections/{provider}', response_model=list[ConnectionView])
-async def update_connection(provider: Literal['anthropic', 'openai', 'shiphero'], body: ConnectionAction, request: Request):
+async def update_connection(provider: Literal['anthropic', 'openai', 'jev', 'shiphero'], body: ConnectionAction, request: Request):
     # Custom header disallows browser cross-origin form submissions; no CORS is enabled.
     if request.headers.get('X-Requested-With') != 'routing-guide-parser':
         raise HTTPException(403, 'Use the local application to update connections.')
@@ -566,7 +566,6 @@ async def bulk_approve(run_id: UUID, body: BulkApproval):
         data = deepcopy(run.payload)
         by_id = {r['id']: r for r in data['rules']}
         selected = []
-        duplicates = duplicate_titles(data['rules'])
         # Validate the entire selection before changing any rule or audit history.
         for rule_id, revision in body.revisions.items():
             rule = by_id.get(str(rule_id))
@@ -574,9 +573,13 @@ async def bulk_approve(run_id: UUID, body: BulkApproval):
                 raise HTTPException(404, 'A selected rule does not belong to this draft.')
             if rule['revision'] != revision or rule['status'] != 'pending':
                 raise HTTPException(409, 'A selected rule changed. Refresh and select the latest pending revisions.')
+            if needs_classification(rule['spec']):
+                raise HTTPException(422, 'Choose rule use, operational category and consumption points before approving.')
+            if rule.get('evidence_issues'):
+                raise HTTPException(422, 'Resolve the source evidence issues by editing this proposal before approving it.')
             spec = RuleSpec.model_validate(rule['spec'])
-            if individual_review_reasons(spec, rule.get('evidence_issues', []), spec.title.strip().casefold() in duplicates):
-                raise HTTPException(422, 'This selection includes rules requiring individual review.')
+            if needs_check_mapping(spec):
+                raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
             await check_evidence(session, run, spec)
             selected.append(rule)
         timestamp = datetime.now(timezone.utc).isoformat()

@@ -1,7 +1,7 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
-import type { Candidate, Comparison, RuleSpec, Run, RuleTypeDefinition } from './api';
+import type { Candidate, Comparison, Connection, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { activeWorkflows, operationalCategoryLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
@@ -15,8 +15,8 @@ const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
   { value: 'document', label: 'Documents' },
 ];
 
-export default function ReviewPanel({ run, actor, onActorChange, reload }: {
-  run: Run; actor: string; onActorChange: (value: string) => void; reload: () => void;
+export default function ReviewPanel({ run, actor, onActorChange, reload, connections }: {
+  run: Run; actor: string; onActorChange: (value: string) => void; reload: () => void; connections: Connection[];
 }) {
   const typeCatalog = useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const comparison = useRemote<Comparison>(`/api/analysis/${run.id}/comparison`, 0, run.version);
@@ -46,15 +46,24 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [coverageNote, setCoverageNote] = useState('');
-  const focusAfterNavigation = useRef(false);
+  const focusAfterNavigation = useRef<{afterVersion:number}|null>(null);
   const activeHeading = useRef<HTMLButtonElement>(null);
+  const activeRow = useRef<HTMLTableRowElement>(null);
   const editable = run.status === 'complete';
   const current = run.payload.rules.find(r => r.id === selected);
   const classificationJob = run.payload.classification_job;
+  const [classificationProvider,setClassificationProvider] = useState(String(classificationJob?.provider || (run.config.provider==='openai'?'openai':'anthropic')));
+  const classificationConnection = connections.find(c=>c.id===classificationProvider);
+  const defaultClassificationModel = classificationJob?.provider===classificationProvider
+    ? String(classificationJob.model||'') : classificationConnection?.model || (run.config.provider===classificationProvider?String(run.config.model||''):'');
+  const [classificationModel,setClassificationModel] = useState(defaultClassificationModel);
+  useEffect(()=>{setClassificationModel(defaultClassificationModel);},[classificationProvider,defaultClassificationModel]);
+  const classificationConfigured = !!classificationConnection?.credential_configured && !!classificationModel.trim();
+  const resumingClassification = classificationJob?.status==='failed' && classificationJob.provider===classificationProvider && classificationJob.model===classificationModel.trim();
   const classifying = !!classificationJob && ['queued', 'running'].includes(String(classificationJob.status));
   const unclassified = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && (needsClassification(r.spec)||!r.spec.rule_type)).length;
   const untyped = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && !r.spec.rule_type).length;
-  const autoClassify = () => action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:run.config.provider==='openai'?'openai':'anthropic',model:typeof run.config.model==='string'?run.config.model:'',include_approved:true});
+  const autoClassify = () => action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:classificationProvider,model:classificationModel.trim(),include_approved:true});
   const pending = run.payload.rules.filter(r => r.status === 'pending').length;
   const carryCount = run.payload.rules.filter(r => r.status === 'pending' && comparison.data?.unchanged?.[r.id]).length;
 
@@ -64,15 +73,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
       run.payload.rules.some(r => r.id === id && r.revision === revision && r.status === 'pending'))));
   }, [run.version]);
   useEffect(() => { setScopeConfirmed(false); }, [comparison.data?.base_release_id]);
-  useEffect(() => {
-    if (focusAfterNavigation.current) {
-      activeHeading.current?.focus({ preventScroll: true });
-      activeHeading.current?.scrollIntoView({ block: 'start' });
-      focusAfterNavigation.current = false;
-    }
-  }, [selected]);
-
-  const resetView = () => { setPage(0); setSelected(''); setChecked({}); setError(''); };
+  const resetView = () => { focusAfterNavigation.current=null; setPage(0); setSelected(''); setChecked({}); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
     setFilter('pending'); setType('all'); setPurpose('all'); setCheckMode('all'); setStandardType('all');
@@ -90,12 +91,27 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const visibleRules = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  useLayoutEffect(() => {
+    const navigation=focusAfterNavigation.current;
+    if (!navigation || run.version<navigation.afterVersion) return;
+    // Approval can remove a row from this filter and move the next rule to another page.
+    // Align only after the refreshed list and its expanded row have been rendered.
+    const index=filtered.findIndex(rule=>rule.id===selected);
+    if (index>=0 && Math.floor(index/pageSize)!==currentPage) {
+      setPage(Math.floor(index/pageSize));
+      return;
+    }
+    activeHeading.current?.focus({preventScroll:true});
+    (activeRow.current||tableHeading.current)?.scrollIntoView({block:'start',inline:'nearest',behavior:'instant'});
+    focusAfterNavigation.current=null;
+  }, [selected,run.version,currentPage,pageSize]);
   const pagePending = visibleRules.filter(r => r.status === 'pending');
   const pageSelectedCount = pagePending.filter(r => checked[r.id] === r.revision).length;
   useEffect(() => {
     if (pageCheckbox.current) pageCheckbox.current.indeterminate = pageSelectedCount > 0 && pageSelectedCount < pagePending.length;
   }, [pageSelectedCount, pagePending.length]);
   const changePage = (next: number) => {
+    focusAfterNavigation.current=null;
     setPage(next); setSelected(''); setError('');
     tableHeading.current?.scrollIntoView({ block: 'start' });
   };
@@ -106,8 +122,8 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const selectedFlagged = selectedRules.filter(r => r.individual_review_reasons.length || needsClassification(r.spec) || r.evidence_issues?.length).length;
   const extraFilterCount = [type, purpose, operationalCategory, standardType].filter(v => v !== 'all').length;
   const selectRules = (rules: Candidate[]) => setChecked(Object.fromEntries(rules.map(r => [r.id, r.revision])));
-  const openRule = (id: string, focus = false) => {
-    focusAfterNavigation.current = focus;
+  const openRule = (id: string, focus = false, afterVersion = run.version) => {
+    focusAfterNavigation.current = focus?{afterVersion}:null;
     const index = filtered.findIndex(r => r.id === id);
     if (index >= 0) setPage(Math.floor(index / pageSize));
     setSelected(id); setError('');
@@ -124,7 +140,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     if (await action(`/api/analysis/${run.id}/rules/${candidate.id}`, { version: run.version, actor, note:decisionNote, action: kind }, 'PUT')) {
       setMessage(`“${candidate.spec.title}” ${{approve:'approved',reject:'rejected',ignore:'ignored. Excluded from publication; restore it using Status → Ignored',restore:'restored to review'}[kind]}.`);
       setChecked(previous => { const updated = { ...previous }; delete updated[candidate.id]; return updated; });
-      openRule(next?.id || '', true);
+      openRule(next?.id || '', true, run.version+1);
     }
   };
   const save = async (spec: RuleSpec, correctionNote: string) => {
@@ -160,14 +176,19 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
       {classifying?<><p role="status">Classifying {String(classificationJob!.processed)} of {String(classificationJob!.total)} rules… Completed batches are saved.</p><button className="secondary" disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/cancel-classification`,{version:run.version,actor:actor.trim()||'User'})}>Stop classification</button></>:<>
         {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}
         {classificationJob?.status==='complete'&&<p className="muted">{String(classificationJob.applied)} rules classified · {String(classificationJob.skipped)} edited or decided rules left untouched.</p>}
-        {(unclassified>0||classificationJob?.status==='failed')&&<button className="primary" disabled={busy||editing} onClick={autoClassify}>{classificationJob?.status==='failed'?'Resume automatic classification':`Auto-classify ${unclassified} remaining rules`}</button>}
+        {(unclassified>0||classificationJob?.status==='failed')&&<button className="primary" disabled={busy||editing||!classificationConfigured} onClick={autoClassify}>{resumingClassification?'Resume automatic classification':`Auto-classify ${unclassified} remaining rules`}</button>}
       </>}
-      <p className="muted">Uses the analysis provider and model. Sends rule text and excerpts; API charges may apply. Existing type assignments stay in place. New types use display-only workflow defaults. Approved rules with changed metadata return to review.</p>
+      <p className="muted">Uses the classification provider selected below. Sends rule text and excerpts; API charges may apply. Existing type assignments and verification settings stay in place. New types use display-only workflow defaults. Approved rules with changed metadata return to review.</p>
     </section>}
     <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
     {run.payload.warnings.length>0&&<details className="coverage"><summary>Analysis notes · {run.payload.warnings.length}</summary><ul>{run.payload.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></details>}
     </details>
-    {editable&&!adding&&(untyped>0||classifying)&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${untyped} rules need a standard type`}</span><button className="secondary" disabled={busy||editing||classifying} onClick={autoClassify}>{classifying?'Classification running…':classificationJob?.status==='failed'?'Resume classification':'Auto-classify rule types'}</button><small>Changed approved rules return to review.</small>{classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
+    {editable&&!adding&&(unclassified>0||classifying||classificationJob?.status==='failed')&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${unclassified} rules need classification · ${untyped} need a standard type`}</span>
+      <label>Classification provider<select value={classificationProvider} disabled={busy||editing||classifying} onChange={e=>setClassificationProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="jev">Jev / TypeSafe</option></select></label>
+      <label>Model<input value={classificationModel} disabled={busy||editing||classifying} onChange={e=>setClassificationModel(e.target.value)} placeholder="Model ID"/></label>
+      <button className="secondary" disabled={busy||editing||classifying||!classificationConfigured} onClick={autoClassify}>{classifying?'Classification running…':resumingClassification?'Resume classification':'Auto-classify rules'}</button><small>Changed approved rules return to review. Sends rule text and excerpts to the selected provider.</small>
+      {!classificationConfigured&&<p className="muted">Add an API key and model in Connections to use this provider.</p>}
+      {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
     {adding ? <>{initialRule&&<p className="notice">This is a separate draft copied from an existing rule. Adjust its conditions, instruction and image. The original remains unchanged. Check that variant ranges do not overlap and explicitly decide how boundaries such as exactly 7 inches should be handled.</p>}{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor initial={initialRule} guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
       <fieldset className="review-filter-controls" disabled={editing || busy}>
         <legend className="visually-hidden">Filter rules</legend>
@@ -203,7 +224,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
 
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
-            <tr className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
+            <tr ref={expanded?activeRow:undefined} className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
               <td>{editable && r.status === 'pending' && <input type="checkbox" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const next = { ...previous }; if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; return next; })}/>}</td>
               <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span></th>
               <td><VerificationBadge spec={r.spec} status={r.check_status} compact/></td>
@@ -222,7 +243,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
                   onApprove:async(spec,note,changed)=>{
                     if(!changed){await decision(r,'approve',note);return;}
                     if(await action(`/api/analysis/${run.id}/rules/${r.id}`,{version:run.version,actor,note,action:'save_and_approve',spec},'PUT')){
-                      setEditing(false);setMessage(`“${spec.title}” saved and approved.`);openRule(next?.id||'',true);
+                      setEditing(false);setMessage(`“${spec.title}” saved and approved.`);openRule(next?.id||'',true,run.version+1);
                     }
                   },
                 }}/>
@@ -238,10 +259,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         <div className="review-selection-main"><strong>{selectedCount} selected</strong><button className="text-button" disabled={busy} onClick={() => { setChecked({}); setBulkOptions(false); }}>Clear</button>
           <button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
           <button className="secondary" disabled={busy || editing} aria-expanded={bulkOptions} onClick={() => setBulkOptions(!bulkOptions)}>More actions <ChevronDown size={14}/></button>
-          <button className="primary" disabled={busy || editing || !actor.trim() || selectedFlagged > 0} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button></div>
+          <button className="primary" disabled={busy || editing || !actor.trim()} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button></div>
         {!actor.trim() && <div className="review-selection-identity">{reviewerInput}<span className="muted">Enter your name to record approvals.</span></div>}
         {actor.trim() && <p className="review-selection-help">Reviewing as {actor} · Read each selected rule and its source before approving.</p>}
-        {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule needs' : 'rules need'} individual review. <button className="text-button" disabled={busy || editing} onClick={() => selectRules(selectedRules.filter(r => !r.individual_review_reasons.length && !needsClassification(r.spec) && !r.evidence_issues?.length))}>Deselect flagged rules</button></p>}
+        {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule has' : 'rules have'} review warnings. You can approve these together; warnings remain visible. Missing configuration or invalid source evidence must still be resolved.</p>}
         {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label></div>}
         {error && <p className="error" role="alert">{error}</p>}
       </div>}

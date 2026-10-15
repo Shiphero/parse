@@ -14,6 +14,7 @@ from routing_guides.extraction_results import save_response
 from routing_guides.purpose_guidance import PURPOSE_GUIDANCE
 from routing_guides.rules import StrictModel
 from routing_guides.rule_catalog import RULE_TYPES, RuleTypeBinding
+from routing_guides.jev_classification import classify_jev
 from routing_guides.taxonomy import OperationalCategory, ConsumptionPoint, TAXONOMY_GUIDANCE, canonical_consumption_points
 
 PROMPT_VERSION = 'rule-use-classification-1.4'
@@ -82,7 +83,10 @@ async def classify(provider, model, rules, response_path: Path):
                               'subject': r['spec']['subject'], 'verification': r['spec']['verification'], 'standard_check': r['spec'].get('standard_check'),
                               'applicability': r['spec']['applicability_text'], 'evidence': r['spec']['evidence']}
                              for r in rules], ensure_ascii=False)
-        if provider == 'anthropic':
+        provider_responses = None
+        if provider == 'jev':
+            raw, actual_model, usage, provider_responses = await classify_jev(config['key'], model, rules)
+        elif provider == 'anthropic':
             async with AsyncAnthropic(api_key=config['key'], timeout=180, max_retries=0) as client:
                 response = await client.messages.create(model=model, max_tokens=12000, system=system,
                     messages=[{'role': 'user', 'content': content}], tool_choice={'type': 'auto'},
@@ -107,7 +111,8 @@ async def classify(provider, model, rules, response_path: Path):
         except Exception:
             save_response(response_path.with_suffix('.rejected.json'), {'raw': raw, 'model': actual_model, 'usage': usage, 'prompt_version': PROMPT_VERSION})
             raise
-        save_response(response_path, {'raw': raw, 'model': actual_model, 'usage': usage, 'prompt_version': PROMPT_VERSION})
+        save_response(response_path, {'raw': raw, 'model': actual_model, 'usage': usage, 'prompt_version': PROMPT_VERSION,
+                                     'provider_responses': provider_responses})
         return ClassifiedOutput(parsed, actual_model, usage)
     except ProviderFailure:
         raise

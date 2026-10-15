@@ -28,7 +28,7 @@ Frontend and API source changes reload during development. Dependency, migration
 
 - PDF upload, persistent retailer library, full-page rendering/text extraction and source viewer.
 - Configurable Claude and OpenAI adapters with durable page batches, retries, cancellation, coverage and model/usage records.
-- Local Connections screen for server-side credentials, with presence-only responses.
+- Local Connections screen for server-side credentials, with presence-only responses. Jev / TypeSafe is available for classification of existing rules.
 - Manual and AI draft review with evidence images, edits, exact-revision approval and audit history.
 - Explicit retain/replace/retire update decisions, comparison, scenario impact and immutable releases.
 - JSON rule exports, Markdown instructions, release history and active-release restoration.
@@ -49,7 +49,7 @@ Document files live in the `documents` Docker volume. Unknown database commit ou
 
 ## Configuration
 
-See `.env.example`. Optional environment credentials are `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`, with separate model settings. Having a key configured does not mean provider access has been verified. Connections in the app override these environment defaults. Keep `.env` out of Git. Recreate API/worker containers after environment changes with `make up`. Service health and provider configuration remain available through the API for developers; they are not the user's homepage.
+See `.env.example`. Optional environment credentials are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `JEV_API_KEY`, with separate model settings. Jev defaults to `jev-1.14.0` and supports existing-rule classification; guide extraction uses Claude or OpenAI. Having a key configured does not mean provider access has been verified. Connections in the app override these environment defaults. Keep `.env` out of Git. Recreate API/worker containers after environment changes with `make up`. Service health and provider configuration remain available through the API for developers; they are not the user's homepage.
 
 Change `WEB_PORT` or `API_PORT` in `.env` if needed. The PostgreSQL password must match the existing database volume: changing the environment alone does not rotate an initialized database's password.
 

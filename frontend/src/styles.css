@@ -624,6 +624,8 @@ input[type=checkbox] { accent-color: var(--accent); }
 .rule-type-classification-bar>span { font-weight:600; }
 .rule-type-classification-bar>small { color:var(--text-muted); }
 .rule-type-classification-bar>button { font-size:12px; padding:6px 9px; }
+.rule-type-classification-bar>label { display:flex; flex-direction:column; gap:4px; font-size:11px; }
+.rule-type-classification-bar>label input,.rule-type-classification-bar>label select { padding:6px 8px; font-size:12px; max-width:240px; }
 @media(max-width:700px) { .rule-usage-summary { grid-template-columns:1fr; gap:16px; } }
 
 /* Source-backed rule authoring. Crops retain the original page coordinates. */

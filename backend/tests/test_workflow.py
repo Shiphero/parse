@@ -328,8 +328,6 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         flagged = run['payload']['rules'][1]['id']
         self.assertTrue(run['payload']['rules'][1]['individual_review_reasons'])
         body = {'version': run['version'], 'actor': 'Reviewer'}
-        await self.send('POST', f'/api/analysis/{self.rid}/bulk-approve',
-                        {**body, 'revisions': {good: 1, flagged: 1}}, 422)
         endpoint = f'/api/analysis/{self.rid}/rules/{good}'
         await self.send('PUT', endpoint, {**body, 'action': 'reject'}, 422)
         await self.send('PUT', endpoint, {**body, 'action': 'save', 'spec': rule().model_dump(mode='json')}, 422)
@@ -346,6 +344,22 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(approved['review']['actor'], 'Reviewer')
         self.assertEqual(approved['review']['revision'], approved['revision'])
         self.assertTrue(approved['individual_review_reasons'])
+
+    async def test_flagged_rules_can_be_bulk_approved_without_clearing_warnings(self):
+        run = await self.add_candidate(1)
+        run = await self.add_candidate(run['version'], rule(unresolved_questions=['Check applicability']))
+        candidates = run['payload']['rules']
+        self.assertTrue(all(r['individual_review_reasons'] for r in candidates))
+        approved = await self.send('POST', f'/api/analysis/{self.rid}/bulk-approve', {
+            'version': run['version'], 'actor': 'Reviewer',
+            'revisions': {r['id']: r['revision'] for r in candidates},
+        })
+        for before, after in zip(candidates, approved['payload']['rules']):
+            self.assertEqual(after['status'], 'approved')
+            self.assertEqual(after['spec'], before['spec'])
+            self.assertEqual(after['individual_review_reasons'], before['individual_review_reasons'])
+            self.assertEqual(after['review']['mode'], 'bulk')
+            self.assertEqual(after['review']['note'], '')
 
     async def test_foreign_retailer_release_and_foreign_draft_rule_are_rejected(self):
         run = await self.add_candidate(1)
@@ -657,7 +671,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(legacy['routing_complete'])
 
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
-        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='')):
+        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='',jev_api_key=SimpleNamespace(get_secret_value=lambda:''),jev_model='jev-1.14.0')):
             response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})
             self.assertEqual(response.status_code,403)
             with patch.object(workflow_api.psycopg.AsyncConnection,'connect',new=AsyncMock()) as connect:

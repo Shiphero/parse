@@ -24,7 +24,7 @@ class ExactComparisonTests(unittest.TestCase):
         candidate['evidence_issues'] = ['Citation mismatch']
         self.assertEqual(compare_rules([candidate], old)['unchanged'], {})
 
-    def test_flags_and_visual_descriptions_cannot_be_bulk_approved_or_carried(self):
+    def test_flags_and_visual_descriptions_prevent_automatic_carry_forward(self):
         specs = [rule(unresolved_questions=['Which cartons?']), rule(verification='unresolved'),
                  rule(exceptions=[{'description': 'Except promotional items', 'condition': None}]),
                  rule(evidence=[{'page': 1, 'quote': 'Label in lower corner', 'kind': 'visual'}]),

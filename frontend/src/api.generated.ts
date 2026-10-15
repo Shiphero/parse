@@ -1933,7 +1933,7 @@ export interface components {
              * @default anthropic
              * @enum {string}
              */
-            provider: "anthropic" | "openai";
+            provider: "anthropic" | "openai" | "jev";
             /**
              * Model
              * @default
@@ -2329,7 +2329,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                provider: "anthropic" | "openai" | "shiphero";
+                provider: "anthropic" | "openai" | "jev" | "shiphero";
             };
             cookie?: never;
         };

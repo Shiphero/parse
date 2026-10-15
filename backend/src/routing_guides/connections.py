@@ -4,7 +4,7 @@ import os
 import tempfile
 from routing_guides.config import get_settings
 
-NAMES = {'anthropic', 'openai', 'shiphero'}
+NAMES = {'anthropic', 'openai', 'jev', 'shiphero'}
 
 
 def connection(name: str) -> dict:
@@ -41,4 +41,4 @@ def save_connection(name: str, key: str | None, model: str) -> None:
 
 
 def statuses() -> list[dict]:
-    return [{'id': name, 'credential_configured': bool(connection(name)['key']), 'model': connection(name)['model']} for name in ('anthropic', 'openai', 'shiphero')]
+    return [{'id': name, 'credential_configured': bool(connection(name)['key']), 'model': connection(name)['model']} for name in ('anthropic', 'openai', 'jev', 'shiphero')]
