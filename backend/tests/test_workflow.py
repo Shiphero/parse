@@ -704,3 +704,37 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(ignored_event.payload['before']['status'], 'pending')
             self.assertEqual(ignored_event.payload['after']['status'], 'ignored')
             self.assertTrue(any(e.action=='restore' for e in events))
+
+    async def test_inline_correction_and_approval_are_atomic(self):
+        spec = rule().model_dump(mode='json')
+        run = await self.send('POST', f'/api/analysis/{self.rid}/rules', {'version':1,'actor':'Reviewer','spec':spec})
+        candidate = run['payload']['rules'][0]
+        path = f'/api/analysis/{self.rid}/rules/{candidate["id"]}'
+        changed = {**spec, 'title':'Updated carton weight'}
+        bad_source = {**changed, 'evidence':[{'page':1,'quote':'A source quote that does not exist','kind':'text'}]}
+        await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','note':'Updated evidence during rule review.',
+            'action':'save_and_approve','spec':bad_source},422)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.version, run['version'])
+            self.assertEqual(saved.payload['rules'][0]['spec'], spec)
+            self.assertEqual(saved.payload['rules'][0]['status'], 'pending')
+        approved = await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','note':'Updated title during rule review.',
+            'action':'save_and_approve','spec':changed})
+        current = approved['payload']['rules'][0]
+        self.assertEqual(current['status'], 'approved')
+        self.assertEqual(current['revision'], 2)
+        self.assertEqual(current['review']['revision'], 2)
+        self.assertEqual(current['spec']['title'], changed['title'])
+        await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','note':'Stale edit',
+            'action':'save_and_approve','spec':spec},409)
+
+    async def test_inline_approval_cannot_bypass_classification_or_ignore(self):
+        spec = rule().model_dump(mode='json')
+        run = await self.send('POST', f'/api/analysis/{self.rid}/rules', {'version':1,'actor':'Reviewer','spec':spec})
+        path = f'/api/analysis/{self.rid}/rules/{run["payload"]["rules"][0]["id"]}'
+        await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','note':'Updated use',
+            'action':'save_and_approve','spec':{**spec,'purpose':'unclassified'}},422)
+        ignored = await self.send('PUT', path, {'version':run['version'],'actor':'Reviewer','action':'ignore'})
+        await self.send('PUT', path, {'version':ignored['version'],'actor':'Reviewer','note':'Try approving ignored',
+            'action':'save_and_approve','spec':spec},422)

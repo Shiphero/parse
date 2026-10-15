@@ -75,6 +75,8 @@ services:
       API_PROXY_TARGET: http://api:8000
     volumes:
       - ./frontend/src:/app/src:ro
+      - ./frontend/tests:/app/tests:ro
+      - ./frontend/package.json:/app/package.json:ro
       - ./frontend/index.html:/app/index.html:ro
     ports:
       - '127.0.0.1:${WEB_PORT:-5180}:5173'

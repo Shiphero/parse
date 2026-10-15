@@ -1,11 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pencil, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, RuleSpec, Run, RuleTypeDefinition } from './api';
-import { behaviorLabels } from './RuleDeliveryEditor';
-import { availabilityLabels } from './StandardCheckEditor';
-import { describeCondition } from './ConditionBuilder';
-import RuleEditor, { Evidence } from './RuleEditor';
+import RuleEditor from './RuleEditor';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { operationalCategoryLabels, consumptionPointLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
 import { rulePurposeLabels, shipmentCheckMode, shipmentCheckLabel } from './rulePurpose';
@@ -45,7 +42,6 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [initialRule, setInitialRule] = useState<RuleSpec|undefined>();
-  const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [coverageNote, setCoverageNote] = useState('');
@@ -73,7 +69,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     }
   }, [selected]);
 
-  const resetView = () => { setPage(0); setSelected(''); setNote(''); setChecked({}); setError(''); };
+  const resetView = () => { setPage(0); setSelected(''); setChecked({}); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
     setFilter('pending'); setType('all'); setPurpose('all'); setCheckMode('all'); setStandardType('all');
@@ -97,7 +93,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     if (pageCheckbox.current) pageCheckbox.current.indeterminate = pageSelectedCount > 0 && pageSelectedCount < pagePending.length;
   }, [pageSelectedCount, pagePending.length]);
   const changePage = (next: number) => {
-    setPage(next); setSelected(''); setNote(''); setError('');
+    setPage(next); setSelected(''); setError('');
     tableHeading.current?.scrollIntoView({ block: 'start' });
   };
   const eligible = filtered.filter(r => r.status === 'pending' && !r.individual_review_reasons.length && !needsClassification(r.spec) && !r.evidence_issues?.length);
@@ -111,7 +107,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     focusAfterNavigation.current = focus;
     const index = filtered.findIndex(r => r.id === id);
     if (index >= 0) setPage(Math.floor(index / pageSize));
-    setSelected(id); setNote(''); setError('');
+    setSelected(id); setError('');
   };
   const action = async (url: string, body: unknown, method = 'POST') => {
     setBusy(true); setError('');
@@ -119,10 +115,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     catch (e) { setError((e as Error).message); return false; }
     finally { setBusy(false); }
   };
-  const decision = async (candidate: Candidate, kind: 'approve' | 'reject' | 'ignore' | 'restore') => {
+  const decision = async (candidate: Candidate, kind: 'approve' | 'reject' | 'ignore' | 'restore', decisionNote = '') => {
     const index = filtered.findIndex(r => r.id === candidate.id);
     const next = [...filtered.slice(index + 1), ...filtered.slice(0, index)].find(r => r.status === 'pending');
-    if (await action(`/api/analysis/${run.id}/rules/${candidate.id}`, { version: run.version, actor, note, action: kind }, 'PUT')) {
+    if (await action(`/api/analysis/${run.id}/rules/${candidate.id}`, { version: run.version, actor, note:decisionNote, action: kind }, 'PUT')) {
       setMessage(`“${candidate.spec.title}” ${{approve:'approved',reject:'rejected',ignore:'ignored. Excluded from publication; restore it using Status → Ignored',restore:'restored to review'}[kind]}.`);
       setChecked(previous => { const updated = { ...previous }; delete updated[candidate.id]; return updated; });
       openRule(next?.id || '', true);
@@ -199,7 +195,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
         {visibleRules.map(r => {
           const expanded = selected === r.id;
           const next = filtered.slice(filtered.indexOf(r) + 1).find(candidate => candidate.status === 'pending');
-          const blocked = needsClassification(r.spec) ? 'Assign a category, workflow and rule use before approving.' : r.check_status?.availability==='needs_mapping' ? 'Choose a standard verification check before approving.' : r.evidence_issues?.length ? 'Correct the source references before approving.' : !actor.trim() ? 'Enter your reviewer name to record a decision.' : '';
+
           const consumers = r.spec.consumption_points?.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') || 'Not assigned';
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
           return <Fragment key={r.id}>
@@ -214,34 +210,18 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
               <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
             </tr>
             {expanded && <tr className="review-detail-row"><td colSpan={8}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
-              <h3 className="review-expanded-title">{r.spec.title}</h3>
-              {editing ? <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={() => setEditing(false)} busy={busy}/> : <>
-                <div className="review-inline-columns"><div className="rule-interpretation">
-                  <div className="review-detail-heading"><h3>What this rule requires</h3>{editable && r.status === 'pending' && <button className="text-button" disabled={busy} onClick={() => setCategorizing({ rules: [r], version: run.version })}>Categorize</button>}<button className="text-button" disabled={!editable || busy} onClick={() => setEditing(true)}><Pencil size={14}/> Edit rule</button><button className="text-button" disabled={!editable || busy || r.source_guide_id!==run.guide_id} title={r.source_guide_id!==run.guide_id?'Create variants in the source guide to preserve image references.':'Copy this rule into a new pending draft; adjust its conditions, instruction and image.'} onClick={()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}}>Create variant</button></div>
-                  <p className="instruction">{r.spec.instruction}</p>
-                  <dl><dt>Applies when</dt><dd>{r.spec.applicability_text}{r.spec.applicability&&<p className="condition-summary">{describeCondition(r.spec.applicability)}</p>}</dd><dt>Consumed by</dt><dd>{r.spec.consumption_points?.length ? r.spec.consumption_points.map(p => consumptionPointLabels[p]).sort((a, b) => a.localeCompare(b)).join(', ') : 'Not assigned'}</dd><dt>Rule use</dt><dd>{rulePurposeLabels[r.spec.purpose || 'unclassified']}</dd><dt>Obligation & verification</dt><dd>{r.spec.obligation} · {shipmentCheckMode(r.spec, r.check_status)} · {r.spec.verification.replaceAll('_', ' ')}</dd></dl>
-                  {(r.spec.exceptions || []).map((e, i) => <p key={i}><strong>Exception:</strong> {e.description}</p>)}
-                  {(r.spec.unresolved_questions || []).map((q, i) => <p className="error" key={i}>{q}</p>)}
-                  {r.individual_review_reasons.length > 0 && <div className="review-card-flags"><strong>Check before approving</strong><ul>{r.individual_review_reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>}
-                  {!!r.evidence_issues?.length && <div className="evidence-warning"><strong>Source evidence needs correction</strong><ul>{r.evidence_issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul></div>}
-                  <p><strong>Standard rule type:</strong> {typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id)?.label||r.spec.rule_type?.id||'Needs rule type mapping'}</p>
-                  {!!r.spec.placements?.length&&<ul>{r.spec.placements.map(p=><li key={`${p.workflow}:${p.area}`}>{consumptionPointLabels[p.workflow]} → {typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id)?.allowed_placements.find(a=>a.workflow===p.workflow&&a.area===p.area)?.label||p.area}: {behaviorLabels[p.behavior||'display']}{p.enabled===false?' · Disabled':''}</li>)}</ul>}
-                  {r.check_status&&<p><strong>Standard check:</strong> {r.check_status.label} · {availabilityLabels[r.check_status.availability]}</p>}
-                  {r.spec.standard_check&&<details><summary>Check parameters</summary><pre>{JSON.stringify(r.spec.standard_check.parameters,null,2)}</pre></details>}
-                  {r.spec.assertion && <details><summary>Automatic check</summary><pre>{JSON.stringify(r.spec.assertion, null, 2)}</pre></details>}
-                  {!!r.classification?.reason && <details><summary>Why this classification?</summary><p>{String(r.classification.reason)}</p></details>}
-                  {r.review && <p className="review-note">Reviewed by {String(r.review.actor)}{r.review.note ? `: ${String(r.review.note)}` : ''}</p>}
-                  {r.carried_from_release_id && <p className="muted">Approval carried forward from the previous release.</p>}
-                </div><Evidence guideId={r.source_guide_id} spec={r.spec} collapsibleImage/></div>
-                {editable && <div className="review-decision">
-                  <div className="review-decision-fields">{reviewerInput}<label>Decision note (optional unless rejecting)<textarea rows={2} value={note} disabled={busy} onChange={e => setNote(e.target.value)} placeholder="Optional context; required only when rejecting"/></label></div>
-                  {r.status==='ignored'?<p className="muted">Ignored rules are excluded from publication. Restore to review before approving.</p>:blocked&&<p className="muted">{blocked}</p>}
-                  <div className="review-decision-actions">{r.status==='ignored'?<button className="secondary" disabled={busy||!actor.trim()} onClick={()=>decision(r,'restore')}>Restore to review</button>:<button className="secondary" disabled={busy||!actor.trim()} title="Exclude from publication and shipment checks. You can restore it from Status → Ignored." onClick={()=>decision(r,'ignore')}>Ignore rule</button>}<button className="secondary" disabled={busy || !note.trim() || !actor.trim()} onClick={() => decision(r, 'reject')}><X size={15}/> Reject</button>
-                    {next && <button className="text-button" disabled={busy} onClick={() => openRule(next.id, true)}>Skip for now <ArrowRight size={15}/></button>}
-                    <button className="primary" disabled={busy || !!blocked || r.status==='ignored'} onClick={() => decision(r, 'approve')}><Check size={15}/>{busy ? 'Saving…' : pendingInView.some(candidate => candidate.id !== r.id) ? 'Approve & next' : 'Approve rule'}</button></div>
-                </div>}
-              </>}
-              {error && <div className="error" role="alert">{error}</div>}
+              <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={()=>openRule('')} busy={busy}
+                review={{actor,onActorChange,editable,error,onDirtyChange:setEditing,
+                  onDecision:(kind,note)=>decision(r,kind,note),
+                  onNext:next?()=>openRule(next.id,true):undefined,
+                  onVariant:r.source_guide_id===run.guide_id?()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}:undefined,
+                  onApprove:async(spec,note,changed)=>{
+                    if(!changed){await decision(r,'approve',note);return;}
+                    if(await action(`/api/analysis/${run.id}/rules/${r.id}`,{version:run.version,actor,note,action:'save_and_approve',spec},'PUT')){
+                      setEditing(false);setMessage(`“${spec.title}” saved and approved.`);openRule(next?.id||'',true);
+                    }
+                  },
+                }}/>
             </div></td></tr>}
           </Fragment>;
         })}
@@ -264,7 +244,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload }: {
     </>}
     {categorizing && <CategorizeRulesDialog runId={run.id} version={categorizing.version} rules={categorizing.rules} actor={actor} onActorChange={onActorChange} onClose={() => setCategorizing(null)} onSave={changed => {
       setMessage(changed ? `${changed} ${changed === 1 ? 'rule categorized' : 'rules categorized'}. Complete categories leave “Needs categorization”; the rules remain awaiting approval.` : 'Categorization was already complete. No rules changed.');
-      setCategorizing(null); setChecked({}); setSelected(''); setNote(''); setBulkOptions(false); reload();
+      setCategorizing(null); setChecked({}); setSelected(''); setBulkOptions(false); reload();
     }}/>}
   </div>;
 }

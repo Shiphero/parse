@@ -1588,7 +1588,7 @@ export interface components {
              * Action
              * @enum {string}
              */
-            action: "save" | "approve" | "reject" | "ignore" | "restore";
+            action: "save" | "approve" | "reject" | "ignore" | "restore" | "save_and_approve";
             spec?: components["schemas"]["RuleSpec-Input"] | null;
         };
         /** RuleSpec */
