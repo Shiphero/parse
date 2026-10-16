@@ -51,6 +51,101 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code,status,response.text)
         return response.json()
 
+    async def published_fixture(self):
+        run = await self.add_candidate(1)
+        rid = run['payload']['rules'][0]['id']
+        run = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{rid}',
+            {'version': run['version'], 'actor': 'Reviewer', 'action': 'approve'})
+        body = dict(version=run['version'], actor='Publisher', note='Synthetic coverage',
+                    name='Original', effective_date='2026-01-01', scope='Cartons',
+                    coverage_confirmed=True, impact_confirmed=True, decisions={}, base_release_id=None)
+        release = await self.send('POST', f'/api/analysis/{self.rid}/publish', body)
+        return release, body
+
+    async def test_release_draft_preserves_approval_identity_and_original(self):
+        original, publish = await self.published_fixture()
+        url = f'/api/releases/{original["id"]}/draft'
+        body = {'request_id': str(uuid4()), 'actor': 'Editor'}
+        await self.send('POST', url, {**body, 'actor': '  '}, 422)
+        draft = await self.send('POST', url, body)
+        self.assertEqual(await self.send('POST', url, body), draft)
+        self.assertEqual(draft['status'], 'complete')
+        self.assertEqual(draft['config']['source_release_id'], original['id'])
+        self.assertEqual(draft['payload']['pending_batches'], [])
+        self.assertEqual(draft['payload']['batches'], [])
+        candidate = draft['payload']['rules'][0]
+        old = original['payload']['rules'][0]
+        self.assertEqual(candidate['id'], old['stable_id'])
+        self.assertEqual(candidate['review'], old['review'])
+        self.assertEqual(candidate['status'], 'approved')
+        workflow = (await self.client.get(f'/api/guides/{self.gid}/workflow')).json()
+        self.assertEqual(workflow['active_release_id'], original['id'])
+        endpoint = f'/api/analysis/{draft["id"]}/rules/{candidate["id"]}'
+        draft = await self.send('PUT', endpoint, dict(version=draft['version'], actor='Editor',
+            action='save', note='Clarify title', spec=rule(title='Updated title').model_dump(mode='json')))
+        self.assertEqual(draft['payload']['rules'][0]['status'], 'pending')
+        self.assertIsNone(draft['payload']['rules'][0]['review'])
+        update = {**publish, 'version': draft['version'], 'base_release_id': original['id'], 'name': 'Updated'}
+        await self.send('POST', f'/api/analysis/{draft["id"]}/publish', update, 409)
+        draft = await self.send('PUT', endpoint, dict(version=draft['version'], actor='Editor', action='approve'))
+        update['version'] = draft['version']
+        await self.send('POST', f'/api/analysis/{draft["id"]}/publish',
+            {**update, 'decisions': {candidate['id']: 'retain'}}, 422)
+        updated = await self.send('POST', f'/api/analysis/{draft["id"]}/publish', update)
+        self.assertEqual(len(updated['payload']['rules']), 1)
+        self.assertEqual(updated['payload']['rules'][0]['stable_id'], old['stable_id'])
+        self.assertEqual(updated['payload']['rules'][0]['spec']['title'], 'Updated title')
+        exported = (await self.client.get(f'/api/releases/{original["id"]}/export')).json()
+        self.assertEqual(exported['payload'], original['payload'])
+        # A draft request ID cannot be reused for a different source release.
+        await self.send('POST', f'/api/releases/{updated["id"]}/draft', body, 409)
+
+    async def test_unpublish_stale_guard_restore_and_edit_after_unpublishing(self):
+        original, publish = await self.published_fixture()
+        url = f'/api/releases/{original["id"]}/unpublish'
+        body = dict(expected_active_id=original['id'], actor='Reviewer', note='Correcting requirements')
+        await self.send('POST', url, {**body, 'expected_active_id': None}, 409)
+        await self.send('POST', url, {**body, 'note': '  '}, 422)
+        await self.send('POST', url, body)
+        await self.send('POST', url, body, 409)
+        workflow = (await self.client.get(f'/api/guides/{self.gid}/workflow')).json()
+        self.assertIsNone(workflow['active_release_id'])
+        self.assertEqual(workflow['runs'][0]['status'], 'published')
+        self.assertEqual(workflow['releases'][0]['payload'], original['payload'])
+        await self.send('POST', f'/api/releases/{original["id"]}/activate',
+            {**body, 'expected_active_id': None})
+        await self.send('POST', url, body)
+        draft = await self.send('POST', f'/api/releases/{original["id"]}/draft',
+            dict(request_id=str(uuid4()), actor='Editor'))
+        updated = await self.send('POST', f'/api/analysis/{draft["id"]}/publish',
+            {**publish, 'version': draft['version'], 'base_release_id': None})
+        self.assertEqual(updated['payload']['rules'][0]['stable_id'], original['payload']['rules'][0]['stable_id'])
+        # Unpublishing the old release cannot clear a newly active version.
+        await self.send('POST', url, body, 409)
+
+    async def test_release_draft_validates_retained_rule_against_original_guide(self):
+        original, _ = await self.published_fixture()
+        other_gid = uuid4()
+        async with self.sessions.begin() as session:
+            # Simulate a release retaining a rule from an older guide.
+            session.add(Guide(id=other_gid, retailer_id=self.retailer, title='Newer guide',
+                filename='new.pdf', sha256=uuid4().hex, size_bytes=1, status='ready',
+                page_count=1, processed_pages=1, attention_pages=0))
+            await session.flush()
+            session.add(GuidePage(guide_id=other_gid, page_index=0, text='Different source text.',
+                text_status='extracted', image_status='ready'))
+            run = await session.get(AnalysisRun, self.rid)
+            run.guide_id = other_gid
+        draft = await self.send('POST', f'/api/releases/{original["id"]}/draft',
+            dict(request_id=str(uuid4()), actor='Editor'))
+        candidate = draft['payload']['rules'][0]
+        self.assertEqual(draft['guide_id'], str(other_gid))
+        self.assertEqual(candidate['source_guide_id'], str(self.gid))
+        edited = await self.send('PUT', f'/api/analysis/{draft["id"]}/rules/{candidate["id"]}',
+            dict(version=draft['version'], actor='Editor', action='save_and_approve',
+                 note='Clarify title', spec=rule(title='Original source retained').model_dump(mode='json')))
+        self.assertEqual(edited['payload']['rules'][0]['status'], 'approved')
+
     async def test_typed_delivery_publication_export_and_revision(self):
         from test_delivery import mapped
         response=await self.client.get('/api/rule-types')

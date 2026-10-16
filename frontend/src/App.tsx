@@ -6,7 +6,7 @@ import GuideViewer from './GuideViewer';
 import UploadDialog from './UploadDialog';
 import ConnectionsDialog from './ConnectionsDialog';
 
-function selectedGuide() { return window.location.hash.match(/^#guides\/([0-9a-f-]{36})$/i)?.[1] ?? null; }
+function selectedGuide() { return window.location.hash.match(/^#guides\/([0-9a-f-]{36})(?:\/draft\/[0-9a-f-]{36})?$/i)?.[1] ?? null; }
 
 export default function App() {
   const [retailer, setRetailer] = useState('');

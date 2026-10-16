@@ -259,10 +259,30 @@ class PublishAction(VersionedAction):
     impact_confirmed: bool
 
 
+class DraftFromRelease(BaseModel):
+    request_id: UUID
+    actor: str = Field(min_length=1, max_length=200)
+
+    @field_validator('actor')
+    @classmethod
+    def named_reviewer(cls, value):
+        if not value.strip():
+            raise ValueError('Enter your reviewer name.')
+        return value.strip()
+
+
 class RestoreAction(BaseModel):
     expected_active_id: UUID | None
     actor: str = Field(min_length=1, max_length=200)
     note: str = Field(min_length=1, max_length=5000)
+
+
+    @field_validator('actor', 'note')
+    @classmethod
+    def nonblank(cls, value):
+        if not value.strip():
+            raise ValueError('Enter a reviewer name and reason.')
+        return value.strip()
 
 
 class ConnectionAction(BaseModel):
@@ -320,8 +340,14 @@ def guard(run, version):
         raise HTTPException(409, 'Only a completed, unpublished analysis can be edited or published.')
 
 
-async def check_evidence(session, run, spec):
-    pages = (await session.scalars(select(GuidePage).where(GuidePage.guide_id == run.guide_id))).all()
+async def check_evidence(session, run, spec, source_guide_id=None):
+    source_id = UUID(str(source_guide_id)) if source_guide_id else run.guide_id
+    if source_id != run.guide_id:
+        guide = await required(session, Guide, run.guide_id)
+        source = await required(session, Guide, source_id)
+        if source.retailer_id != guide.retailer_id:
+            raise HTTPException(422, 'Rule evidence must belong to the same retailer.')
+    pages = (await session.scalars(select(GuidePage).where(GuidePage.guide_id == source_id))).all()
     try:
         validate_evidence(spec, {p.page_index+1: p.text for p in pages})
     except ValueError as exc:
@@ -448,7 +474,7 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
                 raise HTTPException(422, 'Provide the edited rule.')
             if not body.note.strip():
                 raise HTTPException(422, 'Explain the correction before saving.')
-            await check_evidence(session, run, body.spec)
+            await check_evidence(session, run, body.spec, rule['source_guide_id'])
             rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], classification=None, carried_from_release_id=None, carried_from_rule_id=None)
         if body.action != 'save':
             if body.action == 'restore' and rule['status'] != 'ignored':
@@ -463,7 +489,7 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
                 spec = RuleSpec.model_validate(rule['spec'])
                 if needs_check_mapping(spec):
                     raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
-                await check_evidence(session, run, spec)
+                await check_evidence(session, run, spec, rule['source_guide_id'])
             rule.update(carried_from_release_id=None, carried_from_rule_id=None, status={'approve': 'approved', 'save_and_approve': 'approved', 'reject': 'rejected', 'ignore': 'ignored', 'restore': 'pending'}[body.action], review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
@@ -580,7 +606,7 @@ async def bulk_approve(run_id: UUID, body: BulkApproval):
             spec = RuleSpec.model_validate(rule['spec'])
             if needs_check_mapping(spec):
                 raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
-            await check_evidence(session, run, spec)
+            await check_evidence(session, run, spec, rule['source_guide_id'])
             selected.append(rule)
         timestamp = datetime.now(timezone.utc).isoformat()
         batch_id = str(uuid4())
@@ -632,7 +658,7 @@ async def carry_approvals(run_id: UUID, body: CarryApprovals):
         if not selected:
             raise HTTPException(409, 'No pending exact matches to carry forward.')
         for rule in selected:
-            await check_evidence(session, run, RuleSpec.model_validate(rule['spec']))
+            await check_evidence(session, run, RuleSpec.model_validate(rule['spec']), rule['source_guide_id'])
         for rule in selected:
             before = deepcopy(rule)
             stable_id = matches[rule['id']]
@@ -678,6 +704,13 @@ def assemble_release(run, base, body):
     old = base.payload['rules'] if base else []
     matches = compare_rules(rules, old)['unchanged']
     decisions = dict(body.decisions)
+    if base and run.config.get('source_release_id') == str(base.id):
+        for previous in old:
+            rid = previous['stable_id']
+            if rid in approved:
+                if rid in decisions and decisions[rid] != 'replace:' + rid:
+                    raise HTTPException(422, 'A copied approved rule replaces its previous version. Ignore or reject it in Review rules before retiring it.')
+                decisions[rid] = 'replace:' + rid
     for rid, rule in approved.items():
         if rule.get('carried_from_release_id'):
             if not base or rule['carried_from_release_id'] != str(base.id) or matches.get(rid) != rule.get('carried_from_rule_id'):
@@ -711,6 +744,8 @@ def assemble_release(run, base, body):
         raise HTTPException(409, 'Map shipment requirements to the standard check catalog before publication.')
     if any(needs_classification(r['spec']) for r in result):
         raise HTTPException(409, 'Choose rule use, operational category and consumption points for every rule before publication.')
+    if len({r['stable_id'] for r in result}) != len(result):
+        raise HTTPException(422, 'A copied rule would appear twice. Replace its previous version instead of retaining it.')
     body.decisions = decisions
     return result
 
@@ -755,6 +790,44 @@ async def publish(run_id: UUID, body: PublishAction):
         head.release_id = release.id
         run.status, run.version = 'published', run.version+1
         audit(session, release.id, body.actor, 'published', payload.model_dump(mode='json'))
+        return ReleaseView.model_validate(release)
+
+
+@router.post('/releases/{release_id}/draft', response_model=RunView)
+async def draft_from_release(release_id: UUID, body: DraftFromRelease):
+    async with sessions.begin() as session:
+        # Serialize retries for the same release; the client reuses request_id on retry.
+        release = await required(session, RuleRelease, release_id, True)
+        existing = await session.get(AnalysisRun, body.request_id)
+        if existing:
+            if existing.config.get('source_release_id') != str(release.id):
+                raise HTTPException(409, 'This request ID belongs to another draft.')
+            return RunView.model_validate(existing)
+        source = await required(session, AnalysisRun, release.run_id)
+        rules = [Candidate(id=r['stable_id'], revision=r['review'].get('revision', 1),
+                           status='approved', spec=r['spec'], source_guide_id=r['source_guide_id'],
+                           review=deepcopy(r['review'])) for r in release.payload['rules']]
+        payload = RunPayload(rules=rules, coverage=deepcopy(source.payload['coverage']),
+                             warnings=deepcopy(source.payload.get('warnings', [])))
+        run = AnalysisRun(id=body.request_id, guide_id=source.guide_id, status='complete', version=1,
+                          config={'provider': 'manual', 'source_release_id': str(release.id),
+                                  'source_release_name': release.name, 'scope': release.payload['scope']},
+                          payload=payload.model_dump(mode='json'))
+        session.add(run)
+        await session.flush()
+        audit(session, run.id, body.actor, 'draft_created_from_release', {'release_id': str(release.id)})
+        return RunView.model_validate(run)
+
+
+@router.post('/releases/{release_id}/unpublish', response_model=ReleaseView)
+async def unpublish_release(release_id: UUID, body: RestoreAction):
+    async with sessions.begin() as session:
+        release = await required(session, RuleRelease, release_id)
+        head = await required(session, ReleaseHead, release.retailer_id, True)
+        if head.release_id != release_id or head.release_id != body.expected_active_id:
+            raise HTTPException(409, 'Active release changed. Refresh before unpublishing.')
+        head.release_id = None
+        audit(session, release.id, body.actor, 'unpublished', body.model_dump(mode='json'))
         return ReleaseView.model_validate(release)
 
 

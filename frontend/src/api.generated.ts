@@ -430,6 +430,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/releases/{release_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft From Release */
+        post: operations["draft_from_release_api_releases__release_id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/releases/{release_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish Release */
+        post: operations["unpublish_release_api_releases__release_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/releases/{release_id}/activate": {
         parameters: {
             query?: never;
@@ -1045,6 +1079,16 @@ export interface components {
              * @enum {string}
              */
             milestone: "before_dispatch" | "before_arrival";
+        };
+        /** DraftFromRelease */
+        DraftFromRelease: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Actor */
+            actor: string;
         };
         /** EvaluationItem */
         EvaluationItem: {
@@ -2846,6 +2890,76 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PublishAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleaseView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_from_release_api_releases__release_id__draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                release_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftFromRelease"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_release_api_releases__release_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                release_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreAction"];
             };
         };
         responses: {

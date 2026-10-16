@@ -155,8 +155,8 @@ class EvidenceAndReleaseTests(unittest.TestCase):
                 validate_evidence(rule(evidence=[{'page': 1, 'quote': quote}]), {1: '“Non-\ncompliant” ofﬁce shipments: 50 lb.'})
 
     def test_missing_rule_does_not_silently_disappear(self):
-        run=SimpleNamespace(payload={'rules':[], 'coverage':[], 'pending_batches':[]})
-        base=SimpleNamespace(payload={'rules':[{'stable_id':'old','spec':rule().model_dump()}]})
+        run=SimpleNamespace(config={}, payload={'rules':[], 'coverage':[], 'pending_batches':[]})
+        base=SimpleNamespace(id='baseline', payload={'rules':[{'stable_id':'old','spec':rule().model_dump()}]})
         with self.assertRaises(HTTPException):
             assemble_release(run,base,SimpleNamespace(decisions={}))
         self.assertEqual(len(assemble_release(run,base,SimpleNamespace(decisions={'old':'retain'}))),1)

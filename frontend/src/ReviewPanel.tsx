@@ -22,7 +22,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const comparison = useRemote<Comparison>(`/api/analysis/${run.id}/comparison`, 0, run.version);
   const [checked, setChecked] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState('');
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState(run.config.source_release_id?'all':'pending');
   const [operationalCategory, setOperationalCategory] = useState('all');
   const [consumptionPoint, setConsumptionPoint] = useState('all');
   const [purpose, setPurpose] = useState('all');
@@ -159,6 +159,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   return <div className="review-panel review-workspace">
     <div className="section-heading"><div><h2>Review rules</h2><p>{pending} awaiting review · {run.payload.rules.length - pending} decided · {run.payload.rules.length} total</p></div>
       <button className="secondary" disabled={!editable || busy || editing || adding} onClick={() => { setInitialRule(undefined); setAdding(true); }}><Plus size={16}/> Add rule</button></div>
+    {editable && !!run.config.source_release_id && <p className="notice">Draft of {String(run.config.source_release_name)}. Unchanged rules keep their approvals. Editing a rule returns it to review; publish when your changes are ready.</p>}
     {!editable && <p className="notice">{['running', 'queued'].includes(run.status) ? 'Analysis is still running. You can read the rules now; decisions become available when it finishes.' : ['failed', 'cancelled'].includes(run.status) ? 'Analysis stopped before completion. Read the saved proposals here, or resume in Analyze before making decisions.' : 'This analysis is read-only. Select a completed draft to make review decisions.'}</p>}
     {message && <p className="notice" role="status">{message}</p>}
     {error && !current && !selectedCount && <div className="error" role="alert">{error}</div>}
