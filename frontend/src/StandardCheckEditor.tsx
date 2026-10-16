@@ -6,9 +6,10 @@ const fieldLabels: Record<string,string> = {
   required_percent:'Required fulfillment (%)', quantity_basis:'Compare ordered quantity against',
   order_basis:'Ordered quantity source', maximum_unique_skus:'Maximum distinct SKUs per carton', maximum_unique_pos:'Maximum distinct POs per carton',
   required_checks:'Required label inspections', reconcile_by:'Reconcile ASN by',
+  approving_authority:'Who must approve', approval_scope:'What requires approval', milestone:'Required by',
 };
 const optionLabels: Record<string,string> = {lte:'At most (≤)',gte:'At least (≥)',original_order:'Original PO quantities',approved_current_order:'Approved current PO revision'};
-type Property = {type?:string;enum?:string[];items?:{enum?:string[]};minimum?:number;maximum?:number;exclusiveMinimum?:number};
+type Property = {type?:string;enum?:string[];items?:{enum?:string[]};minimum?:number;maximum?:number;exclusiveMinimum?:number;minLength?:number;maxLength?:number;description?:string};
 type Binding = NonNullable<RuleSpec['standard_check']>;
 export const availabilityLabels = {implemented:'Automatic verification',not_implemented:'Automatic verification · unavailable',manual:'Manual verification',external:'External confirmation',needs_mapping:'Verification not configured',legacy:'Existing verification · not mapped',guidance:'Guidance only'};
 
@@ -42,6 +43,7 @@ export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onCh
       {Object.entries(properties).map(([key,property])=><div key={key}>
         {property.type==='array'?<fieldset className="consumption-points"><legend>{fieldLabels[key]||words(key)}</legend>{property.items?.enum?.map(option=><label className="checkbox-label" key={option}><input type="checkbox" checked={Array.isArray(parameters[key])&&(parameters[key] as string[]).includes(option)} onChange={e=>changeParameter(key,e.target.checked?[...(parameters[key] as string[]||[]),option]:(parameters[key] as string[]||[]).filter(item=>item!==option))}/>{words(option)}</label>)}</fieldset>:
         <label>{fieldLabels[key]||words(key)}{property.enum?<select value={String(parameters[key]??'')} onChange={e=>changeParameter(key,e.target.value)}><option value="" disabled>Choose…</option>{property.enum.map(option=><option key={option} value={option}>{optionLabels[option]||words(option)}</option>)}</select>:
+        property.type==='string'?<input type="text" minLength={property.minLength} maxLength={property.maxLength} value={String(parameters[key]??'')} onChange={e=>changeParameter(key,e.target.value)}/>:
         <input type="number" step={property.type==='integer'?1:'any'} min={property.minimum} max={property.maximum} value={typeof parameters[key]==='number'?parameters[key] as number:''} onChange={e=>changeParameter(key,e.target.value===''?null:Number(e.target.value))}/>}</label>}
       </div>)}
       <details><summary>Required data</summary><ul>{selected.required_data.map(item=><li key={item}>{item}</li>)}</ul></details>

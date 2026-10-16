@@ -69,12 +69,38 @@ class CheckCatalogTests(unittest.TestCase):
         for identifier,method,subject,parameters in [
             ('label_placement','human','carton',{'required_checks':['no_seam_overlap']}),
             ('document_confirmation','external_evidence','shipment',{'document_type':'packing_list','milestone':'before_dispatch'}),
+            ('approval_confirmation','external_evidence','shipment',{'approving_authority':'Inbound Quality Senior Manager','approval_scope':'Floor-loaded or slip-sheet freight into Sortable FCs','milestone':'before_dispatch'}),
         ]:
             spec=rule(schema_version='1.2',verification=method,subject=subject,assertion=None,
                       standard_check={'check_id':identifier,'version':1,'parameters':parameters})
             self.assertEqual(evaluate_rule('r',spec,{'cartons':[{}],'shipment':{},'evidence':{'approved':True}})['outcome'],'cannot_determine')
         self.assertEqual(check_status(rule()).availability,'legacy')
         self.assertEqual(check_status(rule(purpose='general_guidance')).availability,'guidance')
+
+    def test_shipment_approval_preserves_scope_and_requires_external_confirmation(self):
+        spec=rule(schema_version='1.2', subject='shipment', verification='external_evidence', assertion=None,
+            operational_category='transportation_scheduling', consumption_points=['transport_planning'],
+            rule_type={'id':'transport.approval','version':1},
+            placements=[{'workflow':'transport_planning','area':'shipment_approval','behavior':'display'}],
+            applicability_text='Floor-loaded or slip-sheet freight into Sortable FCs; parcel shipments excluded.',
+            applicability={'op':'ne','path':'shipment.mode','value':'parcel'},
+            standard_check={'check_id':'approval_confirmation','version':1,'parameters':{
+                'approving_authority':'Walmart Inbound Quality Senior Manager (Labeling@walmart.com)',
+                'approval_scope':'Floor-loaded or slip-sheet freight into Sortable FCs',
+                'milestone':'before_dispatch'}})
+        self.assertEqual(check_status(spec).availability,'external')
+        self.assertEqual(evaluate_rule('r',spec,{'shipment':{'mode':'parcel'}})['outcome'],'not_applicable')
+        self.assertEqual(evaluate_rule('r',spec,{'shipment':{'mode':'ltl'},'evidence':{'approved':True}})['outcome'],'cannot_determine')
+        original=spec.model_dump(mode='json')
+        for field,value in [('approving_authority','   '),('approval_scope',''),('milestone','after_arrival')]:
+            changed=deepcopy(original)
+            changed['standard_check']['parameters'][field]=value
+            with self.subTest(field=field),self.assertRaises(ValidationError):
+                rule(**changed)
+        with self.assertRaises(ValidationError):
+            rule(**{**original,'verification':'data'})
+        with self.assertRaises(ValidationError):
+            rule(**{**original,'placements':[{'workflow':'transport_planning','area':'shipment_approval','behavior':'block'}]})
 
     def test_provider_schema_and_prompt_use_the_shared_catalog(self):
         schema=strict_schema(extraction_schema())

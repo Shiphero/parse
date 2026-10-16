@@ -54,6 +54,19 @@ class DocumentParameters(Parameters):
     milestone: Literal['before_dispatch', 'before_arrival']
 
 
+class ApprovalParameters(Parameters):
+    approving_authority: str = Field(min_length=1, max_length=500, description='Person, role or organization authorized by the source to grant approval.')
+    approval_scope: str = Field(min_length=1, max_length=2000, description='Specific shipment activity or exception that requires approval. Preserve conditions in the rule applicability.')
+    milestone: Literal['before_loading', 'before_dispatch', 'before_arrival']
+
+    @field_validator('approving_authority', 'approval_scope')
+    @classmethod
+    def nonblank_text(cls, value):
+        if not value.strip():
+            raise ValueError('Describe the required approval and its authority.')
+        return value.strip()
+
+
 class CheckBinding(Parameters):
     version: Literal[1]
 
@@ -100,7 +113,12 @@ class DocumentCheck(CheckBinding):
     parameters: DocumentParameters
 
 
-StandardCheck = Annotated[Union[MeasurementCheck, FulfillmentCheck, SkuCheck, PoCheck, PlacementCheck, AsnCheck, DocumentCheck], Field(discriminator='check_id')]
+class ApprovalCheck(CheckBinding):
+    check_id: Literal['approval_confirmation']
+    parameters: ApprovalParameters
+
+
+StandardCheck = Annotated[Union[MeasurementCheck, FulfillmentCheck, SkuCheck, PoCheck, PlacementCheck, AsnCheck, DocumentCheck, ApprovalCheck], Field(discriminator='check_id')]
 
 
 class CheckDefinition(BaseModel):
@@ -163,6 +181,15 @@ CATALOG = {
         description='Obtain external confirmation that the required document exists for this shipment before the chosen milestone. Source-guide evidence alone is not shipment-specific confirmation.',
         required_data=['Shipment-linked document, confirmation timestamp and milestone timestamp.'],
         parameters_schema=DocumentParameters.model_json_schema()),
+    'approval_confirmation': CheckDefinition(
+        id='approval_confirmation', version=1, label='Approval confirmation',
+        verification='external_evidence', availability='external', subjects=['shipment'],
+        description='Confirm that the source-designated authority granted approval for this shipment and the required activity before the specified milestone. A request, generic approval flag, guide instruction or unrelated approval is not confirmation. Preserve shipment scope, conditions and exclusions; missing evidence remains unknown.',
+        required_data=['Approval evidence linked to this shipment and the required activity or exception.',
+                       'Identity or role of the approving authority and any approval conditions.',
+                       'Approval timestamp and the relevant loading, dispatch or arrival timestamp.',
+                       'Reviewer confirmation that the evidence covers this shipment and remains applicable.'],
+        parameters_schema=ApprovalParameters.model_json_schema()),
 }
 
 

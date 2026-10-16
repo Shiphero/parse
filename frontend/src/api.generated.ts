@@ -709,6 +709,38 @@ export interface components {
             note: string;
             spec: components["schemas"]["RuleSpec-Input"];
         };
+        /** ApprovalCheck */
+        ApprovalCheck: {
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            check_id: "approval_confirmation";
+            parameters: components["schemas"]["ApprovalParameters"];
+        };
+        /** ApprovalParameters */
+        ApprovalParameters: {
+            /**
+             * Approving Authority
+             * @description Person, role or organization authorized by the source to grant approval.
+             */
+            approving_authority: string;
+            /**
+             * Approval Scope
+             * @description Specific shipment activity or exception that requires approval. Preserve conditions in the rule applicability.
+             */
+            approval_scope: string;
+            /**
+             * Milestone
+             * @enum {string}
+             */
+            milestone: "before_loading" | "before_dispatch" | "before_arrival";
+        };
         /** AsnCheck */
         AsnCheck: {
             /**
@@ -1698,7 +1730,7 @@ export interface components {
              * Standard Check
              * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
              */
-            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"] | components["schemas"]["ApprovalCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
@@ -1767,7 +1799,7 @@ export interface components {
              * Standard Check
              * @description Versioned shared check binding. Never invent IDs or availability; null means needs mapping for schema 1.2 shipment rules.
              */
-            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"]) | null;
+            standard_check?: (components["schemas"]["MeasurementCheck"] | components["schemas"]["FulfillmentCheck"] | components["schemas"]["SkuCheck"] | components["schemas"]["PoCheck"] | components["schemas"]["PlacementCheck"] | components["schemas"]["AsnCheck"] | components["schemas"]["DocumentCheck"] | components["schemas"]["ApprovalCheck"]) | null;
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
             /** Unresolved Questions */
