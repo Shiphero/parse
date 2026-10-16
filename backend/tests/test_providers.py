@@ -1,5 +1,6 @@
 import unittest
 import json
+from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -97,6 +98,72 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIn('rules.0.instruction', str(failure.exception))
         self.assertEqual(client.create.await_count, 1)
         self.assertEqual(json.loads(cached.read_text())['raw'], raw)
+
+    async def test_saved_unmapped_proposals_are_recovered_without_provider_call(self):
+        from routing_guides.check_catalog import needs_check_mapping
+        from routing_guides.evaluator import evaluate_rule
+        raw = self.extraction.model_dump(mode='json')
+        original = deepcopy(raw['rules'][0])
+        raw['rules'] = [original, {**original, 'verification': 'human'},
+                        {**original, 'verification': 'external_evidence'},
+                        {**original, 'verification': 'data', 'assertion': {
+                            'op': 'lte', 'path': 'weight', 'value': 50, 'unit': 'lb'}}]
+        cached = self.directory / 'saved-failed-batch.json'
+        saved = dict(raw=raw, pages=[1], model='original-model', usage={'input_tokens': 123},
+                     prompt_version='routing-extraction-1.9')
+        cached.write_text(json.dumps(saved))
+        before = cached.read_bytes()
+        with patch('routing_guides.analysis_provider.AsyncAnthropic') as client:
+            first = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+            second = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+        client.assert_not_called()
+        self.assertEqual(first.extraction, second.extraction)
+        self.assertEqual(first.model, 'original-model')
+        self.assertEqual(first.usage, {'input_tokens': 123})
+        self.assertEqual(first.prompt_version, 'routing-extraction-1.9')
+        self.assertEqual(cached.read_bytes(), before)
+        self.assertEqual(first.extraction.rules[0].model_dump(mode='json'), original)
+        self.assertEqual(len(first.extraction.rules), 4)
+        self.assertEqual(len(first.extraction.warnings), 3)
+        for recovered in first.extraction.rules[1:]:
+            self.assertEqual(recovered.verification, 'unresolved')
+            self.assertIsNone(recovered.assertion)
+            self.assertTrue(needs_check_mapping(recovered))
+            self.assertIn('Needs verification mapping', recovered.unresolved_questions[0])
+            self.assertEqual(recovered.evidence[0].model_dump(mode='json'), original['evidence'][0])
+            self.assertEqual(recovered.instruction, original['instruction'])
+            self.assertEqual(evaluate_rule('r', recovered, {'cartons':[{'weight':{'value':40,'unit':'lb'}}]})['outcome'], 'cannot_determine')
+        # The public rule contract remains strict outside provider ingestion.
+        with self.assertRaises(ValidationError):
+            Extraction.model_validate(raw)
+
+    def test_recovery_does_not_hide_other_errors_or_invent_check_mappings(self):
+        raw = self.extraction.model_dump(mode='json')
+        raw['rules'][0]['verification'] = 'human'
+        before = deepcopy(raw)
+        parse_extraction(raw)
+        self.assertEqual(raw, before)
+        for change in ({'standard_check': {'check_id':'invented', 'version':1, 'parameters':{}}},
+                       {'instruction': None}, {'evidence': []},
+                       {'rule_type': {'id':'invented', 'version':1}}):
+            invalid = deepcopy(raw)
+            invalid['rules'].append({**raw['rules'][0], **change})
+            with self.subTest(change=change), self.assertRaises(ValidationError):
+                parse_extraction(invalid)
+        invalid = deepcopy(raw)
+        invalid['coverage'][0]['page'] = 0
+        with self.assertRaises(ValidationError):
+            parse_extraction(invalid)
+
+    def test_valid_catalog_and_instruction_only_and_legacy_rules_are_unchanged(self):
+        from test_check_catalog import measurement
+        from test_delivery import mapped
+        manual = mapped(rule_type={'id':'pallet.wrapping','version':1}, subject='pallet',
+            verification='human', standard_check=None, consumption_points=['pallet_building'],
+            placements=[{'workflow':'pallet_building','area':'wrapping','behavior':'confirm'}])
+        raw = Extraction(rules=[measurement(), manual, rule(), rule(purpose='general_guidance')],
+                         coverage=[], warnings=['Original warning']).model_dump(mode='json')
+        self.assertEqual(parse_extraction(raw).model_dump(mode='json'), raw)
 
     def test_only_omitted_warnings_are_optional(self):
         for field in ('rules', 'coverage'):

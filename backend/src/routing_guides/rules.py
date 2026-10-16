@@ -1,6 +1,7 @@
 """Versioned rule contracts and a deliberately bounded, non-executable rule language."""
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 from routing_guides.check_catalog import StandardCheck, check_definition
 from routing_guides.rule_catalog import RuleTypeBinding, Placement, validate_delivery, instruction_only_check
@@ -111,7 +112,7 @@ class RuleSpec(StrictModel):
                 raise ValueError('Catalog checks cannot also contain a custom assertion.')
         elif self.schema_version == '1.2' and self.purpose == 'shipment_validation' and not instruction_only_check(self):
             if self.verification != 'unresolved' or self.assertion is not None:
-                raise ValueError('Unmapped catalog rules must use unresolved verification with no assertion.')
+                raise PydanticCustomError('unmapped_catalog_rule', 'Unmapped catalog rules must use unresolved verification with no assertion.')
         if self.verification == 'data' and self.assertion is None and self.standard_check is None:
             raise ValueError('Data verification requires a compliance assertion.')
         return self
