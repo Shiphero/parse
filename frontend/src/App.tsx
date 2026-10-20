@@ -4,7 +4,7 @@ import { fileSize, formatDate, statusNames, useRemote } from './api';
 import type { Library, UploadResult } from './api';
 import ParseBrand from './ParseBrand';
 import RetailerIcon from './RetailerIcon';
-import RetailersDialog from './RetailersDialog';
+import RetailersPage from './RetailersPage';
 import GuideViewer from './GuideViewer';
 import UploadDialog from './UploadDialog';
 import ConnectionsDialog from './ConnectionsDialog';
@@ -27,10 +27,10 @@ export default function App() {
   const [guideId, setGuideId] = useState(selectedGuide);
   const [notice, setNotice] = useState('');
   const [connections, setConnections] = useState(false);
-  const [manageRetailers, setManageRetailers] = useState(false);
+  const [showRetailers, setShowRetailers] = useState(() => window.location.hash === '#retailers');
   useEffect(() => { const t = window.setTimeout(() => setQuery(search), 250); return () => window.clearTimeout(t); }, [search]);
   useEffect(() => {
-    const listener = () => setGuideId(selectedGuide());
+    const listener = () => { setGuideId(selectedGuide()); setShowRetailers(window.location.hash === '#retailers'); };
     if (window.location.hash === '#brand') window.history.replaceState(null, '', '#guides');
     window.addEventListener('hashchange', listener);
     return () => window.removeEventListener('hashchange', listener);
@@ -60,14 +60,14 @@ export default function App() {
   const page = Math.floor(offset / limit) + 1;
   return <div className="shell"><aside className="sidebar">
     <a className="brand" aria-label="PARSE by ShipHero — guide library" href="#guides" onClick={() => selectRetailer('')}><ParseBrand/></a>
-    <nav className="workspace-nav" aria-label="Guide library"><button className={`nav-item ${!retailer ? 'active' : ''}`} onClick={() => selectRetailer('')} aria-current={!retailer ? 'page' : undefined}><BookOpen size={17}/> All guides <span className="nav-count">{totalGuides}</span></button></nav>
-    <div className="retailer-nav-heading"><span>Retailers</span><button className="icon-button" aria-label="Manage retailers" title="Manage retailers and icons" onClick={() => setManageRetailers(true)}><Settings2 size={15}/></button></div>
+    <nav className="workspace-nav" aria-label="Guide library"><button className={`nav-item ${!retailer && !showRetailers ? 'active' : ''}`} onClick={() => selectRetailer('')} aria-current={!retailer && !showRetailers ? 'page' : undefined}><BookOpen size={17}/> All guides <span className="nav-count">{totalGuides}</span></button></nav>
+    <div className="retailer-nav-heading"><span>Retailers</span><button className="icon-button" aria-label="Manage retailers" title="Manage retailers and icons" onClick={() => { window.location.hash = 'retailers'; }}><Settings2 size={15}/></button></div>
     <div className="sidebar-search"><Search size={14}/><input aria-label="Find retailer" placeholder="Find retailer…" value={retailerSearch} onChange={e => setRetailerSearch(e.target.value)}/>{retailerSearch && <button className="icon-button" aria-label="Clear retailer search" onClick={() => setRetailerSearch('')}><X size={12}/></button>}</div>
-    <nav className="retailer-nav-list" aria-label="Retailers">{retailers.filter(r => r.name.toLowerCase().includes(retailerSearch.trim().toLowerCase())).map(r => <button key={r.id} className={`nav-item retailer-nav ${retailer === r.id ? 'active' : ''}`} onClick={() => selectRetailer(r.id)} aria-current={retailer === r.id ? 'page' : undefined}><RetailerIcon retailer={r}/><span className="retailer-nav-name">{r.name}</span><span className="nav-count">{r.guide_count}</span></button>)}</nav>
-    <div className="sidebar-bottom"><button className="nav-item" onClick={() => setConnections(true)}><Settings2 size={16}/> Connections</button><div className="private-label"><ShieldCheck size={12}/> Internal workspace</div></div>
-  </aside><div className="main-wrap"><header className="topbar"><span><a href="#guides" onClick={() => selectRetailer('')}>Workspace</a><ChevronRight size={12}/><strong>{guideId ? 'Guide details' : retailer ? retailerName(retailer) : 'All guides'}</strong></span></header><main className={guideId ? undefined : 'library-main'}>
-    {guideId ? <GuideViewer key={guideId} guideId={guideId} retailerName={retailerName} onBack={() => { setNotice(''); window.location.hash = 'guides'; }} notice={notice}/> : <>
-      <div className="page-heading library-heading"><div className="library-title">{selectedRetailer && <RetailerIcon retailer={selectedRetailer} large/>}<h1>{selectedRetailer ? selectedRetailer.name : 'Routing guides'}</h1><span className="library-total">{selectedRetailer ? selectedRetailer.guide_count : totalGuides}</span></div><div className="library-heading-actions"><button className="secondary" onClick={() => setManageRetailers(true)}><Store size={15}/> Retailers</button><button className="primary" onClick={() => setUpload(true)} disabled={!library}><Plus size={16}/> Upload guide</button></div></div>
+    <nav className="retailer-nav-list" aria-label="Retailers">{retailers.filter(r => r.name.toLowerCase().includes(retailerSearch.trim().toLowerCase())).map(r => <button key={r.id} className={`nav-item retailer-nav ${!showRetailers && retailer === r.id ? 'active' : ''}`} onClick={() => selectRetailer(r.id)} aria-current={!showRetailers && retailer === r.id ? 'page' : undefined}><RetailerIcon retailer={r}/><span className="retailer-nav-name">{r.name}</span><span className="nav-count">{r.guide_count}</span></button>)}</nav>
+    <div className="sidebar-bottom"><a className={`nav-item ${showRetailers ? 'active' : ''}`} href="#retailers" aria-current={showRetailers ? 'page' : undefined}><Store size={16}/> Manage retailers</a><button className="nav-item" onClick={() => setConnections(true)}><Settings2 size={16}/> Connections</button><div className="private-label"><ShieldCheck size={12}/> Internal workspace</div></div>
+  </aside><div className="main-wrap"><header className="topbar"><span><a href="#guides" onClick={() => selectRetailer('')}>Workspace</a><ChevronRight size={12}/><strong>{showRetailers ? 'Retailers' : guideId ? 'Guide details' : retailer ? retailerName(retailer) : 'All guides'}</strong></span></header><main className={guideId ? undefined : 'library-main'}>
+    {showRetailers ? <RetailersPage onChanged={() => setRevision(n => n + 1)} onOpenGuides={id => { setSearch(''); setQuery(''); setStatus(''); selectRetailer(id); }}/> : guideId ? <GuideViewer key={guideId} guideId={guideId} retailerName={retailerName} onBack={() => { setNotice(''); window.location.hash = 'guides'; }} notice={notice}/> : <>
+      <div className="page-heading library-heading"><div className="library-title">{selectedRetailer && <RetailerIcon retailer={selectedRetailer} large/>}<h1>{selectedRetailer ? selectedRetailer.name : 'Routing guides'}</h1><span className="library-total">{selectedRetailer ? selectedRetailer.guide_count : totalGuides}</span></div><div className="library-heading-actions"><button className="secondary" onClick={() => { window.location.hash = 'retailers'; }}><Store size={15}/> Retailers</button><button className="primary" onClick={() => setUpload(true)} disabled={!library}><Plus size={16}/> Upload guide</button></div></div>
       <section className="library-panel" aria-label="Routing guide library">
         <div className="library-toolbar"><div className="search-field"><Search size={16}/><input aria-label="Search guides" placeholder="Search guides, retailers, versions…" value={search} onChange={e => { setSearch(e.target.value); setOffset(0); }}/>{search && <button className="icon-button" aria-label="Clear search" onClick={() => { setSearch(''); setOffset(0); }}><X size={14}/></button>}</div><select className="status-filter" aria-label="Filter by preparation status" value={status} onChange={e => { setStatus(e.target.value); setOffset(0); }}><option value="">All preparation states</option>{Object.entries(statusNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{filtersActive && <button className="text-button clear-library-filters" onClick={resetFilters}>Clear filters</button>}<span className="result-count" aria-live="polite">{library ? `${library.total} ${library.total === 1 ? 'result' : 'results'}` : 'Loading…'}</span></div>
         {error && <div className="error library-error" role="alert"><AlertCircle size={16}/><span>{error}{library ? ' Showing the last available results.' : ''}</span><button onClick={reload}>Retry</button></div>}
@@ -78,7 +78,6 @@ export default function App() {
       </section>
     </>}
   </main><footer className="site-footer"><span className="footer-brand">PARSE by ShipHero</span><span>Policies Analyzed into Rules, Standards &amp; Exceptions</span><span>Created by the Retail Solutions team.</span><span>EDI: Easy. Dependable. Integrated.</span></footer></div>
-    {manageRetailers && <RetailersDialog retailers={retailers} onClose={() => setManageRetailers(false)} onChanged={(id, iconUrl) => { setRetailers(current => current.map(r => r.id === id ? { ...r, icon_url: iconUrl } : r)); setRevision(n => n + 1); }}/>}
     {connections && <ConnectionsDialog onClose={() => setConnections(false)}/>}
     {upload && library && <UploadDialog library={library} retailer={retailer} onClose={() => setUpload(false)} onUploaded={uploaded}/>}
   </div>;

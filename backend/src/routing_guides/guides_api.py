@@ -6,14 +6,14 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, Response
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import psycopg
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from starlette.concurrency import run_in_threadpool
 
 from routing_guides.config import get_settings
 from routing_guides.db import sessions
-from routing_guides.models import Guide, GuidePage, Retailer
+from routing_guides.models import Guide, GuidePage, Retailer, ReleaseHead
 from routing_guides.retailer_icons import MAX_ICON_BYTES, normalize_icon
 from routing_guides.storage import InvalidUpload, guide_directory, save_original
 from routing_guides.tasks import dsn, prepare_guide
@@ -229,15 +229,15 @@ class RetailerIconResult(BaseModel):
     icon_url: str | None
 
 
-def require_icon_editor(request: Request) -> None:
+def require_retailer_editor(request: Request) -> None:
     # Matches Connections' same-origin browser write guard; this is not user auth.
     if request.headers.get('X-Requested-With') != 'routing-guide-parser':
-        raise HTTPException(403, 'Use the application to update retailer icons.')
+        raise HTTPException(403, 'Use the application to manage retailers.')
 
 
 @router.put('/retailers/{retailer_id}/icon', response_model=RetailerIconResult)
 async def upload_retailer_icon(retailer_id: str, request: Request, file: Annotated[UploadFile, File()]):
-    require_icon_editor(request)
+    require_retailer_editor(request)
     try:
         async with sessions() as session:
             if not await session.get(Retailer, retailer_id):
@@ -261,7 +261,7 @@ async def upload_retailer_icon(retailer_id: str, request: Request, file: Annotat
 
 @router.delete('/retailers/{retailer_id}/icon', response_model=RetailerIconResult)
 async def delete_retailer_icon(retailer_id: str, request: Request):
-    require_icon_editor(request)
+    require_retailer_editor(request)
     async with sessions.begin() as session:
         retailer = await session.get(Retailer, retailer_id)
         if retailer is None:
@@ -279,3 +279,62 @@ async def get_retailer_icon(retailer_id: str):
         raise HTTPException(404, 'Retailer icon not found.')
     return Response(content, media_type='image/png', headers={
         'Cache-Control': 'private, max-age=0, must-revalidate', 'X-Content-Type-Options': 'nosniff'})
+
+
+class RetailerInput(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+
+    @field_validator('name', mode='before')
+    @classmethod
+    def normalize_name(cls, value):
+        return ' '.join(value.split()) if isinstance(value, str) else value
+
+
+class RetailerUpdate(RetailerInput):
+    expected_name: str = Field(min_length=1, max_length=100)
+
+
+@router.get('/retailers', response_model=list[RetailerCount])
+async def list_retailers():
+    async with sessions() as session:
+        rows = (await session.execute(select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(Guide.id))
+            .outerjoin(Guide, Retailer.id == Guide.retailer_id)
+            .group_by(Retailer.id, Retailer.name, Retailer.icon_version)
+            .order_by(func.lower(Retailer.name), Retailer.id))).all()
+    return [RetailerCount(id=id, name=name, guide_count=count, icon_url=retailer_icon_url(id, version))
+            for id, name, version, count in rows]
+
+
+@router.post('/retailers', response_model=RetailerCount, status_code=201)
+async def create_retailer(body: RetailerInput, request: Request):
+    require_retailer_editor(request)
+    async with sessions.begin() as session:
+        # Serialize name changes to reject simultaneous case-insensitive duplicates.
+        await session.execute(text('SELECT pg_advisory_xact_lock(914823)'))
+        if await session.scalar(select(Retailer.id).where(func.lower(Retailer.name) == body.name.lower())):
+            raise HTTPException(409, 'A retailer with this name already exists.')
+        retailer_id = 'retailer-' + uuid4().hex
+        session.add(Retailer(id=retailer_id, name=body.name, discovery_note=''))
+        await session.flush()
+        session.add(ReleaseHead(retailer_id=retailer_id, release_id=None))
+    return RetailerCount(id=retailer_id, name=body.name, guide_count=0)
+
+
+@router.put('/retailers/{retailer_id}', response_model=RetailerCount)
+async def rename_retailer(retailer_id: str, body: RetailerUpdate, request: Request):
+    require_retailer_editor(request)
+    async with sessions.begin() as session:
+        await session.execute(text('SELECT pg_advisory_xact_lock(914823)'))
+        retailer = await session.get(Retailer, retailer_id, with_for_update=True)
+        if retailer is None:
+            raise HTTPException(404, 'Retailer not found.')
+        if retailer.name != body.expected_name:
+            raise HTTPException(409, 'This retailer was renamed elsewhere. Cancel and try again with the current name.')
+        duplicate = await session.scalar(select(Retailer.id).where(
+            func.lower(Retailer.name) == body.name.lower(), Retailer.id != retailer_id))
+        if duplicate:
+            raise HTTPException(409, 'A retailer with this name already exists.')
+        retailer.name = body.name
+        count = await session.scalar(select(func.count()).select_from(Guide).where(Guide.retailer_id == retailer_id))
+        return RetailerCount(id=retailer.id, name=retailer.name, guide_count=count,
+                             icon_url=retailer_icon_url(retailer.id, retailer.icon_version))

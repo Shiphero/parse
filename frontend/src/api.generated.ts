@@ -126,6 +126,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/retailers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Retailers */
+        get: operations["list_retailers_api_retailers_get"];
+        put?: never;
+        /** Create Retailer */
+        post: operations["create_retailer_api_retailers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/retailers/{retailer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename Retailer */
+        put: operations["rename_retailer_api_retailers__retailer_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/check-catalog": {
         parameters: {
             query?: never;
@@ -1671,6 +1706,11 @@ export interface components {
             /** Icon Url */
             icon_url: string | null;
         };
+        /** RetailerInput */
+        RetailerInput: {
+            /** Name */
+            name: string;
+        };
         /** RetailerSummary */
         RetailerSummary: {
             /** Id */
@@ -1679,6 +1719,13 @@ export interface components {
             name: string;
             /** Discovery Note */
             discovery_note: string;
+        };
+        /** RetailerUpdate */
+        RetailerUpdate: {
+            /** Name */
+            name: string;
+            /** Expected Name */
+            expected_name: string;
         };
         /** ReviewAction */
         ReviewAction: {
@@ -2457,6 +2504,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RetailerIconResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_retailers_api_retailers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetailerCount"][];
+                };
+            };
+        };
+    };
+    create_retailer_api_retailers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetailerInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetailerCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_retailer_api_retailers__retailer_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                retailer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetailerUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetailerCount"];
                 };
             };
             /** @description Validation Error */

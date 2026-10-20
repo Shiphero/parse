@@ -819,23 +819,10 @@ input[type=checkbox] { accent-color: var(--accent); }
 .library-panel .empty-library { min-height:220px; padding:42px 20px; color:var(--text-muted); }
 .library-panel .empty-library h2 { font-size:16px; font-weight:500; letter-spacing:0; margin:14px 0 20px; }
 .site-footer { padding:12px 20px; gap:2px 12px; font-size:10px; background:transparent; border-top:0; color:var(--text-muted); }
-.retailers-dialog { width:540px; }
-.retailer-format-note { font-size:12px; color:var(--text-muted); margin-bottom:16px; }
-.retailer-manager-search { width:100%; margin:0 0 12px; }
-.retailer-manager-list { max-height:50dvh; overflow:auto; }
-.retailer-manager-row { display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
-.retailer-manager-name { min-width:0; }
-.retailer-manager-name strong { font-size:13px; font-weight:600; }
-.retailer-manager-name small { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; }
-.retailer-manager-actions { display:flex; align-items:center; gap:4px; margin-left:auto; flex-shrink:0; }
 .icon-upload { position:relative; cursor:pointer; overflow:hidden; font-size:11px; min-height:30px; padding:5px 9px; }
 .icon-upload input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .icon-upload:focus-within { outline:3px solid var(--focus); outline-offset:2px; }
 .icon-upload.disabled { opacity:.5; cursor:default; }
-.retailer-manager-footer { display:flex; justify-content:flex-end; margin-top:18px; }
-.retailer-save-message { margin:12px 0 0; font-size:12px; color:var(--success); }
-.retailer-no-results { padding:20px 0; font-size:13px; color:var(--text-muted); }
-.retailers-dialog .error { margin-top:12px; font-size:12px; }
 @media(max-width:1100px) {
   .sidebar { width:200px; }
   .main-wrap { margin-left:200px; }
@@ -868,3 +855,34 @@ input[type=checkbox] { accent-color: var(--accent); }
   .library-pagination>div { margin-left:auto; }
   .site-footer { font-size:9px; }
 }
+
+/* Retailer directory and inline editing. */
+.sidebar-bottom a.nav-item { text-decoration:none; }
+.retailer-page-panel { margin-top:16px; }
+.retailer-table-wrap { max-height:calc(100dvh - 285px); overflow:auto; }
+.retailer-management-table { min-width:560px; }
+.retailer-management-table th:first-child { width:40%; }
+.retailer-management-table th:last-child { width:120px; }
+.retailer-name-cell { display:flex; align-items:center; gap:12px; }
+.retailer-name-cell>strong { font-size:13px; font-weight:600; }
+.retailer-guide-count { display:inline-flex; align-items:center; gap:8px; background:transparent; padding:6px 0; color:var(--accent); font-size:12px; }
+.retailer-icon-controls { display:flex; align-items:center; gap:4px; }
+.retailer-rename-button { font-size:11px; padding:5px 8px; min-height:30px; }
+.retailer-create-form { display:flex; align-items:center; gap:10px; padding:14px; border:1px solid var(--border); border-radius:7px; background:var(--surface); margin-bottom:16px; }
+.retailer-create-form label { font-size:12px; font-weight:600; white-space:nowrap; }
+.retailer-create-form input,.retailer-rename-form input { min-width:100px; max-width:350px; width:100%; padding:7px 9px; border:1px solid var(--input-border); border-radius:5px; color:var(--text); background:var(--surface); font-size:13px; }
+.retailer-create-form .primary,.retailer-create-form .secondary { min-height:34px; font-size:12px; }
+.retailer-rename-form { display:flex; align-items:center; gap:3px; width:100%; }
+.retailer-page-notice { display:flex; align-items:center; gap:8px; padding:8px 12px; font-size:12px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--success); }
+.retailer-page-notice .icon-button { margin-left:auto; width:24px; height:24px; }
+.retailer-icon-hint { font-size:11px; }
+.retailer-page-number { align-self:center; min-width:40px; text-align:center; font-size:11px; }
+@media(max-width:760px) {
+  .retailer-create-form { flex-wrap:wrap; }
+  .retailer-create-form label { width:100%; }
+  .retailer-create-form input { max-width:none; }
+  .retailer-icon-hint { display:none; }
+  .retailer-table-wrap { max-height:65dvh; }
+}
+
+.library-heading>.primary { width:auto; margin-left:auto; min-height:34px; padding:7px 11px; font-size:12px; }

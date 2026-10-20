@@ -126,3 +126,48 @@ class LibraryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(removed.json(), {'icon_url': None})
         self.assertEqual((await self.client.get(endpoint)).status_code, 404)
         self.assertEqual((await self.library())['total'], 301)
+
+    async def test_create_retailer_normalizes_name_and_initializes_release_head(self):
+        from routing_guides.models import ReleaseHead
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        name = 'New Retailer ' + uuid4().hex
+        blocked = await self.client.post('/api/retailers', json={'name': name})
+        self.assertEqual(blocked.status_code, 403)
+        result = await self.client.post('/api/retailers', headers=headers, json={'name': '  ' + name.replace(' ', '  ') + '  '})
+        self.assertEqual(result.status_code, 201, result.text)
+        retailer = result.json()
+        self.assertEqual(retailer['name'], name)
+        self.assertEqual(retailer['guide_count'], 0)
+        self.assertIsNone(retailer['icon_url'])
+        async with self.sessions() as session:
+            self.assertIsNotNone(await session.get(ReleaseHead, retailer['id']))
+        duplicate = await self.client.post('/api/retailers', headers=headers, json={'name': name.upper()})
+        self.assertEqual(duplicate.status_code, 409)
+        listed = await self.client.get('/api/retailers')
+        self.assertIn(retailer, listed.json())
+        library = await self.library()
+        self.assertIn(retailer, library['retailers'])
+        for bad_name in ('', '   ', 'x' * 101):
+            response = await self.client.post('/api/retailers', headers=headers, json={'name': bad_name})
+            self.assertEqual(response.status_code, 422)
+
+    async def test_rename_keeps_guides_icons_and_id_and_rejects_stale_or_duplicate_names(self):
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        endpoint = f'/api/retailers/{self.retailer}'
+        icon = await self.client.put(endpoint + '/icon', headers=headers, files={'file': ('icon.png', picture(), 'image/png')})
+        renamed = 'Renamed ' + uuid4().hex
+        payload = {'name': renamed, 'expected_name': self.name}
+        self.assertEqual((await self.client.put(endpoint, json=payload)).status_code, 403)
+        result = await self.client.put(endpoint, headers=headers, json=payload)
+        self.assertEqual(result.status_code, 200, result.text)
+        self.assertEqual(result.json()['id'], self.retailer)
+        self.assertEqual(result.json()['guide_count'], 301)
+        self.assertEqual(result.json()['icon_url'], icon.json()['icon_url'])
+        self.assertEqual((await self.library(q=renamed))['total'], 301)
+        self.assertEqual((await self.client.put(endpoint, headers=headers, json=payload)).status_code, 409)
+        second = 'Another ' + uuid4().hex
+        await self.client.post('/api/retailers', headers=headers, json={'name': second})
+        duplicate = await self.client.put(endpoint, headers=headers, json={'name': second.upper(), 'expected_name': renamed})
+        self.assertEqual(duplicate.status_code, 409)
+        missing = await self.client.put('/api/retailers/no-such-retailer', headers=headers, json=payload)
+        self.assertEqual(missing.status_code, 404)
