@@ -47,7 +47,7 @@ def reconcile_warnings(rules: list[dict]) -> list[str]:
 async def run_analysis(run_id: UUID):
     async with sessions.begin() as session:
         run = await session.get(AnalysisRun, run_id, with_for_update=True)
-        if not run or run.status in {'cancelled', 'complete', 'published'}:
+        if not run or run.status in {'cancelled', 'complete', 'published', 'deleted'}:
             return
         run.status, run.error = 'running', None
         config, guide_id = deepcopy(run.config), run.guide_id
@@ -59,7 +59,7 @@ async def run_analysis(run_id: UUID):
         while True:
             async with sessions.begin() as session:
                 run = await session.get(AnalysisRun, run_id, with_for_update=True)
-                if run.status == 'cancelled':
+                if run.status in {'cancelled', 'deleted'}:
                     return
                 payload = deepcopy(run.payload)
                 pending = payload['pending_batches']
@@ -101,7 +101,7 @@ async def run_analysis(run_id: UUID):
                 if exc.split and len(batch) > 1:
                     async with sessions.begin() as session:
                         run = await session.get(AnalysisRun, run_id, with_for_update=True)
-                        if run.status == 'cancelled':
+                        if run.status in {'cancelled', 'deleted'}:
                             return
                         data = deepcopy(run.payload)
                         midpoint = len(batch)//2
@@ -111,7 +111,7 @@ async def run_analysis(run_id: UUID):
                 raise
             async with sessions.begin() as session:
                 run = await session.get(AnalysisRun, run_id, with_for_update=True)
-                if run.status == 'cancelled':
+                if run.status in {'cancelled', 'deleted'}:
                     return
                 data = deepcopy(run.payload)
                 # Queue execution lock serializes this run; batch result and checkpoint commit together.
@@ -125,6 +125,6 @@ async def run_analysis(run_id: UUID):
     except Exception as exc:
         async with sessions.begin() as session:
             run = await session.get(AnalysisRun, run_id, with_for_update=True)
-            if run.status != 'cancelled':
+            if run.status not in {'cancelled', 'deleted'}:
                 run.status = 'failed'
                 run.error = str(exc) if isinstance(exc, (ProviderFailure, ValueError)) else 'Analysis stopped unexpectedly. Completed batches are saved; retry to resume.'

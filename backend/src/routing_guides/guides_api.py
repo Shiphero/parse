@@ -173,6 +173,32 @@ async def get_guide(guide_id: UUID) -> GuideDetail:
         return GuideDetail(**GuideSummary.model_validate(guide).model_dump(), pages=pages, can_retry=can_retry)
 
 
+class GuideRename(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=1, max_length=250)
+    expected_title: str = Field(min_length=1, max_length=250)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def trim_title(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
+@router.patch("/guides/{guide_id}", response_model=GuideSummary)
+async def rename_guide(guide_id: UUID, body: GuideRename, request: Request) -> GuideSummary:
+    if request.headers.get("X-Requested-With") != "routing-guide-parser":
+        raise HTTPException(403, "Use the application to rename guides.")
+    async with sessions.begin() as session:
+        guide = await session.get(Guide, guide_id, with_for_update=True)
+        if guide is None:
+            raise HTTPException(404, "Guide not found.")
+        if guide.title != body.expected_title:
+            raise HTTPException(409, "This guide was renamed elsewhere. Cancel and try again with the current title.")
+        guide.title = body.title
+        await session.flush()
+        return GuideSummary.model_validate(guide)
+
+
 @router.post("/guides/{guide_id}/retry", status_code=202)
 async def retry_preparation(guide_id: UUID) -> dict[str, str]:
     async with await psycopg.AsyncConnection.connect(dsn) as connection:

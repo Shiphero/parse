@@ -62,6 +62,67 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         release = await self.send('POST', f'/api/analysis/{self.rid}/publish', body)
         return release, body
 
+    async def test_version_delete_restore_preserves_payload_and_blocks_stale_writes(self):
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        url = f'/api/analysis/{self.rid}'
+        body = {'version': 1, 'actor': 'Reviewer'}
+        self.assertEqual((await self.client.post(url+'/delete', json=body)).status_code, 403)
+        deleted = await self.client.post(url+'/delete', json=body, headers=headers)
+        self.assertEqual(deleted.status_code, 200, deleted.text)
+        self.assertEqual(deleted.json()['status'], 'deleted')
+        workflow = (await self.client.get(f'/api/guides/{self.gid}/workflow')).json()
+        self.assertEqual(workflow['runs'], [])
+        self.assertEqual(len(workflow['deleted_runs']), 1)
+        # A queued task must not resurrect a deleted analysis.
+        await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual((await self.client.post(url+'/restore', json=body, headers=headers)).status_code, 409)
+        restored = await self.client.post(url+'/restore', json={**body, 'version': 2}, headers=headers)
+        self.assertEqual(restored.status_code, 200, restored.text)
+        self.assertEqual(restored.json()['status'], 'complete')
+        self.assertEqual(restored.json()['payload'], deleted.json()['payload'])
+        self.assertNotIn('deletion', restored.json()['config'])
+
+    async def test_delete_active_release_requires_unpublish_and_restore_does_not_activate(self):
+        release, _ = await self.published_fixture()
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        url = f'/api/analysis/{self.rid}'
+        workflow_url = f'/api/guides/{self.gid}/workflow'
+        workflow = (await self.client.get(workflow_url)).json()
+        version = workflow['runs'][0]['version']
+        body = {'version': version, 'actor': 'Reviewer'}
+        self.assertEqual((await self.client.post(url+'/delete', json=body, headers=headers)).status_code, 409)
+        await self.send('POST', f'/api/releases/{release["id"]}/unpublish',
+                        {'actor': 'Reviewer', 'note': 'Retire fixture', 'expected_active_id': release['id']})
+        deleted = await self.client.post(url+'/delete', json=body, headers=headers)
+        self.assertEqual(deleted.status_code, 200, deleted.text)
+        self.assertEqual((await self.client.get(workflow_url)).json()['releases'], [])
+        await self.send('POST', f'/api/releases/{release["id"]}/activate',
+                        {'actor': 'Reviewer', 'note': 'Restore fixture', 'expected_active_id': None}, 409)
+        self.assertEqual((await self.client.get(f'/api/releases/{release["id"]}/export?format=json')).status_code, 200)
+        restored = await self.client.post(url+'/restore', json={**body, 'version': version+1}, headers=headers)
+        self.assertEqual(restored.status_code, 200, restored.text)
+        workflow = (await self.client.get(workflow_url)).json()
+        self.assertEqual(workflow['runs'][0]['status'], 'published')
+        self.assertEqual(len(workflow['releases']), 1)
+        self.assertIsNone(workflow['active_release_id'])
+
+    async def test_cannot_delete_analysis_or_classification_in_progress(self):
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        for status in ('queued', 'running'):
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                run.status = status
+            response = await self.client.post(f'/api/analysis/{self.rid}/delete',
+                json={'version': 1, 'actor': 'Reviewer'}, headers=headers)
+            self.assertEqual(response.status_code, 409)
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'complete'
+            run.payload = {**run.payload, 'classification_job': {'status': 'running'}}
+        response = await self.client.post(f'/api/analysis/{self.rid}/delete',
+            json={'version': 1, 'actor': 'Reviewer'}, headers=headers)
+        self.assertEqual(response.status_code, 409)
+
     async def test_release_draft_preserves_approval_identity_and_original(self):
         original, publish = await self.published_fixture()
         url = f'/api/releases/{original["id"]}/draft'

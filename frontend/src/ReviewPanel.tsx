@@ -15,8 +15,8 @@ const ruleTypes: { value: RuleSpec['subject']; label: string }[] = [
   { value: 'document', label: 'Documents' },
 ];
 
-export default function ReviewPanel({ run, actor, onActorChange, reload, connections }: {
-  run: Run; actor: string; onActorChange: (value: string) => void; reload: () => void; connections: Connection[];
+export default function ReviewPanel({ run, actor, onActorChange, reload, connections, onEditingChange }: {
+  run: Run; actor: string; onActorChange: (value: string) => void; reload: () => void; connections: Connection[]; onEditingChange?: (editing:boolean)=>void;
 }) {
   const typeCatalog = useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const comparison = useRemote<Comparison>(`/api/analysis/${run.id}/comparison`, 0, run.version);
@@ -74,6 +74,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       run.payload.rules.some(r => r.id === id && r.revision === revision && r.status === 'pending'))));
   }, [run.version]);
   useEffect(() => { setScopeConfirmed(false); }, [comparison.data?.base_release_id]);
+  useEffect(() => { onEditingChange?.(editing || adding); return () => onEditingChange?.(false); }, [editing, adding, onEditingChange]);
   const resetView = () => { focusAfterNavigation.current=null; setPage(0); setSelected(''); setChecked({}); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');

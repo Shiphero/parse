@@ -1008,3 +1008,21 @@ main:has(.guide-workspace) { max-width:none; padding:20px 24px; }
   .shell:has(.guide-workspace) .retailer-nav-list { display:none; }
   .shell:has(.guide-workspace) .sidebar-bottom { display:flex; gap:18px; }
 }
+
+.guide-title-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.guide-title-row .text-button { display:inline-flex; align-items:center; gap:4px; flex-shrink:0; font-size:12px; }
+.guide-header > div:first-child { flex:1; min-width:0; }
+.guide-rename-form { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }
+.guide-rename-form input { flex:1; min-width:180px; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font:inherit; }
+.guide-rename-form .error { width:100%; margin:0; }
+
+.version-workspace { border-bottom:1px solid var(--border); }
+.version-actions { margin-left:auto; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.version-actions .text-button { display:inline-flex; align-items:center; gap:5px; }
+.version-effective { font-size:11px; }
+.version-release-context { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding:8px 16px; font-size:12px; }
+.version-management { padding:12px 16px; border-top:1px solid var(--border); }
+.version-management > label { max-width:240px; }
+.version-delete-confirm p { margin:8px 0; font-size:12px; }
+.deleted-versions > div { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; }
+@media(max-width:760px) { .version-actions { margin-left:0; } .version-release-context { padding:8px 12px; } }

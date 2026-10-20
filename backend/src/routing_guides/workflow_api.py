@@ -168,6 +168,7 @@ class ConnectionView(BaseModel):
 
 class WorkflowView(BaseModel):
     runs: list[RunView]
+    deleted_runs: list[RunView] = Field(default_factory=list)
     releases: list[ReleaseView]
     active_release_id: UUID | None
     connections: list[ConnectionView]
@@ -376,9 +377,9 @@ async def workflow(guide_id: UUID):
     async with sessions() as session:
         guide = await required(session, Guide, guide_id)
         runs = (await session.scalars(select(AnalysisRun).where(AnalysisRun.guide_id == guide_id).order_by(AnalysisRun.created_at.desc()))).all()
-        releases = (await session.scalars(select(RuleRelease).where(RuleRelease.retailer_id == guide.retailer_id).order_by(RuleRelease.created_at.desc()))).all()
+        releases = (await session.scalars(select(RuleRelease).join(AnalysisRun, RuleRelease.run_id == AnalysisRun.id).where(RuleRelease.retailer_id == guide.retailer_id, AnalysisRun.status != 'deleted').order_by(RuleRelease.created_at.desc()))).all()
         head = await session.get(ReleaseHead, guide.retailer_id)
-        return WorkflowView(runs=[RunView.model_validate(r) for r in runs], releases=[ReleaseView.model_validate(r) for r in releases], active_release_id=head.release_id if head else None, connections=statuses())
+        return WorkflowView(runs=[RunView.model_validate(r) for r in runs if r.status != 'deleted'], deleted_runs=[RunView.model_validate(r) for r in runs if r.status == 'deleted'], releases=[ReleaseView.model_validate(r) for r in releases], active_release_id=head.release_id if head else None, connections=statuses())
 
 
 @router.post('/guides/{guide_id}/analysis', response_model=RunView, status_code=201)
@@ -386,6 +387,8 @@ async def start_analysis(guide_id: UUID, body: StartAnalysis):
     async with sessions() as session:
         existing = await session.get(AnalysisRun, body.request_id)
         if existing:
+            if existing.status == 'deleted':
+                raise HTTPException(409, 'Restore this deleted version before opening it.')
             if existing.guide_id != guide_id:
                 raise HTTPException(409, 'Request ID belongs to another guide.')
             return RunView.model_validate(existing)
@@ -419,6 +422,50 @@ async def start_analysis(guide_id: UUID, body: StartAnalysis):
             await analyze_guide.configure(connection=conn, lock=f'analysis:{body.request_id}', queueing_lock=f'analysis:{body.request_id}').defer_async(run_id=str(body.request_id))
     async with sessions() as session:
         return RunView.model_validate(await required(session, AnalysisRun, body.request_id))
+
+
+@router.post('/analysis/{run_id}/delete', response_model=RunView)
+async def delete_version(run_id: UUID, body: VersionedAction, request: Request):
+    if request.headers.get('X-Requested-With') != 'routing-guide-parser':
+        raise HTTPException(403, 'Use the application to delete versions.')
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        if run.version != body.version:
+            raise HTTPException(409, 'This version changed. Refresh before deleting.')
+        if run.status not in {'complete', 'failed', 'cancelled', 'published'}:
+            raise HTTPException(409, 'Stop the analysis before deleting this version.')
+        if (run.payload.get('classification_job') or {}).get('status') in {'queued', 'running'}:
+            raise HTTPException(409, 'Stop classification before deleting this version.')
+        release = await session.scalar(select(RuleRelease).where(RuleRelease.run_id == run_id))
+        if release:
+            head = await required(session, ReleaseHead, release.retailer_id, True)
+            if head.release_id == release.id:
+                raise HTTPException(409, 'Unpublish the active release before deleting this version.')
+        previous_status = run.status
+        run.config = {**run.config, 'deletion': {'previous_status': previous_status,
+            'deleted_at': datetime.now(timezone.utc).isoformat(), 'actor': body.actor,
+            'release_name': release.name if release else None}}
+        run.status, run.version = 'deleted', run.version + 1
+        audit(session, run.id, body.actor, 'version_deleted', {'previous_status': previous_status})
+        return RunView.model_validate(run)
+
+
+@router.post('/analysis/{run_id}/restore', response_model=RunView)
+async def restore_version(run_id: UUID, body: VersionedAction, request: Request):
+    if request.headers.get('X-Requested-With') != 'routing-guide-parser':
+        raise HTTPException(403, 'Use the application to restore versions.')
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        if run.status != 'deleted' or run.version != body.version:
+            raise HTTPException(409, 'This version changed. Refresh before restoring.')
+        config = deepcopy(run.config)
+        previous_status = config.get('deletion', {}).get('previous_status')
+        if previous_status not in {'complete', 'failed', 'cancelled', 'published'}:
+            raise HTTPException(409, 'This version has no restorable state.')
+        del config['deletion']
+        run.config, run.status, run.version = config, previous_status, run.version + 1
+        audit(session, run.id, body.actor, 'version_restored', {'status': previous_status})
+        return RunView.model_validate(run)
 
 
 @router.post('/analysis/{run_id}/cancel')
@@ -800,10 +847,14 @@ async def draft_from_release(release_id: UUID, body: DraftFromRelease):
         release = await required(session, RuleRelease, release_id, True)
         existing = await session.get(AnalysisRun, body.request_id)
         if existing:
+            if existing.status == 'deleted':
+                raise HTTPException(409, 'Restore this deleted draft before opening it.')
             if existing.config.get('source_release_id') != str(release.id):
                 raise HTTPException(409, 'This request ID belongs to another draft.')
             return RunView.model_validate(existing)
         source = await required(session, AnalysisRun, release.run_id)
+        if source.status == 'deleted':
+            raise HTTPException(409, 'Restore the deleted version before creating a draft.')
         rules = [Candidate(id=r['stable_id'], revision=r['review'].get('revision', 1),
                            status='approved', spec=r['spec'], source_guide_id=r['source_guide_id'],
                            review=deepcopy(r['review'])) for r in release.payload['rules']]
@@ -835,6 +886,9 @@ async def unpublish_release(release_id: UUID, body: RestoreAction):
 async def activate_release(release_id: UUID, body: RestoreAction):
     async with sessions.begin() as session:
         release = await required(session, RuleRelease, release_id)
+        source = await required(session, AnalysisRun, release.run_id, True)
+        if source.status == 'deleted':
+            raise HTTPException(409, 'Restore the deleted version before activating its release.')
         head = await required(session, ReleaseHead, release.retailer_id, True)
         if head.release_id != body.expected_active_id:
             raise HTTPException(409, 'Active release changed. Refresh before restoring.')

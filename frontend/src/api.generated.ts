@@ -36,7 +36,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename Guide */
+        patch: operations["rename_guide_api_guides__guide_id__patch"];
         trace?: never;
     };
     "/api/guides/{guide_id}/retry": {
@@ -257,6 +258,40 @@ export interface paths {
         put?: never;
         /** Start Analysis */
         post: operations["start_analysis_api_guides__guide_id__analysis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Version */
+        post: operations["delete_version_api_analysis__run_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Version */
+        post: operations["restore_version_api_analysis__run_id__restore_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1418,6 +1453,13 @@ export interface components {
             /** Issue */
             issue: string | null;
         };
+        /** GuideRename */
+        GuideRename: {
+            /** Title */
+            title: string;
+            /** Expected Title */
+            expected_title: string;
+        };
         /** GuideSummary */
         GuideSummary: {
             /**
@@ -2149,6 +2191,8 @@ export interface components {
         WorkflowView: {
             /** Runs */
             runs: components["schemas"]["RunView"][];
+            /** Deleted Runs */
+            deleted_runs?: components["schemas"]["RunView"][];
             /** Releases */
             releases: components["schemas"]["ReleaseView"][];
             /** Active Release Id */
@@ -2279,6 +2323,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GuideDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_guide_api_guides__guide_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                guide_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideRename"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideSummary"];
                 };
             };
             /** @description Validation Error */
@@ -2748,6 +2827,76 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_version_api_analysis__run_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_version_api_analysis__run_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

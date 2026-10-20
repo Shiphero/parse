@@ -210,3 +210,11 @@ Open **Manage retailers** in the sidebar or **Retailers** above the library to u
 A guide with saved rules opens on **Rules**. **Source** contains the PDF page viewer with direct page entry and optional extracted text. **Analysis** shows progress and failure details before offering a new run; stopped work can be resumed from its existing checkpoint. **Releases** retains publication, export, draft and unpublish controls, while **Scenarios** holds shipment checks. Source page position, rule filters/edits and scenario input survive tab changes within the same guide. The compact rules table keeps verification, workflow, page and status visible; **More columns** adds category and rule use.
 
 The redesign does not relax review or publication requirements. Incomplete analyses remain read-only, failures retain their full diagnostic text, and starting or resuming analysis still requires an explicit action.
+
+### Version selection and deletion
+
+The working-version selector sits above the guide tabs. It selects the rules and analysis being viewed, the draft used for publishing, and the published release used for scenario checks. An unpublished working version cannot be evaluated as a release. The source PDF is shared by all working versions of that guide. Release history is scoped to the retailer, and the active retailer release is identified independently of the selected version.
+
+The document effective date is upload metadata; a release effective date is assigned at publication. An unset document date does not mean there is no active release.
+
+Delete version is recoverable. It hides the run and any inactive release from the normal lists, preserves payloads and audit history, and exposes Restore under Deleted versions. Stop analysis/classification first; unpublish an active release first. Restoring a published version makes it visible again but does not activate it. Existing exports and evaluations pinned to immutable releases remain available. Deletion and restoration require a reviewer name and an unchanged version number.
