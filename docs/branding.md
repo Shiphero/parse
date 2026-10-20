@@ -8,7 +8,7 @@ Tagline: **From retailer requirements to operational rules.**
 
 PARSE is the product name; “by ShipHero” is the parent endorsement. The coral geometric P shares the rounded hexagonal construction of ShipHero's S without replacing it. The official ShipHero logo remains intact in the endorsement. This is a proposed product identity, not a replacement corporate brand standard.
 
-The app uses `ParseBrand.tsx` for the compact lockup and the standalone mark as its favicon. Brand reference material and downloadable assets stay in the repository; there is no dedicated brand page in the app. The original Retail Solutions footer wording is preserved. The Git repository and infrastructure names stay `routing-guide-parser` / `routing-guides`.
+The app uses `ParseBrand.tsx` for the compact lockup and the standalone mark as its favicon. Brand reference material and downloadable assets stay in the repository; there is no dedicated brand page in the app. The original Retail Solutions footer wording is preserved. The Git repository and project directory are named `parse`. Existing infrastructure names remain `routing-guides` to preserve Docker volumes and local data.
 
 ## Assets
 

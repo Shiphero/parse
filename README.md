@@ -1,6 +1,10 @@
-# routing-guide-parser
+# parse
 
-A local application for turning retailer routing guides into reviewed rules and shipment validations. The initial foundation runs a React interface, FastAPI backend, PostgreSQL database and Procrastinate worker in Docker.
+**PARSE by ShipHero — Policies Analyzed into Rules, Standards & Exceptions.**
+
+PARSE turns retailer routing guides into structured rules that people and software can use. Upload a guide, use AI to propose rules with links to the original evidence, review and approve them, and publish a versioned ruleset. Rules can provide warehouse instructions and images, describe transportation or EDI requirements, or validate shipment scenarios. Updated guides can be compared with earlier rules before changes are approved.
+
+The repository and project directory are named `parse`. The application runs a React interface, FastAPI backend, PostgreSQL database and Procrastinate worker in Docker. The existing Docker Compose project name remains `routing-guides` to preserve its database and document volumes.
 
 ## Start locally
 
