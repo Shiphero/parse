@@ -73,6 +73,43 @@ class LibraryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()
 
+    async def test_editions_group_in_library_and_keep_source_ids(self):
+        first = (await self.library(sort='title', direction='asc'))['items'][0]
+        from uuid import UUID
+        root = UUID(first['id'])
+        edition_id = uuid4()
+        async with self.sessions.begin() as session:
+            session.add(Guide(id=edition_id, retailer_id=self.retailer, title=first['title'],
+                series_id=root, previous_guide_id=root, edition_number=2,
+                version_label='2026 edition', filename='new.pdf', sha256=uuid4().hex,
+                size_bytes=1, status='ready'))
+        library = await self.library(sort='title', direction='asc')
+        self.assertEqual(library['total'], 301)
+        self.assertEqual(library['items'][0]['id'], str(edition_id))
+        self.assertEqual(next(r for r in library['retailers'] if r['id']==self.retailer)['guide_count'], 301)
+        detail = (await self.client.get(f'/api/guides/{root}')).json()
+        self.assertEqual([e['id'] for e in detail['editions']], [str(edition_id), str(root)])
+        choices = (await self.client.get(f'/api/retailers/{self.retailer}/guide-choices')).json()
+        self.assertIn(str(edition_id), [g['id'] for g in choices])
+        self.assertNotIn(str(root), [g['id'] for g in choices])
+        renamed = await self.client.patch(f'/api/guides/{edition_id}',
+            headers={'X-Requested-With': 'routing-guide-parser'},
+            json={'title':'Packaging guide', 'expected_title':first['title']})
+        self.assertEqual(renamed.status_code, 200, renamed.text)
+        detail = (await self.client.get(f'/api/guides/{root}')).json()
+        self.assertEqual({e['title'] for e in detail['editions']}, {'Packaging guide'})
+
+    async def test_upload_edition_rejects_parent_from_another_retailer(self):
+        first = (await self.library())['items'][0]
+        other = 'test-' + uuid4().hex
+        async with self.sessions.begin() as session:
+            session.add(Retailer(id=other, name='Other retailer', discovery_note='Synthetic'))
+        response = await self.client.post('/api/guides', data={'retailer_id':other,
+            'title':'Wrong retailer', 'previous_guide_id':first['id']},
+            files={'file':('guide.pdf',b'%PDF-1.4 synthetic','application/pdf')})
+        self.assertEqual(response.status_code, 422)
+        self.assertIn('existing guide for this retailer', response.json()['detail'])
+
     async def test_large_library_paginates_without_skipping_or_repeating(self):
         ids = []
         for offset in (0, 100, 200, 300):

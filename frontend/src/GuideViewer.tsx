@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { AlertCircle, ArrowLeft, Download, LoaderCircle, Pencil, RefreshCw } from 'lucide-react';
 import WorkflowPanel from './WorkflowPanel';
 import GuideSource from './GuideSource';
+import UploadDialog from './UploadDialog';
 import { fileSize, formatDate, jsonRequest, request, useRemote } from './api';
-import type { GuideDetail } from './api';
+import type { GuideDetail, Library, UploadResult } from './api';
 
-export default function GuideViewer({ guideId, retailerName, onBack, notice }: {
-  guideId: string; retailerName: (id: string) => string; onBack: () => void; notice: string;
+export default function GuideViewer({ guideId, retailerName, onBack, notice, library, onUploaded }: {
+  guideId: string; retailerName: (id: string) => string; onBack: () => void; notice: string; library: Library | null; onUploaded: (result:UploadResult)=>void;
 }) {
   const { data: guide, error, reload } = useRemote<GuideDetail>(`/api/guides/${guideId}`, 4000);
+  const [upload, setUpload] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [actionError, setActionError] = useState('');
   const [renaming, setRenaming] = useState(false);
@@ -47,6 +49,8 @@ export default function GuideViewer({ guideId, retailerName, onBack, notice }: {
       {['queued','preparing'].includes(guide.status) && <div className="guide-preparation-note" role="status"><LoaderCircle size={15} className="spin"/>{guide.status === 'queued' ? 'Preparation queued' : `Preparing pages · ${guide.processed_pages} / ${guide.page_count ?? '—'}`}</div>}
       {(guide.error || guide.attention_pages > 0) && <div className="attention-banner"><AlertCircle size={16}/><span>{guide.error || `${guide.attention_pages} pages need preparation retried.`}</span>{guide.can_retry && <button className="secondary" onClick={retry} disabled={retrying}><RefreshCw size={14}/>{retrying ? 'Retrying…' : 'Retry preparation'}</button>}</div>}
       {actionError && <div className="error" role="alert">{actionError}</div>}
+      <div className="document-edition-bar"><label>Document edition<select aria-label="Document edition" value={guide.id} onChange={e=>{window.location.hash=`guides/${e.target.value}`;}}>{guide.editions?.map(edition=><option value={edition.id} key={edition.id}>{edition.version_label || `Edition ${edition.edition_number}`} · Uploaded {formatDate(edition.created_at)}{edition.id === guide.editions?.[0]?.id ? ' · Latest upload' : ''}</option>)}</select></label><button className="secondary" disabled={!library} onClick={()=>setUpload(true)}>Upload new edition</button>{guide.previous_guide_id && <a href={`#guides/${guide.previous_guide_id}`}>Previous edition</a>}</div>
+      {upload && library && <UploadDialog library={library} retailer={guide.retailer_id} initialGuide={guide.editions?.[0] || guide} onClose={()=>setUpload(false)} onUploaded={result=>{setUpload(false);onUploaded(result);}}/>}
       <WorkflowPanel guide={guide} source={<GuideSource guide={guide}/>}/>
     </>}
   </div>;

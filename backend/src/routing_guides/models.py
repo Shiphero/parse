@@ -30,6 +30,9 @@ class Guide(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     retailer_id: Mapped[str] = mapped_column(ForeignKey("retailers.id"), index=True)
+    series_id: Mapped[UUID | None] = mapped_column(ForeignKey("guides.id"), index=True)
+    previous_guide_id: Mapped[UUID | None] = mapped_column(ForeignKey("guides.id"))
+    edition_number: Mapped[int] = mapped_column(Integer, server_default="1")
     title: Mapped[str] = mapped_column(String(250))
     version_label: Mapped[str | None] = mapped_column(String(100))
     effective_date: Mapped[date | None] = mapped_column(Date)

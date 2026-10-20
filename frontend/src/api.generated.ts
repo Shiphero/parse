@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/retailers/{retailer_id}/guide-choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Guide Choices */
+        get: operations["guide_choices_api_retailers__retailer_id__guide_choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/guides/{guide_id}": {
         parameters: {
             query?: never;
@@ -451,6 +468,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/edition-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Edition Comparison */
+        get: operations["edition_comparison_api_analysis__run_id__edition_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis/{run_id}/carry-approvals": {
         parameters: {
             query?: never;
@@ -867,6 +901,8 @@ export interface components {
             version_label: string;
             /** Effective Date */
             effective_date?: string | null;
+            /** Previous Guide Id */
+            previous_guide_id?: string | null;
         };
         /** Body_upload_retailer_icon_api_retailers__retailer_id__icon_put */
         Body_upload_retailer_icon_api_retailers__retailer_id__icon_put: {
@@ -1018,6 +1054,8 @@ export interface components {
              * @default
              */
             base_scope: string;
+            /** Retained Other Guide Ids */
+            retained_other_guide_ids?: string[];
             /** Unchanged */
             unchanged?: {
                 [key: string]: string;
@@ -1208,6 +1246,8 @@ export interface components {
         };
         /** DraftFromRelease */
         DraftFromRelease: {
+            /** Guide Id */
+            guide_id?: string | null;
             /**
              * Request Id
              * Format: uuid
@@ -1383,6 +1423,12 @@ export interface components {
             retailer_id: string;
             /** Title */
             title: string;
+            /** Series Id */
+            series_id: string | null;
+            /** Previous Guide Id */
+            previous_guide_id: string | null;
+            /** Edition Number */
+            edition_number: number;
             /** Version Label */
             version_label: string | null;
             /** Effective Date */
@@ -1413,6 +1459,8 @@ export interface components {
             pages: components["schemas"]["GuidePageSummary"][];
             /** Can Retry */
             can_retry: boolean;
+            /** Editions */
+            editions?: components["schemas"]["GuideSummary"][];
         };
         /** GuideLibrary */
         GuideLibrary: {
@@ -1471,6 +1519,12 @@ export interface components {
             retailer_id: string;
             /** Title */
             title: string;
+            /** Series Id */
+            series_id: string | null;
+            /** Previous Guide Id */
+            previous_guide_id: string | null;
+            /** Edition Number */
+            edition_number: number;
             /** Version Label */
             version_label: string | null;
             /** Effective Date */
@@ -1660,6 +1714,11 @@ export interface components {
             coverage_confirmed: boolean;
             /** Impact Confirmed */
             impact_confirmed: boolean;
+            /**
+             * Conflicts Confirmed
+             * @default false
+             */
+            conflicts_confirmed: boolean;
         };
         /** ReleasePayload */
         ReleasePayload: {
@@ -1679,6 +1738,10 @@ export interface components {
             actor: string;
             /** Run Version */
             run_version: number;
+            /** Conflict Review */
+            conflict_review?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** ReleaseRule */
         ReleaseRule: {
@@ -2292,6 +2355,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UploadResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guide_choices_api_retailers__retailer_id__guide_choices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                retailer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideSummary"][];
                 };
             };
             /** @description Validation Error */
@@ -3206,6 +3300,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ComparisonView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edition_comparison_api_analysis__run_id__edition_comparison_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

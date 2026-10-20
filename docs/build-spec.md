@@ -84,3 +84,7 @@ Rule schema 1.2 adds the shared, versioned `standard_check` catalog. The builder
 ## Normalized consumer delivery
 
 Optional, versioned rule-type bindings and validated workflow-area placements extend existing rule records without migrating stored rules. A shared catalog supplies stable semantics across retailers and conservative display defaults. Verification parameters stay in the typed check catalog; consumer enablement and display/confirmation/warning/blocking behavior are distinct from retailer obligation and approval. Read-only delivery resolves an explicitly selected release against canonical facts, retaining unknown scope and unavailable data as needs-information outcomes. Legacy consumer reads remain compatible. The editor, review filters/details, AI extraction, exports and published-release delivery preview expose these contracts. See [workflow.md](workflow.md#standard-rule-types-and-workflow-delivery) for consumer integration semantics and limits.
+
+## Document organization
+
+Retailer → guide series → immutable document edition → analysis/rule draft. Publication produces a combined retailer ruleset rather than activating a PDF upload. Guide-series identity is explicit at upload; updates never infer lineage from file names. See workflow.md for edition comparisons, protected contributions from separate guides, and conflict-review limits.

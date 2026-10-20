@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import { jsonRequest } from './api';
 import type { Release, Run } from './api';
 
-export default function ReleaseActions({release, activeId, actor, onDraft, reload}: {
-  release: Release; activeId: string | null; actor: string;
+export default function ReleaseActions({guideId, release, activeId, actor, onDraft, reload}: {
+  guideId: string; release: Release; activeId: string | null; actor: string;
   onDraft: (run: Run) => void; reload: () => void;
 }) {
   const requestId = useRef(crypto.randomUUID());
@@ -17,7 +17,7 @@ export default function ReleaseActions({release, activeId, actor, onDraft, reloa
     if (!actor.trim()) { setError('Enter your reviewer name above to create a draft.'); return; }
     setBusy(true);
     try {
-      const draft = await jsonRequest<Run>(`/api/releases/${release.id}/draft`, {actor, request_id: requestId.current});
+      const draft = await jsonRequest<Run>(`/api/releases/${release.id}/draft`, {actor, guide_id: guideId, request_id: requestId.current});
       requestId.current = crypto.randomUUID();
       onDraft(draft);
     } catch (e) { setError((e as Error).message); }

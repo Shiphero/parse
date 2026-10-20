@@ -213,8 +213,24 @@ The redesign does not relax review or publication requirements. Incomplete analy
 
 ### Version selection and deletion
 
-The working-version selector sits above the guide tabs. It selects the rules and analysis being viewed, the draft used for publishing, and the published release used for scenario checks. An unpublished working version cannot be evaluated as a release. The source PDF is shared by all working versions of that guide. Release history is scoped to the retailer, and the active retailer release is identified independently of the selected version.
+The working-version selector sits above the guide tabs. It selects the rules and analysis being viewed and the draft used for publishing. Scenario checks select a published retailer ruleset independently, defaulting to the active one; unpublished drafts are evaluated through publication impact preview. The source PDF is shared by all working versions of that guide. Release history is scoped to the retailer, and the active retailer release is identified independently of the selected version.
 
 The document effective date is upload metadata; a release effective date is assigned at publication. An unset document date does not mean there is no active release.
 
 Delete version is recoverable. It hides the run and any inactive release from the normal lists, preserves payloads and audit history, and exposes Restore under Deleted versions. Stop analysis/classification first; unpublish an active release first. Restoring a published version makes it visible again but does not activate it. Existing exports and evaluations pinned to immutable releases remain available. Deletion and restoration require a reviewer name and an unchanged version number.
+
+### Guides, document editions, and analyses
+
+A retailer can publish complementary documents (for example Packaging, Transportation, and EDI). Each guide has immutable document editions. Upload offers Separate guide or New edition of an existing guide; the detail page also has Upload new edition. Existing documents become edition 1 in independent guide series. Source IDs, PDFs, rule evidence, approvals, and releases are preserved. No title-based merging is attempted.
+
+The library lists the latest uploaded edition once per guide and counts guides, not uploads. The document-edition selector opens older uploads. An upload is not a publication. The active retailer ruleset stays unchanged until a reviewed release is published. Renaming a guide updates its display title across its editions; edition labels and document dates remain per upload.
+
+Analysis / rule draft selects an extraction attempt or manual draft for the current PDF. Scenarios default to the active combined retailer ruleset, with an explicit selector for historical rulesets; choosing a document edition does not change what is active. Retrying AI does not create a document edition. Recoverable deletion applies to analyses/drafts, not original PDFs or edition history.
+
+Previous-edition comparisons use the most recent completed, non-deleted analysis of the immediately previous edition. Exact rule-content matching ignores evidence page movement and does not carry approvals. Title/subject matches are suggestions; unmatched rules are not automatically retired. Partial extraction is labelled provisional. Publication approval reuse continues to require the stricter source-evidence checks against the active release.
+
+Publishing assembles one retailer ruleset. Rules from separate guide series are retained automatically and cannot be retired from another guide's draft. Rules in earlier editions of the current guide still require explicit retain/replace/retire decisions. A release draft copies only the selected guide's contribution. The ruleset can intentionally retain some older-edition rules with their original citations when a reviewer selects Retain.
+
+The publication preview flags differing requirements with the same standardized type (or same title for unmapped rules) across guide series. These are potential conflicts, not complete semantic conflict detection. Reviewers must confirm review and record resolutions in publication notes; the release stores the flagged rule pairs and confirmation. Conflicts are never silently resolved. Source authority and scope remain reviewer decisions.
+
+Storage uses the existing guide row as a document edition, with nullable series_id pointing to the first edition, previous_guide_id identifying its predecessor, and edition_number. A root row is its own series when series_id is null. Root locking and database uniqueness prevent competing successor editions. References to another retailer and stale predecessor selections are rejected.

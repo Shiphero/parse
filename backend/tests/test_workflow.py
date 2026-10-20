@@ -123,6 +123,36 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             json={'version': 1, 'actor': 'Reviewer'}, headers=headers)
         self.assertEqual(response.status_code, 409)
 
+    async def test_separate_guide_retains_other_rules_and_blocks_retirement(self):
+        original, _ = await self.published_fixture()
+        gid, rid = uuid4(), uuid4()
+        async with self.sessions.begin() as session:
+            session.add(Guide(id=gid, retailer_id=self.retailer, title='Transportation',
+                filename='transport.pdf', sha256=uuid4().hex, size_bytes=1,
+                status='ready', page_count=1, processed_pages=1, attention_pages=0))
+            await session.flush()
+            session.add(AnalysisRun(id=rid, guide_id=gid, status='complete', version=1,
+                config={'provider':'manual'}, payload={'rules':[], 'coverage':[
+                    {'page':1,'outcome':'no_rules','note':'Synthetic coverage'}],
+                    'warnings':[], 'batches':[], 'pending_batches':[]}))
+        comparison = (await self.client.get(f'/api/analysis/{rid}/comparison')).json()
+        stable_id = original['payload']['rules'][0]['stable_id']
+        self.assertEqual(comparison['retained_other_guide_ids'], [stable_id])
+        self.assertEqual(comparison['missing'], [])
+        body = dict(version=1, actor='Publisher', note='Synthetic coverage', name='Combined',
+            effective_date='2026-02-01', scope='Cartons and transportation', coverage_confirmed=True,
+            impact_confirmed=True, decisions={stable_id:'retire'}, base_release_id=original['id'])
+        await self.send('POST', f'/api/analysis/{rid}/publish', body, 422)
+        body['decisions'] = {}
+        combined = await self.send('POST', f'/api/analysis/{rid}/publish', body)
+        self.assertEqual(combined['payload']['rules'], original['payload']['rules'])
+        self.assertEqual(combined['payload']['decisions'], {stable_id:'retain'})
+        # Editing the packaging contribution of a combined release stays on its source guide.
+        draft = await self.send('POST', f'/api/releases/{combined["id"]}/draft',
+            {'request_id':str(uuid4()),'actor':'Editor','guide_id':str(self.gid)})
+        self.assertEqual(draft['guide_id'], str(self.gid))
+        self.assertEqual(len(draft['payload']['rules']), 1)
+
     async def test_release_draft_preserves_approval_identity_and_original(self):
         original, publish = await self.published_fixture()
         url = f'/api/releases/{original["id"]}/draft'

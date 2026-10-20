@@ -15,6 +15,7 @@ from routing_guides.connections import connection, statuses, save_connection
 from routing_guides.db import sessions
 from routing_guides.evaluator import evaluate_release
 from routing_guides.models import AnalysisRun, AuditEvent, Evaluation, Guide, GuidePage, ReleaseHead, RuleRelease, Scenario
+from routing_guides.guide_versions import partition_baseline, protect_other_guides, potential_conflicts, compare_editions
 from routing_guides.review import compare_rules, duplicate_titles, individual_review_reasons
 from routing_guides.rules import RuleSpec, PageCoverage, EvaluationItem
 from routing_guides.check_catalog import CATALOG, CheckDefinition, CheckStatus, check_status, check_summary, needs_check_mapping
@@ -115,6 +116,7 @@ class ReleasePayload(BaseModel):
     coverage_note: str
     actor: str
     run_version: int
+    conflict_review: dict[str, Any] | None = None
 
 
 class ReleaseView(BaseModel):
@@ -230,6 +232,7 @@ class ComparisonView(BaseModel):
     base_release_id: UUID | None = None
     base_name: str = ''
     base_scope: str = ''
+    retained_other_guide_ids: list[str] = Field(default_factory=list)
     unchanged: dict[str, str] = Field(default_factory=dict)
     changed: dict[str, list[str]] = Field(default_factory=dict)
     added: list[str] = Field(default_factory=list)
@@ -258,9 +261,11 @@ class PublishAction(VersionedAction):
     scope: str = Field(min_length=1, max_length=5000)
     coverage_confirmed: bool
     impact_confirmed: bool
+    conflicts_confirmed: bool = False
 
 
 class DraftFromRelease(BaseModel):
+    guide_id: UUID | None = None
     request_id: UUID
     actor: str = Field(min_length=1, max_length=200)
 
@@ -683,9 +688,33 @@ async def comparison(run_id: UUID):
     async with sessions() as session:
         run = await required(session, AnalysisRun, run_id)
         base = await active_baseline(session, run)
-        return ComparisonView(base_release_id=base.id if base else None, base_name=base.name if base else '',
+        guide = await required(session, Guide, run.guide_id)
+        related, retained = await partition_baseline(session, guide, base)
+        return ComparisonView(retained_other_guide_ids=[rule['stable_id'] for rule in retained], base_release_id=base.id if base else None, base_name=base.name if base else '',
                               base_scope=base.payload['scope'] if base else '',
-                              **compare_rules(run.payload['rules'], base.payload['rules'] if base else []))
+                              **compare_rules(run.payload['rules'], related))
+
+
+@router.get('/analysis/{run_id}/edition-comparison')
+async def edition_comparison(run_id: UUID):
+    async with sessions() as session:
+        run = await required(session, AnalysisRun, run_id)
+        guide = await required(session, Guide, run.guide_id)
+        if not guide.previous_guide_id:
+            return {'available': False, 'reason': 'This is the first document edition.'}
+        previous = await required(session, Guide, guide.previous_guide_id)
+        baseline = await session.scalar(select(AnalysisRun).where(
+            AnalysisRun.guide_id == previous.id, AnalysisRun.status.in_(['complete', 'published']))
+            .order_by(AnalysisRun.created_at.desc()).limit(1))
+        if not baseline:
+            return {'available': False, 'reason': 'The previous edition has no completed analysis.', 'previous_guide_id': str(previous.id)}
+        old = [dict(stable_id=r['id'], spec=r['spec'], review=r.get('review'), source_guide_id=r['source_guide_id'])
+               for r in baseline.payload['rules'] if r['status'] not in {'ignored', 'rejected'}]
+        return {'available': True, 'previous_guide_id': str(previous.id),
+                'previous_label': previous.version_label or f'Edition {previous.edition_number}',
+                'partial': run.status not in {'complete', 'published'},
+                'previous_rules': old, 'current_rules': run.payload['rules'],
+                **compare_editions(run.payload['rules'], old)}
 
 
 @router.post('/analysis/{run_id}/carry-approvals', response_model=RunView)
@@ -698,7 +727,9 @@ async def carry_approvals(run_id: UUID, body: CarryApprovals):
             raise HTTPException(409, 'The active release changed or belongs to another retailer. Refresh the comparison.')
         if not body.scope_confirmed:
             raise HTTPException(422, 'Confirm this guide has the same operational scope as the baseline.')
-        matches = compare_rules(run.payload['rules'], base.payload['rules'])['unchanged']
+        guide = await required(session, Guide, run.guide_id)
+        related, _ = await partition_baseline(session, guide, base)
+        matches = compare_rules(run.payload['rules'], related)['unchanged']
         previous = {r['stable_id']: r for r in base.payload['rules']}
         data = deepcopy(run.payload)
         selected = [r for r in data['rules'] if r['id'] in matches and r['status'] == 'pending']
@@ -806,9 +837,10 @@ async def impact(run_id: UUID, body: PublishAction):
         base = await required(session, RuleRelease, body.base_release_id) if body.base_release_id else None
         if base and base.retailer_id != guide.retailer_id:
             raise HTTPException(422, 'Baseline must belong to the same retailer.')
+        await protect_other_guides(session, guide, run, base, body)
         rules = assemble_release(run, base, body)
         scenarios = (await session.scalars(select(Scenario).where(Scenario.retailer_id == guide.retailer_id))).all()
-        return {'scenarios': [{'id': str(s.id), 'name': s.name, 'before': evaluate_release(base.payload['rules'], s.payload['normalized']) if base else None, 'after': evaluate_release(rules, s.payload['normalized'])} for s in scenarios]}
+        return {'conflicts': await potential_conflicts(session, rules), 'scenarios': [{'id': str(s.id), 'name': s.name, 'before': evaluate_release(base.payload['rules'], s.payload['normalized']) if base else None, 'after': evaluate_release(rules, s.payload['normalized'])} for s in scenarios]}
 
 
 @router.post('/analysis/{run_id}/publish', response_model=ReleaseView)
@@ -829,8 +861,12 @@ async def publish(run_id: UUID, body: PublishAction):
         if len(run.payload['coverage']) != guide.page_count or {p['page'] for p in run.payload['coverage']} != set(range(1,guide.page_count+1)):
             raise HTTPException(409, 'Full guide coverage has not been established.')
         base = await required(session, RuleRelease, body.base_release_id) if body.base_release_id else None
+        await protect_other_guides(session, guide, run, base, body)
         rules = assemble_release(run, base, body)
-        payload = ReleasePayload(rules=rules, base_release_id=str(body.base_release_id) if body.base_release_id else None, decisions=body.decisions, scope=body.scope, coverage_note=body.note, actor=body.actor, run_version=run.version)
+        conflicts = await potential_conflicts(session, rules)
+        if conflicts and not body.conflicts_confirmed:
+            raise HTTPException(422, 'Review potential conflicts between guides before publishing.')
+        payload = ReleasePayload(rules=rules, base_release_id=str(body.base_release_id) if body.base_release_id else None, decisions=body.decisions, scope=body.scope, coverage_note=body.note, actor=body.actor, run_version=run.version, conflict_review={'method': 'rule-type-or-title-v1', 'confirmed': body.conflicts_confirmed, 'pairs': [[c['left']['stable_id'], c['right']['stable_id']] for c in conflicts]})
         release = RuleRelease(id=uuid4(), retailer_id=guide.retailer_id, run_id=run_id, name=body.name.strip(), effective_date=body.effective_date, payload=payload.model_dump(mode='json'))
         session.add(release)
         await session.flush()
@@ -849,15 +885,27 @@ async def draft_from_release(release_id: UUID, body: DraftFromRelease):
         if existing:
             if existing.status == 'deleted':
                 raise HTTPException(409, 'Restore this deleted draft before opening it.')
-            if existing.config.get('source_release_id') != str(release.id):
+            if existing.config.get('source_release_id') != str(release.id) or (body.guide_id and existing.guide_id != body.guide_id):
                 raise HTTPException(409, 'This request ID belongs to another draft.')
             return RunView.model_validate(existing)
         source = await required(session, AnalysisRun, release.run_id)
+        if body.guide_id and body.guide_id != source.guide_id:
+            target = await required(session, Guide, body.guide_id)
+            if target.retailer_id != release.retailer_id:
+                raise HTTPException(422, 'Choose a guide from the same retailer.')
+            if not any(r['source_guide_id'] == str(target.id) for r in release.payload['rules']):
+                raise HTTPException(409, 'This edition has no rules in that release. Analyze and review it first.')
+            source = await session.scalar(select(AnalysisRun).where(AnalysisRun.guide_id == target.id,
+                AnalysisRun.status.in_(['complete', 'published'])).order_by(AnalysisRun.created_at.desc()).limit(1))
+            if source is None:
+                raise HTTPException(409, 'This edition needs a completed analysis before creating a release draft.')
         if source.status == 'deleted':
             raise HTTPException(409, 'Restore the deleted version before creating a draft.')
+        guide = await required(session, Guide, source.guide_id)
+        related, _ = await partition_baseline(session, guide, release)
         rules = [Candidate(id=r['stable_id'], revision=r['review'].get('revision', 1),
                            status='approved', spec=r['spec'], source_guide_id=r['source_guide_id'],
-                           review=deepcopy(r['review'])) for r in release.payload['rules']]
+                           review=deepcopy(r['review'])) for r in related]
         payload = RunPayload(rules=rules, coverage=deepcopy(source.payload['coverage']),
                              warnings=deepcopy(source.payload.get('warnings', [])))
         run = AnalysisRun(id=body.request_id, guide_id=source.guide_id, status='complete', version=1,

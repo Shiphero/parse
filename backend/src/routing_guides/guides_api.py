@@ -8,7 +8,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Upload
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 import psycopg
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import func, or_, select, text, update
+from sqlalchemy.orm import aliased
 from starlette.concurrency import run_in_threadpool
 
 from routing_guides.config import get_settings
@@ -27,6 +28,9 @@ class GuideSummary(BaseModel):
     id: UUID
     retailer_id: str
     title: str
+    series_id: UUID | None
+    previous_guide_id: UUID | None
+    edition_number: int
     version_label: str | None
     effective_date: date | None
     filename: str
@@ -66,6 +70,7 @@ class GuidePageSummary(BaseModel):
 class GuideDetail(GuideSummary):
     pages: list[GuidePageSummary]
     can_retry: bool
+    editions: list[GuideSummary] = Field(default_factory=list)
 
 
 class GuidePageDetail(GuidePageSummary):
@@ -87,7 +92,10 @@ async def list_guides(
     sort: Literal["created_at", "title", "retailer", "effective_date"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> GuideLibrary:
-    filters = []
+    newer = aliased(Guide)
+    filters = [~select(newer.id).where(
+        func.coalesce(newer.series_id, newer.id) == func.coalesce(Guide.series_id, Guide.id),
+        newer.edition_number > Guide.edition_number).exists()]
     if retailer_id:
         filters.append(Guide.retailer_id == retailer_id)
     if q.strip():
@@ -103,7 +111,7 @@ async def list_guides(
         guides = (await session.scalars(select(Guide).join(Retailer).where(*filters)
             .order_by(ordering, Guide.id).offset(offset).limit(limit))).all()
         counts = (await session.execute(
-            select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(Guide.id))
+            select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(func.distinct(func.coalesce(Guide.series_id, Guide.id))))
             .outerjoin(Guide, Retailer.id == Guide.retailer_id)
             .group_by(Retailer.id, Retailer.name, Retailer.icon_version).order_by(Retailer.name)
         )).all()
@@ -113,6 +121,16 @@ async def list_guides(
         max_upload_mb=get_settings().max_upload_mb)
 
 
+@router.get("/retailers/{retailer_id}/guide-choices", response_model=list[GuideSummary])
+async def guide_choices(retailer_id: str):
+    newer = aliased(Guide)
+    async with sessions() as session:
+        rows = (await session.scalars(select(Guide).where(Guide.retailer_id == retailer_id,
+            ~select(newer.id).where(func.coalesce(newer.series_id, newer.id) == func.coalesce(Guide.series_id, Guide.id),
+                newer.edition_number > Guide.edition_number).exists()).order_by(func.lower(Guide.title)))).all()
+        return [GuideSummary.model_validate(row) for row in rows]
+
+
 @router.post("/guides", response_model=UploadResult, status_code=201)
 async def upload_guide(
     file: Annotated[UploadFile, File()],
@@ -120,6 +138,7 @@ async def upload_guide(
     title: Annotated[str, Form(min_length=1, max_length=250)],
     version_label: Annotated[str, Form(max_length=100)] = "",
     effective_date: Annotated[date | None, Form()] = None,
+    previous_guide_id: Annotated[UUID | None, Form()] = None,
 ) -> UploadResult:
     title = title.strip()
     if not title:
@@ -127,6 +146,13 @@ async def upload_guide(
     async with sessions() as session:
         if not await session.get(Retailer, retailer_id):
             raise HTTPException(422, "Choose a retailer from the library.")
+    series_id = None
+    if previous_guide_id:
+        async with sessions() as session:
+            previous = await session.get(Guide, previous_guide_id)
+            if previous is None or previous.retailer_id != retailer_id:
+                raise HTTPException(422, "Choose an existing guide for this retailer.")
+            series_id = previous.series_id or previous.id
     guide_id = uuid4()
     filename = Path((file.filename or "guide.pdf").replace("\\", "/")).name[:250]
     try:
@@ -139,11 +165,26 @@ async def upload_guide(
     try:
         # The guide row and its job either both commit or both roll back.
         async with await psycopg.AsyncConnection.connect(dsn) as connection:
+            edition_number = 1
+            if series_id:
+                # Serialize new editions and guide renames against the series root.
+                cursor = await connection.execute("SELECT title FROM guides WHERE id=%s AND retailer_id=%s FOR UPDATE", (series_id, retailer_id))
+                title = (await cursor.fetchone())[0]
+                cursor = await connection.execute("SELECT id, edition_number FROM guides WHERE COALESCE(series_id,id)=%s ORDER BY edition_number DESC LIMIT 1", (series_id,))
+                latest_id, latest_number = await cursor.fetchone()
+                if latest_id != previous_guide_id:
+                    raise HTTPException(409, "A newer edition was uploaded. Select the latest edition and try again.")
+                edition_number = latest_number + 1
             await connection.execute(
-                "INSERT INTO guides (id, retailer_id, title, version_label, effective_date, filename, sha256, size_bytes) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (guide_id, retailer_id, title, version_label.strip() or None, effective_date, filename, digest, size),
+                "INSERT INTO guides (id, retailer_id, title, version_label, effective_date, filename, sha256, size_bytes, series_id, previous_guide_id, edition_number) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (guide_id, retailer_id, title, version_label.strip() or None, effective_date, filename, digest, size, series_id, previous_guide_id, edition_number),
             )
             await prepare_guide.configure(connection=connection, lock=f"guide:{guide_id}").defer_async(guide_id=str(guide_id))
+    except HTTPException:
+        directory = guide_directory(guide_id)
+        (directory / "original.pdf").unlink()
+        directory.rmdir()
+        raise
     except psycopg.errors.UniqueViolation as exc:
         if exc.diag.constraint_name != "uq_guide_retailer_hash":
             raise
@@ -153,6 +194,9 @@ async def upload_guide(
         directory.rmdir()
         async with sessions() as session:
             guide_id = await session.scalar(select(Guide.id).where(Guide.retailer_id == retailer_id, Guide.sha256 == digest))
+            duplicate = await session.get(Guide, guide_id)
+            if series_id and (duplicate.series_id or duplicate.id) != series_id:
+                raise HTTPException(409, "This PDF already belongs to a different guide for this retailer.")
         existing = True
     async with sessions() as session:
         guide = await session.get(Guide, guide_id)
@@ -170,7 +214,10 @@ async def get_guide(guide_id: UUID) -> GuideDetail:
             .where(GuidePage.guide_id == guide_id).order_by(GuidePage.page_index))).all()
         pages = [GuidePageSummary(page_index=r.page_index, text_status=r.text_status, image_status=r.image_status, issue=r.issue) for r in rows]
         can_retry = guide.status == "failed" or (guide.status == "needs_attention" and any(p.text_status == "failed" or p.image_status == "failed" for p in pages))
-        return GuideDetail(**GuideSummary.model_validate(guide).model_dump(), pages=pages, can_retry=can_retry)
+        editions = (await session.scalars(select(Guide).where(
+            func.coalesce(Guide.series_id, Guide.id) == (guide.series_id or guide.id)).order_by(Guide.edition_number.desc()))).all()
+        return GuideDetail(**GuideSummary.model_validate(guide).model_dump(), pages=pages, can_retry=can_retry,
+                           editions=[GuideSummary.model_validate(edition) for edition in editions])
 
 
 class GuideRename(BaseModel):
@@ -189,13 +236,14 @@ async def rename_guide(guide_id: UUID, body: GuideRename, request: Request) -> G
     if request.headers.get("X-Requested-With") != "routing-guide-parser":
         raise HTTPException(403, "Use the application to rename guides.")
     async with sessions.begin() as session:
-        guide = await session.get(Guide, guide_id, with_for_update=True)
+        guide = await session.get(Guide, guide_id)
         if guide is None:
             raise HTTPException(404, "Guide not found.")
-        if guide.title != body.expected_title:
+        root = await session.get(Guide, guide.series_id or guide.id, with_for_update=True, populate_existing=True)
+        if root.title != body.expected_title:
             raise HTTPException(409, "This guide was renamed elsewhere. Cancel and try again with the current title.")
-        guide.title = body.title
-        await session.flush()
+        await session.execute(update(Guide).where(func.coalesce(Guide.series_id, Guide.id) == root.id).values(title=body.title))
+        await session.refresh(guide)
         return GuideSummary.model_validate(guide)
 
 
@@ -323,7 +371,7 @@ class RetailerUpdate(RetailerInput):
 @router.get('/retailers', response_model=list[RetailerCount])
 async def list_retailers():
     async with sessions() as session:
-        rows = (await session.execute(select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(Guide.id))
+        rows = (await session.execute(select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(func.distinct(func.coalesce(Guide.series_id, Guide.id))))
             .outerjoin(Guide, Retailer.id == Guide.retailer_id)
             .group_by(Retailer.id, Retailer.name, Retailer.icon_version)
             .order_by(func.lower(Retailer.name), Retailer.id))).all()

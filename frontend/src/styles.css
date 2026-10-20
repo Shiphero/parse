@@ -1026,3 +1026,12 @@ main:has(.guide-workspace) { max-width:none; padding:20px 24px; }
 .version-delete-confirm p { margin:8px 0; font-size:12px; }
 .deleted-versions > div { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; }
 @media(max-width:760px) { .version-actions { margin-left:0; } .version-release-context { padding:8px 12px; } }
+
+.document-edition-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:12px 0; font-size:12px; }
+.document-edition-bar label { display:flex; align-items:center; gap:8px; }
+.document-edition-bar select { padding:7px 10px; max-width:420px; border:1px solid var(--border); border-radius:6px; background:var(--surface); font:inherit; }
+.edition-changes { padding:12px 16px; border-bottom:1px solid var(--border); font-size:12px; }
+.edition-changes summary { cursor:pointer; font-weight:600; }
+.edition-changes article { padding:10px 0; border-bottom:1px solid var(--border); }
+.edition-change-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:760px) { .document-edition-bar label { width:100%; } .document-edition-bar select { min-width:0; flex:1; } .edition-change-pair { grid-template-columns:1fr; } }
