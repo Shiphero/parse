@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, Uuid, func
+from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from routing_guides.db import Base
@@ -13,6 +13,8 @@ class Retailer(Base):
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     discovery_note: Mapped[str] = mapped_column(Text)
+    icon_png: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
+    icon_version: Mapped[str | None] = mapped_column(String(64))
 
 
 class ServiceHeartbeat(Base):

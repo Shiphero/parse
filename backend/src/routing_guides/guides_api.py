@@ -1,10 +1,11 @@
 from datetime import date, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict
 import psycopg
 from sqlalchemy import func, or_, select
@@ -13,6 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from routing_guides.config import get_settings
 from routing_guides.db import sessions
 from routing_guides.models import Guide, GuidePage, Retailer
+from routing_guides.retailer_icons import MAX_ICON_BYTES, normalize_icon
 from routing_guides.storage import InvalidUpload, guide_directory, save_original
 from routing_guides.tasks import dsn, prepare_guide
 
@@ -41,6 +43,7 @@ class RetailerCount(BaseModel):
     id: str
     name: str
     guide_count: int
+    icon_url: str | None = None
 
 
 class GuideLibrary(BaseModel):
@@ -81,24 +84,32 @@ async def list_guides(
     status: GuideStatus | None = None,
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=30, ge=1, le=100),
+    sort: Literal["created_at", "title", "retailer", "effective_date"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
 ) -> GuideLibrary:
     filters = []
     if retailer_id:
         filters.append(Guide.retailer_id == retailer_id)
     if q.strip():
-        filters.append(or_(Guide.title.icontains(q.strip(), autoescape=True), Guide.filename.icontains(q.strip(), autoescape=True)))
+        filters.append(or_(*(column.icontains(q.strip(), autoescape=True) for column in
+            (Guide.title, Guide.filename, Guide.version_label, Retailer.name))))
     if status:
         filters.append(Guide.status == status)
+    column = {"created_at": Guide.created_at, "title": func.lower(Guide.title),
+              "retailer": func.lower(Retailer.name), "effective_date": Guide.effective_date}[sort]
+    ordering = (column.asc() if direction == "asc" else column.desc()).nulls_last()
     async with sessions() as session:
-        total = await session.scalar(select(func.count()).select_from(Guide).where(*filters))
-        guides = (await session.scalars(select(Guide).where(*filters).order_by(Guide.created_at.desc(), Guide.id).offset(offset).limit(limit))).all()
+        total = await session.scalar(select(func.count()).select_from(Guide).join(Retailer).where(*filters))
+        guides = (await session.scalars(select(Guide).join(Retailer).where(*filters)
+            .order_by(ordering, Guide.id).offset(offset).limit(limit))).all()
         counts = (await session.execute(
-            select(Retailer.id, Retailer.name, func.count(Guide.id))
+            select(Retailer.id, Retailer.name, Retailer.icon_version, func.count(Guide.id))
             .outerjoin(Guide, Retailer.id == Guide.retailer_id)
-            .group_by(Retailer.id, Retailer.name).order_by(Retailer.name)
+            .group_by(Retailer.id, Retailer.name, Retailer.icon_version).order_by(Retailer.name)
         )).all()
     return GuideLibrary(items=[GuideSummary.model_validate(g) for g in guides], total=total, offset=offset, limit=limit,
-        retailers=[RetailerCount(id=id, name=name, guide_count=count) for id, name, count in counts],
+        retailers=[RetailerCount(id=id, name=name, guide_count=count, icon_url=retailer_icon_url(id, version))
+            for id, name, version, count in counts],
         max_upload_mb=get_settings().max_upload_mb)
 
 
@@ -208,3 +219,63 @@ async def page_image(guide_id: UUID, page_index: int) -> FileResponse:
     if not path.is_file():
         raise HTTPException(404, "This page preview is unavailable.")
     return FileResponse(path, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
+
+
+def retailer_icon_url(retailer_id: str, version: str | None) -> str | None:
+    return f"/api/retailers/{retailer_id}/icon?v={version}" if version else None
+
+
+class RetailerIconResult(BaseModel):
+    icon_url: str | None
+
+
+def require_icon_editor(request: Request) -> None:
+    # Matches Connections' same-origin browser write guard; this is not user auth.
+    if request.headers.get('X-Requested-With') != 'routing-guide-parser':
+        raise HTTPException(403, 'Use the application to update retailer icons.')
+
+
+@router.put('/retailers/{retailer_id}/icon', response_model=RetailerIconResult)
+async def upload_retailer_icon(retailer_id: str, request: Request, file: Annotated[UploadFile, File()]):
+    require_icon_editor(request)
+    try:
+        async with sessions() as session:
+            if not await session.get(Retailer, retailer_id):
+                raise HTTPException(404, 'Retailer not found.')
+        content = await file.read(MAX_ICON_BYTES + 1)
+        try:
+            image = await run_in_threadpool(normalize_icon, content)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        version = sha256(image).hexdigest()
+        async with sessions.begin() as session:
+            retailer = await session.get(Retailer, retailer_id)
+            if retailer is None:
+                raise HTTPException(404, 'Retailer not found.')
+            retailer.icon_png = image
+            retailer.icon_version = version
+        return RetailerIconResult(icon_url=retailer_icon_url(retailer_id, version))
+    finally:
+        await file.close()
+
+
+@router.delete('/retailers/{retailer_id}/icon', response_model=RetailerIconResult)
+async def delete_retailer_icon(retailer_id: str, request: Request):
+    require_icon_editor(request)
+    async with sessions.begin() as session:
+        retailer = await session.get(Retailer, retailer_id)
+        if retailer is None:
+            raise HTTPException(404, 'Retailer not found.')
+        retailer.icon_png = None
+        retailer.icon_version = None
+    return RetailerIconResult(icon_url=None)
+
+
+@router.get('/retailers/{retailer_id}/icon')
+async def get_retailer_icon(retailer_id: str):
+    async with sessions() as session:
+        content = await session.scalar(select(Retailer.icon_png).where(Retailer.id == retailer_id))
+    if content is None:
+        raise HTTPException(404, 'Retailer icon not found.')
+    return Response(content, media_type='image/png', headers={
+        'Cache-Control': 'private, max-age=0, must-revalidate', 'X-Content-Type-Options': 'nosniff'})

@@ -196,3 +196,10 @@ API: `POST /api/releases/{release_id}/draft` takes `request_id` and `actor`; ret
 ### Unmapped provider proposals
 
 Provider ingestion recovers the specific schema-1.2 error where a shipment requirement has no standard check but claims data, human or external verification (unless it is already a valid instruction-only type). It preserves the requirement, scope and evidence, clears any custom compliance assertion, sets verification to unresolved, and adds a per-rule mapping question plus a batch warning. The original response remains unchanged on disk; resuming reuses it without a new provider request for that saved batch. Unprocessed batches still require analysis normally. Recovered proposals remain pending and need mapping before approval. Unknown catalog IDs, invalid parameters, missing evidence, malformed coverage and other structural errors still fail validation. Direct editor/API validation remains strict.
+
+
+## Guide library and retailer icons
+
+The library searches guide titles, filenames, versions and retailer names on the server. Sortable columns and 25/50/100-row pages apply to the full filtered result set; missing effective dates sort last. Retailer navigation is searchable and scrolls independently.
+
+Use **Retailers** above the library, or the settings button beside the sidebar retailer list, to upload, replace or remove an icon. PNG, JPEG and WebP uploads are limited to 1 MB and four million source pixels, decoded and normalized to a PNG no larger than 128 × 128. Metadata and trailing content are discarded. Icons are stored in PostgreSQL, shared across browsers and included in database backups; initials appear when no icon is set. This remains a shared internal workspace with no individual permission model.

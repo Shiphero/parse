@@ -107,6 +107,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/retailers/{retailer_id}/icon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Retailer Icon */
+        get: operations["get_retailer_icon_api_retailers__retailer_id__icon_get"];
+        /** Upload Retailer Icon */
+        put: operations["upload_retailer_icon_api_retailers__retailer_id__icon_put"];
+        post?: never;
+        /** Delete Retailer Icon */
+        delete: operations["delete_retailer_icon_api_retailers__retailer_id__icon_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/check-catalog": {
         parameters: {
             query?: never;
@@ -778,6 +797,11 @@ export interface components {
             version_label: string;
             /** Effective Date */
             effective_date?: string | null;
+        };
+        /** Body_upload_retailer_icon_api_retailers__retailer_id__icon_put */
+        Body_upload_retailer_icon_api_retailers__retailer_id__icon_put: {
+            /** File */
+            file: string;
         };
         /** BulkApproval */
         BulkApproval: {
@@ -1639,6 +1663,13 @@ export interface components {
             name: string;
             /** Guide Count */
             guide_count: number;
+            /** Icon Url */
+            icon_url?: string | null;
+        };
+        /** RetailerIconResult */
+        RetailerIconResult: {
+            /** Icon Url */
+            icon_url: string | null;
         };
         /** RetailerSummary */
         RetailerSummary: {
@@ -2121,6 +2152,8 @@ export interface operations {
                 status?: ("queued" | "preparing" | "ready" | "needs_attention" | "failed") | null;
                 offset?: number;
                 limit?: number;
+                sort?: "created_at" | "title" | "retailer" | "effective_date";
+                direction?: "asc" | "desc";
             };
             header?: never;
             path?: never;
@@ -2327,6 +2360,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_retailer_icon_api_retailers__retailer_id__icon_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                retailer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_retailer_icon_api_retailers__retailer_id__icon_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                retailer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_retailer_icon_api_retailers__retailer_id__icon_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetailerIconResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_retailer_icon_api_retailers__retailer_id__icon_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                retailer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetailerIconResult"];
                 };
             };
             /** @description Validation Error */
