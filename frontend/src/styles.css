@@ -886,3 +886,125 @@ input[type=checkbox] { accent-color: var(--accent); }
 }
 
 .library-heading>.primary { width:auto; margin-left:auto; min-height:34px; padding:7px 11px; font-size:12px; }
+
+/* Guide workspace: task tabs, compact context, and actionable status. */
+main:has(.guide-workspace) { max-width:none; padding:20px 24px; }
+.guide-breadcrumb { display:flex; align-items:center; gap:10px; margin-bottom:12px; color:var(--text-muted); font-size:12px; }
+.guide-breadcrumb .back-link { margin:0; font-size:12px; padding:0; gap:5px; }
+.guide-header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:18px; }
+.guide-header h1 { font-size:22px; line-height:1.35; letter-spacing:-.4px; margin:0 0 8px; }
+.guide-header>.secondary { font-size:11px; padding:6px 10px; min-height:32px; flex-shrink:0; }
+.guide-metadata { display:flex; flex-wrap:wrap; gap:5px 14px; color:var(--text-muted); font-size:11px; }
+.guide-preparation-note { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); margin:12px 0; }
+.guide-workflow { margin:0; border-radius:7px; box-shadow:none; }
+.guide-workflow .guide-tabs { display:flex; overflow:auto; gap:3px; padding:0 12px; }
+.guide-workflow .guide-tabs button { padding:12px 14px; font-size:12px; gap:7px; }
+.guide-tab-count { font-size:10px; line-height:17px; min-width:19px; text-align:center; padding:0 4px; border-radius:4px; color:var(--text-muted); background:var(--surface-muted); }
+.guide-tabs .selected .guide-tab-count { background:var(--accent-subtle); color:var(--accent); }
+.tab-attention { width:6px; height:6px; border-radius:50%; background:#d97706; }
+.guide-context-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:9px 16px; border-bottom:1px solid var(--border); font-size:11px; color:var(--text-muted); background:var(--surface-subtle); }
+.guide-workflow .guide-context-bar label { display:flex; flex-direction:row; align-items:center; gap:8px; margin:0; font-size:11px; white-space:nowrap; }
+.guide-workflow .guide-context-bar select { width:auto; max-width:440px; font-size:11px; padding:5px 28px 5px 8px; height:30px; }
+.guide-context-bar .release-reviewer { margin-left:auto; }
+.guide-workflow .guide-context-bar input { padding:5px 8px; max-width:180px; font-size:11px; height:30px; }
+.guide-tab-panel[hidden] { display:none!important; }
+.analysis-status-strip { display:flex; gap:10px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--accent-subtle); color:var(--accent); }
+.analysis-status-strip.stopped { background:#fffbf3; color:var(--warning); }
+.analysis-status-strip>svg { flex-shrink:0; }
+.analysis-status-strip>div:first-of-type { display:flex; flex-direction:column; gap:2px; }
+.analysis-status-strip strong { font-size:12px; font-weight:600; }
+.analysis-status-strip span { font-size:11px; }
+.analysis-status-actions { display:flex; align-items:center; gap:12px; margin-left:auto; flex-shrink:0; }
+.analysis-status-actions .secondary { min-height:30px; padding:5px 9px; font-size:11px; }
+.analysis-status-actions .text-button { font-size:11px; }
+.published-status-strip { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border); color:var(--text-muted); font-size:12px; }
+.published-status-strip .text-button { margin-left:auto; }
+.guide-workflow .review-panel,.guide-workflow .release-panel,.guide-workflow .scenarios-panel { padding:16px; }
+.guide-workflow .section-heading { margin-bottom:14px; }
+.guide-workflow .section-heading h2 { font-size:15px; letter-spacing:-.1px; margin:0; }
+.guide-workflow .section-heading p { font-size:11px; margin:4px 0 0; }
+.guide-workflow .review-tools { font-size:11px; }
+.guide-workflow .review-tools>summary { padding:3px 0; }
+.guide-workflow .compact-analysis { padding:20px; }
+.analysis-summary { max-width:1000px; }
+.analysis-metrics { display:flex; gap:48px; margin:20px 0 16px; }
+.analysis-metrics>div { display:flex; flex-direction:column; gap:3px; }
+.analysis-metrics strong { font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1.2; }
+.analysis-metrics small { font-size:13px; color:var(--text-muted); font-weight:400; }
+.analysis-metrics span { font-size:11px; color:var(--text-muted); }
+.analysis-summary>progress { width:100%; height:5px; display:block; margin-bottom:18px; accent-color:var(--accent); }
+.analysis-error-detail { border:1px solid #f5d5b0; border-radius:5px; background:#fffbf3; padding:12px; color:var(--warning); font-size:12px; margin:16px 0; }
+.analysis-error-detail strong { font-size:12px; }
+.analysis-error-detail p { margin:6px 0 0; line-height:1.6; overflow-wrap:anywhere; }
+.guide-workflow .analysis-record { border-top:1px solid var(--border); margin:18px 0 0; padding-top:8px; font-size:12px; }
+.analysis-record dl { margin:10px 0; font-size:12px; }
+.analysis-record dl>div { display:flex; gap:12px; margin:4px 0; }
+.analysis-record dt { width:70px; flex-shrink:0; }
+.analysis-record dd { margin:0; color:var(--text); }
+.analysis-batches { overflow:auto; }
+.analysis-batches table { width:100%; border-collapse:collapse; font-size:11px; }
+.analysis-batches th,.analysis-batches td { border-bottom:1px solid var(--border); text-align:left; padding:6px 10px; }
+.guide-workflow .analysis-batches details { margin:0; font-size:11px; }
+.analysis-setup { max-width:850px; }
+.analysis-summary+.analysis-setup { border-top:1px solid var(--border); padding-top:20px; margin-top:20px; }
+.guide-workflow .analysis-setup .analysis-options { display:grid; grid-template-columns:1fr 2fr; gap:16px; }
+.guide-workflow .analysis-advanced { margin:4px 0 12px; font-size:12px; }
+.guide-workflow .analysis-advanced label { margin-top:10px; max-width:180px; }
+.analysis-disclosure { font-size:11px; color:var(--text-muted); margin:12px 0; }
+.analysis-blocker { display:flex; align-items:center; gap:12px; font-size:12px; color:var(--warning); }
+.guide-empty { padding:48px 20px; text-align:center; }
+.guide-empty h2 { font-size:18px; margin-bottom:20px; }
+.guide-workflow .guide-source { border:0; border-radius:0; margin:0; }
+.guide-source .viewer-toolbar { padding:10px 14px; gap:8px; }
+.guide-workflow .source-page-jump { display:flex; align-items:center; gap:7px; font-size:12px; }
+.guide-workflow .source-page-jump label { margin:0; font-size:12px; }
+.guide-workflow .source-page-jump input { width:60px; height:30px; padding:4px 6px; font-size:12px; }
+.guide-workflow .source-issue-select { max-width:210px; height:30px; font-size:11px; padding:4px 6px; }
+.guide-source .viewer-body { grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); }
+.guide-source .viewer-body.image-only { grid-template-columns:1fr; }
+.guide-source .page-canvas { min-height:350px; max-height:calc(100dvh - 260px); padding:18px; background:#eef1f5; }
+.guide-source .source-page { max-width:none; }
+.guide-source .text-pane { max-height:calc(100dvh - 260px); padding:16px; }
+.guide-source .text-pane pre { padding:0; background:none; font-family:inherit; font-size:12px; }
+.guide-source .viewer-caption { font-size:10px; padding:7px 14px; }
+@media(max-width:760px) {
+  main:has(.guide-workspace) { padding:16px 12px; }
+  .guide-header { gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .guide-header h1 { font-size:19px; }
+  .guide-header>.secondary { margin-left:auto; }
+  .guide-workflow .guide-tabs { padding:0 5px; gap:0; }
+  .guide-workflow .guide-tabs button { font-size:11px; padding:11px 9px; }
+  .guide-context-bar { padding:8px 12px; }
+  .guide-workflow .guide-context-bar label { width:100%; }
+  .guide-workflow .guide-context-bar select { width:100%; max-width:100%; min-width:0; }
+  .analysis-status-strip { padding:10px 12px; align-items:flex-start; flex-wrap:wrap; }
+  .analysis-status-actions { margin-left:27px; }
+  .guide-workflow .review-panel,.guide-workflow .release-panel,.guide-workflow .scenarios-panel,.guide-workflow .compact-analysis { padding:12px; }
+  .analysis-metrics { gap:24px; }
+  .analysis-metrics strong { font-size:20px; }
+  .guide-workflow .analysis-setup .analysis-options { grid-template-columns:1fr; gap:0; }
+  .guide-source .viewer-toolbar { justify-content:space-between; flex-wrap:wrap; }
+  .guide-source .viewer-actions { margin-left:auto; }
+  .guide-source .viewer-body { grid-template-columns:1fr; }
+  .guide-source .text-pane { border-left:0; border-top:1px solid var(--border); max-height:350px; }
+  .guide-source .page-canvas { max-height:65dvh; }
+}
+
+.review-heading-actions { display:flex; gap:6px; align-items:center; }
+.review-table.review-table-compact { min-width:760px; }
+.review-table-compact .title-column { width:42%; }
+.review-table-compact .consumer-column { width:auto; }
+.review-table-compact .check-column { width:140px; }
+.review-table-compact .source-column { width:50px; }
+.review-table-compact .status-column { width:80px; }
+.guide-workflow .review-table-title span { white-space:normal; line-height:1.5; }
+.guide-workflow .verification-badge { padding:3px 5px; font-size:11px; }
+.guide-workflow .workflow-use { padding:2px 5px; font-size:10px; }
+.guide-workflow .review-rule-type { font-size:10px; margin-top:3px; }
+
+@media (max-width:760px) {
+  .shell:has(.guide-workspace) .retailer-nav-heading,
+  .shell:has(.guide-workspace) .sidebar-search,
+  .shell:has(.guide-workspace) .retailer-nav-list { display:none; }
+  .shell:has(.guide-workspace) .sidebar-bottom { display:flex; gap:18px; }
+}

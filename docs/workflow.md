@@ -203,3 +203,10 @@ Provider ingestion recovers the specific schema-1.2 error where a shipment requi
 The library searches guide titles, filenames, versions and retailer names on the server. Sortable columns and 25/50/100-row pages apply to the full filtered result set; missing effective dates sort last. Retailer navigation is searchable and scrolls independently.
 
 Open **Manage retailers** in the sidebar or **Retailers** above the library to use the dedicated `#retailers` page. Add retailers, rename them inline, search and filter the directory, and open each retailer’s guides. Names are normalized and case-insensitive duplicates are rejected; stale rename attempts require a refresh. Retailer IDs stay fixed when names change, preserving guide and rule associations. New retailers are available in the upload selector immediately. The page also lets you upload, replace or remove an icon. PNG, JPEG and WebP uploads are limited to 1 MB and four million source pixels, decoded and normalized to a PNG no larger than 128 × 128. Metadata and trailing content are discarded. Icons are stored in PostgreSQL, shared across browsers and included in database backups; initials appear when no icon is set. This remains a shared internal workspace with no individual permission model.
+
+
+## Guide workspace navigation
+
+A guide with saved rules opens on **Rules**. **Source** contains the PDF page viewer with direct page entry and optional extracted text. **Analysis** shows progress and failure details before offering a new run; stopped work can be resumed from its existing checkpoint. **Releases** retains publication, export, draft and unpublish controls, while **Scenarios** holds shipment checks. Source page position, rule filters/edits and scenario input survive tab changes within the same guide. The compact rules table keeps verification, workflow, page and status visible; **More columns** adds category and rule use.
+
+The redesign does not relax review or publication requirements. Incomplete analyses remain read-only, failures retain their full diagnostic text, and starting or resuming analysis still requires an explicit action.
