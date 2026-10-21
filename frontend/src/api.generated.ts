@@ -451,6 +451,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/bulk-decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Decision */
+        post: operations["bulk_decision_api_analysis__run_id__bulk_decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analysis/{run_id}/comparison": {
         parameters: {
             query?: never;
@@ -924,6 +941,27 @@ export interface components {
             revisions: {
                 [key: string]: number;
             };
+        };
+        /** BulkDecision */
+        BulkDecision: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Revisions */
+            revisions: {
+                [key: string]: number;
+            };
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "ignore" | "reject";
         };
         /** Candidate */
         Candidate: {
@@ -3259,6 +3297,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BulkApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_decision_api_analysis__run_id__bulk_decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDecision"];
             };
         };
         responses: {

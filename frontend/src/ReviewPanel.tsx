@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, EyeOff, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, Connection, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
@@ -39,6 +39,8 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const [bulkOptions, setBulkOptions] = useState(false);
   const [categorizing, setCategorizing] = useState<{ rules: Candidate[]; version: number } | null>(null);
   const [bulkNote, setBulkNote] = useState('');
+  const [bulkRejecting, setBulkRejecting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [scopeConfirmed, setScopeConfirmed] = useState(false);
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(false);
@@ -75,7 +77,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   }, [run.version]);
   useEffect(() => { setScopeConfirmed(false); }, [comparison.data?.base_release_id]);
   useEffect(() => { onEditingChange?.(editing || adding); return () => onEditingChange?.(false); }, [editing, adding, onEditingChange]);
-  const resetView = () => { focusAfterNavigation.current=null; setPage(0); setSelected(''); setChecked({}); setError(''); };
+  const resetView = () => { focusAfterNavigation.current=null; setPage(0); setSelected(''); setChecked({}); setBulkRejecting(false); setRejectionReason(''); setError(''); };
   const resetFilters = () => {
     resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
     setFilter(run.status === 'published' || run.config.source_release_id ? 'all' : 'pending'); setType('all'); setPurpose('all'); setCheckMode('all'); setStandardType('all');
@@ -154,6 +156,16 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
     if (await action(`/api/analysis/${run.id}/bulk-approve`, { version: run.version, actor, note: bulkNote, revisions: checked })) {
       setMessage(`${selectedCount} rules approved.`);
       setChecked({}); setBulkNote(''); setBulkOptions(false);
+    }
+  };
+  const bulkDecision = async (kind: 'ignore' | 'reject') => {
+    if (await action(`/api/analysis/${run.id}/bulk-decision`, {
+      version: run.version, actor, action: kind, note: kind === 'reject' ? rejectionReason : bulkNote, revisions: checked,
+    })) {
+      setMessage(kind === 'ignore'
+        ? `${selectedCount} rules ignored. Excluded from publication; restore them individually using Status → Ignored.`
+        : `${selectedCount} rules rejected.`);
+      setChecked({}); setSelected(''); setBulkNote(''); setBulkOptions(false); setBulkRejecting(false); setRejectionReason('');
     }
   };
   const reviewerInput = <label className="reviewer-field">Reviewer name<input value={actor} onChange={e => onActorChange(e.target.value)} placeholder="Your name" autoComplete="name" disabled={busy}/></label>;
@@ -258,14 +270,25 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       </div>
       <div className="review-pagination"><span>{filtered.length ? currentPage * pageSize + 1 : 0}–{Math.min((currentPage + 1) * pageSize, filtered.length)} of {filtered.length}</span><label>Rows<select aria-label="Rules per page" value={pageSize} disabled={editing || busy} onChange={e => { setPageSize(Number(e.target.value)); changePage(0); }}><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label><button className="icon-button" aria-label="Previous rules page" disabled={editing || busy || currentPage === 0} onClick={() => changePage(currentPage - 1)}><ChevronLeft size={16}/></button><span>Page {currentPage + 1} of {pageCount}</span><button className="icon-button" aria-label="Next rules page" disabled={editing || busy || currentPage + 1 >= pageCount} onClick={() => changePage(currentPage + 1)}><ChevronRight size={16}/></button></div>
       {selectedCount > 0 && editable && <div className="review-selection-bar" role="region" aria-label="Selected rule actions">
-        <div className="review-selection-main"><strong>{selectedCount} selected</strong><button className="text-button" disabled={busy} onClick={() => { setChecked({}); setBulkOptions(false); }}>Clear</button>
-          <button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
-          <button className="secondary" disabled={busy || editing} aria-expanded={bulkOptions} onClick={() => setBulkOptions(!bulkOptions)}>More actions <ChevronDown size={14}/></button>
-          <button className="primary" disabled={busy || editing || !actor.trim()} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button></div>
-        {!actor.trim() && <div className="review-selection-identity">{reviewerInput}<span className="muted">Enter your name to record approvals.</span></div>}
-        {actor.trim() && <p className="review-selection-help">Reviewing as {actor} · Read each selected rule and its source before approving.</p>}
-        {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule has' : 'rules have'} review warnings. You can approve these together; warnings remain visible. Missing configuration or invalid source evidence must still be resolved.</p>}
-        {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label></div>}
+        <div className="review-selection-main"><strong>{selectedCount} selected</strong><button className="text-button" disabled={busy || editing} onClick={() => { setChecked({}); setBulkOptions(false); setBulkRejecting(false); setRejectionReason(''); }}>Clear selection</button>
+          {!bulkRejecting && <><button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
+          <button className="secondary" disabled={busy || editing} aria-expanded={bulkOptions} onClick={() => setBulkOptions(!bulkOptions)}>Review details <ChevronDown size={14}/></button>
+          <div className="review-selection-decisions" role="group" aria-label="Bulk decisions">
+            <button className="secondary" disabled={busy || editing || !actor.trim()} title="Exclude selected rules from publication; restore them later" onClick={() => bulkDecision('ignore')}><EyeOff size={15}/>Ignore {selectedCount}</button>
+            <button className="secondary danger-button" disabled={busy || editing} onClick={() => { setBulkRejecting(true); setBulkOptions(false); }}><X size={15}/>Reject…</button>
+            <button className="primary" disabled={busy || editing || !actor.trim()} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button>
+          </div></>}
+        </div>
+        {!actor.trim() && <div className="review-selection-identity">{reviewerInput}<span className="muted">Enter your name to record decisions.</span></div>}
+        {actor.trim() && <p className="review-selection-help">Reviewing as {actor} · Applies to all {selectedCount} selected rules, including other pages.</p>}
+        {bulkRejecting ? <div className="review-rejection-form">
+          <label>Reason for rejecting {selectedCount} rules<textarea autoFocus rows={2} maxLength={5000} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Explain why these proposals should be rejected" disabled={busy} required/></label>
+          <p>This reason is recorded on each selected rule.</p>
+          <div className="review-action-primary"><button className="secondary" disabled={busy} onClick={() => { setBulkRejecting(false); setRejectionReason(''); }}>Cancel</button><button className="secondary danger-button" disabled={busy || editing || !actor.trim() || !rejectionReason.trim()} onClick={() => bulkDecision('reject')}><X size={15}/>{busy ? 'Saving…' : `Reject ${selectedCount} rules`}</button></div>
+        </div> : <>
+          {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule has' : 'rules have'} review warnings. Missing configuration or invalid evidence blocks approval, but you can still ignore or reject these proposals.</p>}
+          {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label></div>}
+        </>}
         {error && <p className="error" role="alert">{error}</p>}
       </div>}
     </>}

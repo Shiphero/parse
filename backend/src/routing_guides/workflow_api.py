@@ -198,7 +198,17 @@ class VersionedAction(BaseModel):
 
 
 class BulkApproval(VersionedAction):
-    revisions: dict[UUID, int] = Field(min_length=1, max_length=1000)
+    revisions: dict[UUID, int] = Field(min_length=1, max_length=10000)
+
+
+class BulkDecision(BulkApproval):
+    action: Literal['ignore', 'reject']
+
+    @model_validator(mode='after')
+    def rejection_reason(self):
+        if self.action == 'reject' and not self.note.strip():
+            raise ValueError('Add a reason before rejecting selected rules.')
+        return self
 
 
 class ClassifyRules(BulkApproval):
@@ -667,6 +677,35 @@ async def bulk_approve(run_id: UUID, body: BulkApproval):
             rule.update(status='approved', review={'actor': body.actor, 'note': body.note.strip(),
                         'revision': rule['revision'], 'at': timestamp, 'mode': 'bulk', 'batch_id': batch_id})
             audit(session, run.id, body.actor, 'approve', {'before': before, 'after': rule, 'batch_id': batch_id})
+        run.payload, run.version = data, run.version + 1
+        return RunView.model_validate(run)
+
+
+@router.post('/analysis/{run_id}/bulk-decision', response_model=RunView)
+async def bulk_decision(run_id: UUID, body: BulkDecision):
+    async with sessions.begin() as session:
+        run = await required(session, AnalysisRun, run_id, True)
+        guard(run, body.version)
+        data = deepcopy(run.payload)
+        by_id = {r['id']: r for r in data['rules']}
+        selected = []
+        for rule_id, revision in body.revisions.items():
+            rule = by_id.get(str(rule_id))
+            if rule is None:
+                raise HTTPException(404, 'A selected rule does not belong to this draft.')
+            if rule['revision'] != revision or rule['status'] != 'pending':
+                raise HTTPException(409, 'A selected rule changed. Refresh and select the latest pending revisions.')
+            selected.append(rule)
+        # Excluding a proposal does not require its classification or evidence to be repaired.
+        timestamp, batch_id = datetime.now(timezone.utc).isoformat(), str(uuid4())
+        for rule in selected:
+            before = deepcopy(rule)
+            rule.update(status={'ignore': 'ignored', 'reject': 'rejected'}[body.action],
+                        carried_from_release_id=None, carried_from_rule_id=None,
+                        review={'actor': body.actor, 'note': body.note.strip(), 'revision': rule['revision'],
+                                'at': timestamp, 'mode': 'bulk', 'batch_id': batch_id})
+            audit(session, run.id, body.actor, body.action,
+                  {'before': before, 'after': rule, 'note': body.note.strip(), 'batch_id': batch_id})
         run.payload, run.version = data, run.version + 1
         return RunView.model_validate(run)
 

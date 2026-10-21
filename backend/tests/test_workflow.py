@@ -548,6 +548,69 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(approvals[0]['payload']['batch_id'], approvals[1]['payload']['batch_id'])
         await self.send('POST', url, {**body, 'version': result['version']}, 409)
 
+    async def test_bulk_ignore_and_reject_preserve_flagged_proposals_and_audit_each_decision(self):
+        run = await self.add_candidate(1)
+        run = await self.add_candidate(run['version'], rule(title='Needs classification', purpose='unclassified',
+            operational_category='unclassified', consumption_points=[]))
+        rules = run['payload']['rules']
+        url = f'/api/analysis/{self.rid}/bulk-decision'
+        body = {'version': run['version'], 'actor': 'Reviewer', 'action': 'ignore',
+                'revisions': {r['id']: r['revision'] for r in rules}}
+        ignored = await self.send('POST', url, body)
+        self.assertEqual(ignored['version'], run['version'] + 1)
+        for original, saved in zip(rules, ignored['payload']['rules']):
+            self.assertEqual(saved['status'], 'ignored')
+            self.assertEqual(saved['spec'], original['spec'])
+            self.assertEqual(saved['review']['mode'], 'bulk')
+            self.assertEqual(saved['review']['revision'], original['revision'])
+            self.assertEqual(saved['review']['note'], '')
+        # Existing restoration works for bulk-ignored proposals too.
+        run = ignored
+        for candidate in rules:
+            run = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{candidate["id"]}',
+                {'version': run['version'], 'actor': 'Reviewer', 'action': 'restore'})
+        rejected = await self.send('POST', url, {**body, 'version': run['version'],
+            'action': 'reject', 'note': '  Duplicate proposals  '})
+        for original, saved in zip(rules, rejected['payload']['rules']):
+            self.assertEqual(saved['status'], 'rejected')
+            self.assertEqual(saved['spec'], original['spec'])
+            self.assertEqual(saved['review']['note'], 'Duplicate proposals')
+        audits = (await self.client.get(f'/api/audit/{self.rid}')).json()
+        for action in ('ignore', 'reject'):
+            entries = [a for a in audits if a['action'] == action]
+            self.assertEqual(len(entries), 2)
+            self.assertEqual(entries[0]['payload']['batch_id'], entries[1]['payload']['batch_id'])
+            self.assertTrue(all(a['payload']['before']['status'] == 'pending' for a in entries))
+
+    async def test_bulk_exclusions_are_atomic_and_reject_stale_or_foreign_selections(self):
+        run = await self.add_candidate(1)
+        run = await self.add_candidate(run['version'], rule(title='Another rule'))
+        rules = run['payload']['rules']
+        url = f'/api/analysis/{self.rid}/bulk-decision'
+        body = {'version': run['version'], 'actor': 'Reviewer', 'action': 'reject', 'note': 'Duplicate',
+                'revisions': {r['id']: r['revision'] for r in rules}}
+        await self.send('POST', url, {**body, 'note': '   '}, 422)
+        await self.send('POST', url, {**body, 'actor': '   '}, 422)
+        await self.send('POST', url, {**body, 'revisions': {}}, 422)
+        await self.send('POST', url, {**body, 'version': 1}, 409)
+        for action in ('ignore', 'reject'):
+            await self.send('POST', url, {**body, 'action': action,
+                'revisions': {rules[0]['id']: 1, str(uuid4()): 1}}, 404)
+            await self.send('POST', url, {**body, 'action': action,
+                'revisions': {rules[0]['id']: 1, rules[1]['id']: 2}}, 409)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.version, run['version'])
+            self.assertTrue(all(r['status'] == 'pending' for r in saved.payload['rules']))
+        audits = (await self.client.get(f'/api/audit/{self.rid}')).json()
+        self.assertFalse(any(a['action'] in {'ignore', 'reject'} for a in audits))
+        ignored = await self.send('POST', url, {**body, 'action': 'ignore'})
+        await self.send('POST', url, {**body, 'version': ignored['version']}, 409)
+        async with self.sessions.begin() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            saved.status = 'published'
+        await self.send('POST', url, {**body, 'version': ignored['version']}, 409)
+
     async def test_flagged_rules_can_be_individually_approved_without_notes(self):
         run = await self.add_candidate(1)
         good = run['payload']['rules'][0]['id']

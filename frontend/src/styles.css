@@ -451,7 +451,10 @@ input[type=checkbox] { accent-color: var(--accent); }
 .review-empty { text-align:center; padding:44px 20px; color:var(--text-muted); font-size:13px; }
 .review-empty>svg { color:var(--accent); margin-bottom:10px; }
 .review-selection-bar { position:sticky; bottom:12px; z-index:8; margin:18px 0 0; padding:14px 18px; background:var(--surface); border:1px solid #93c5fd; border-radius:8px; box-shadow:0 5px 24px #0f172a26; }
-.review-selection-main { display:flex; align-items:center; gap:12px; }
+.review-selection-main { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.review-selection-decisions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; }
+.secondary.danger-button { color:var(--danger); border-color:#fecaca; }
+.secondary.danger-button:hover:not(:disabled) { background:var(--danger-subtle); }
 .review-selection-main>strong { font-size:13px; white-space:nowrap; }
 .review-selection-main>.primary { margin-left:auto; }
 .workflow .review-selection-bar label { margin-bottom:0; }
@@ -723,21 +726,26 @@ input[type=checkbox] { accent-color: var(--accent); }
 .placement-disclosure .placement-table { margin-top:10px; }
 .workflow .review-cautions { font-size:12px; margin:8px 0 0; padding:6px 0; line-height:1.6; }
 .review-cautions summary { font-weight:500; }
-.review-action-dock { position:sticky; bottom:0; z-index:4; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-top:14px; box-shadow:0 -3px 12px #0f172a08; }
-.review-action-identity { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-.workflow .review-action-identity label { display:flex; flex-direction:row; align-items:center; gap:8px; margin:0; font-size:12px; }
-.review-action-identity input { width:170px; padding:6px 8px; }
-.review-action-identity>span { font-size:12px; color:var(--text-secondary); }
-.review-action-buttons,.review-action-primary { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.review-action-dock { position:sticky; bottom:0; z-index:4; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-top:16px; box-shadow:0 -3px 12px #0f172a08; }
+.review-action-identity { display:flex; align-items:center; flex-wrap:wrap; gap:10px 20px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border); }
+.workflow .review-action-identity label { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px; margin:0; font-size:12px; min-width:0; }
+.review-action-identity input { width:170px; max-width:100%; min-width:0; padding:6px 8px; }
+.review-action-identity>span { flex:1 1 220px; font-size:12px; line-height:1.5; color:var(--text-secondary); overflow-wrap:anywhere; }
+.review-action-buttons,.review-action-primary,.review-action-secondary { display:flex; gap:8px; align-items:center; flex-wrap:wrap; min-width:0; }
+.review-action-buttons { gap:12px 24px; }
 .review-action-primary { margin-left:auto; }
-.review-action-buttons button { font-size:12px; min-height:34px; }
-.workflow .rejection-note { font-size:12px; margin:8px 0; }
+.review-action-buttons button { font-size:12px; min-height:38px; padding:8px 12px; }
+.review-rejection-form { display:grid; gap:10px; margin-top:12px; }
+.workflow .review-rejection-form label { margin:0; font-size:12px; }
+.review-rejection-form p { font-size:12px; color:var(--text-secondary); margin:0; }
 .review-submit-error p { margin:4px 0; }
 .guided-rule-review input:focus,.guided-rule-review select:focus,.guided-rule-review textarea:focus { outline:2px solid #60a5fa; outline-offset:2px; }
 @media(max-width:1000px) { .guided-rule-review .rule-evidence { position:static; } }
 @media(max-width:650px) {
-  .review-action-identity { align-items:flex-start; flex-direction:column; gap:5px; }
-  .review-action-primary { margin-left:0; width:100%; }
+  .review-action-identity { align-items:flex-start; flex-direction:column; gap:8px; }
+  .review-action-identity>span { flex:auto; }
+  .review-action-primary,.review-action-secondary,.review-selection-decisions { margin-left:0; width:100%; }
+  .review-action-primary button,.review-action-secondary button,.review-selection-decisions button { flex:1 1 auto; white-space:normal; }
   .review-action-dock { position:static; }
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Check, Copy, EyeOff, X } from 'lucide-react';
 import StandardCheckEditor from './StandardCheckEditor';
 import RuleDeliveryEditor from './RuleDeliveryEditor';
 import ConditionBuilder, { describeCondition } from './ConditionBuilder';
@@ -163,21 +164,24 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
       {review.error&&<div className="error review-submit-error" role="alert"><strong>Could not save this decision</strong><p>{review.error}</p></div>}
       <div className="review-action-identity" ref={el=>{sections.current.reviewer=el;}}>
         <label>Reviewer<input value={review.actor} onChange={e=>review.onActorChange(e.target.value)} placeholder="Your name" autoComplete="name" disabled={busy||!review.editable}/></label>
-        <span>{dirty?'Changes will be saved with this decision.':tasks.length?tasks[0].label:candidate.status==='ignored'?'Restore this rule before making changes.':'No approval note required.'}</span>
+        <span className="review-action-hint">{candidate.status==='ignored'?'Restore this rule before making changes.':dirty?'Unsaved changes · Save the draft or save and approve.':tasks.length?`${tasks.length} ${tasks.length===1?'item needs':'items need'} attention before approval.`:'Ready to approve · No note required.'}</span>
       </div>
-      {rejecting&&<label className="rejection-note">Why reject this rule?<input autoFocus value={note} onChange={e=>setNote(e.target.value)} placeholder="A reason is required for rejection" disabled={busy}/></label>}
-      <div className="review-action-buttons">
+      {rejecting?<div className="review-rejection-form">
+        <label>Reason for rejection<textarea autoFocus rows={2} maxLength={5000} value={note} onChange={e=>setNote(e.target.value)} placeholder="Explain why this proposal should be rejected" disabled={busy} required/></label>
+        <div className="review-action-primary"><button className="secondary" disabled={busy} onClick={()=>{setRejecting(false);setNote('');}}>Cancel</button><button className="secondary danger-button" disabled={busy||dirty||advanced!==null||!review.editable||!note.trim()} onClick={()=>review.actor.trim()?review.onDecision('reject',note):goTo('reviewer')}><X size={15}/>{busy?'Saving…':'Reject rule'}</button></div>
+      </div>:<div className="review-action-buttons">
+        <div className="review-action-secondary" role="group" aria-label="Other rule actions">
         {candidate.status==='ignored'?<button className="secondary" disabled={busy||!review.editable} onClick={()=>review.actor.trim()?review.onDecision('restore',''):goTo('reviewer')}>Restore to review</button>:<>
-          <button className="text-button" disabled={busy||dirty||advanced!==null||!review.editable} title={dirty?'Save or discard changes first':'Exclude from publication; you can restore it later'} onClick={()=>review.actor.trim()?review.onDecision('ignore',''):goTo('reviewer')}>Ignore rule</button>
-          <button className="text-button" disabled={busy||dirty||advanced!==null||!review.editable} onClick={()=>{if(!rejecting){setRejecting(true);return;}if(!review.actor.trim()){goTo('reviewer');return;}if(note.trim())void review.onDecision('reject',note);}}>{rejecting?'Confirm rejection':'Reject…'}</button>
+          <button className="secondary" disabled={busy||dirty||advanced!==null||!review.editable} title={dirty?'Save or discard changes first':'Exclude from publication; you can restore it later'} onClick={()=>review.actor.trim()?review.onDecision('ignore',''):goTo('reviewer')}><EyeOff size={15}/>Ignore</button>
+          <button className="secondary danger-button" disabled={busy||dirty||advanced!==null||!review.editable} onClick={()=>setRejecting(true)}><X size={15}/>Reject…</button>
         </>}
-        {rejecting&&<button className="text-button" onClick={()=>{setRejecting(false);setNote('');}}>Cancel rejection</button>}
-        {review.onVariant&&<button className="text-button" disabled={busy||dirty||advanced!==null||!review.editable} onClick={review.onVariant}>Create variant</button>}
+        {review.onVariant&&<button className="secondary" disabled={busy||dirty||advanced!==null||!review.editable} onClick={review.onVariant}><Copy size={15}/>Create variant</button>}
+        </div>
         <div className="review-action-primary">
           {dirty||advanced!==null?<><button className="secondary" disabled={busy} onClick={()=>{setSpec(candidate.spec);setAdvanced(null);setError('');setNote('');}}>Discard changes</button><button className="secondary" disabled={busy||advanced!==null||!review.editable} onClick={()=>review.actor.trim()?save():goTo('reviewer')}>Save draft</button></>:review.onNext&&<button className="secondary" disabled={busy} onClick={review.onNext}>Next rule →</button>}
-          {candidate.status!=='ignored'&&<button className="primary" disabled={busy||!review.editable||candidate.status==='approved'&&!dirty} onClick={approve}>{busy?'Saving…':tasks.length?`Complete ${tasks.length} ${tasks.length===1?'item':'items'}`:dirty?'Save & approve':candidate.status==='approved'?'Approved':'Approve rule'}</button>}
+          {candidate.status!=='ignored'&&<button className="primary" disabled={busy||!review.editable||candidate.status==='approved'&&!dirty} onClick={approve}><Check size={15}/>{busy?'Saving…':tasks.length?`Complete ${tasks.length} ${tasks.length===1?'item':'items'}`:dirty?'Save & approve':candidate.status==='approved'?'Approved':'Approve rule'}</button>}
         </div>
-      </div>
+      </div>}
     </div>:<div className="editor-save-bar">
 
       {candidate&&<label>Reason for change<input value={note} onChange={e=>setNote(e.target.value)} placeholder="Briefly describe your correction" required/></label>}
