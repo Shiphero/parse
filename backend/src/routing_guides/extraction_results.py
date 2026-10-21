@@ -17,8 +17,22 @@ def validation_messages(exc: ValidationError) -> list[str]:
 
 def parse_extraction(raw: Any) -> Extraction:
     warnings = []
+    normalized = raw
+    # A known provider-only metadata alias belongs in the page note, never in
+    # rule evidence. Keep malformed values and all unknown fields strict.
+    if isinstance(raw, dict) and isinstance(raw.get('coverage'), list):
+        for index, coverage in enumerate(raw['coverage']):
+            if (isinstance(coverage, dict) and isinstance(coverage.get('quote_note'), str)
+                    and isinstance(coverage.get('note'), str)):
+                if normalized is raw:
+                    normalized = deepcopy(raw)
+                item = normalized['coverage'][index]
+                quote_note = item.pop('quote_note')
+                if quote_note.strip():
+                    item['note'] = '\n'.join(part for part in (item['note'], quote_note) if part)
+                warnings.append(f'Coverage item {index + 1}: provider quote_note normalized into note; original response retained.')
     try:
-        extraction = Extraction.model_validate(raw)
+        extraction = Extraction.model_validate(normalized)
     except ValidationError as exc:
         # Only downgrade a known semantic mismatch in provider proposals. The
         # editor/API still use strict RuleSpec validation, and all other errors
@@ -28,7 +42,8 @@ def parse_extraction(raw: Any) -> Extraction:
                    and e['loc'][0] == 'rules' and isinstance(e['loc'][1], int)}
         if not indexes or not isinstance(raw, dict):
             raise
-        normalized = deepcopy(raw)
+        if normalized is raw:
+            normalized = deepcopy(raw)
         for index in sorted(indexes):
             proposal = normalized['rules'][index]
             original_verification = proposal['verification']

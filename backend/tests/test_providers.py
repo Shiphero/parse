@@ -137,6 +137,52 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValidationError):
             Extraction.model_validate(raw)
 
+    async def test_saved_coverage_quote_note_is_recovered_without_provider_call(self):
+        for quote_note in ('', 'Provider commentary, not verified evidence.'):
+            with self.subTest(quote_note=quote_note):
+                raw = self.extraction.model_dump(mode='json')
+                raw['coverage'][0]['quote_note'] = quote_note
+                cached = self.directory / 'saved-coverage-batch.json'
+                cached.write_text(json.dumps(dict(raw=raw, pages=[1], model='original-model',
+                    usage={'input_tokens': 123}, prompt_version='routing-extraction-1.10')))
+                before = cached.read_bytes()
+                with patch('routing_guides.analysis_provider.AsyncAnthropic') as client:
+                    first = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+                    second = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+                client.assert_not_called()
+                self.assertEqual(first.extraction, second.extraction)
+                self.assertEqual(cached.read_bytes(), before)
+                self.assertEqual(first.extraction.rules, self.extraction.rules)
+                self.assertEqual(first.extraction.coverage[0].note, 'Test' + ('\n' + quote_note if quote_note else ''))
+                self.assertEqual(first.extraction.coverage[0].outcome, 'rules_found')
+                self.assertIn('quote_note normalized', first.extraction.warnings[0])
+                with self.assertRaises(ValidationError):
+                    Extraction.model_validate(raw)
+
+    def test_coverage_alias_recovery_remains_strict_and_combines_with_unmapped_recovery(self):
+        raw = self.extraction.model_dump(mode='json')
+        raw['coverage'][0]['quote_note'] = 'Additional note'
+        raw['rules'][0]['verification'] = 'human'
+        before = deepcopy(raw)
+        recovered = parse_extraction(raw)
+        self.assertEqual(raw, before)
+        self.assertEqual(recovered.rules[0].verification, 'unresolved')
+        self.assertEqual(recovered.coverage[0].note, 'Test\nAdditional note')
+        for change in ({'quote_note': None}, {'quote_note': {}}, {'quote_note': 12},
+                       {'other_note': ''}, {'page': 0}, {'outcome': 'invented'}, {'note': None}):
+            invalid = deepcopy(raw)
+            invalid['coverage'][0].update(change)
+            with self.subTest(change=change), self.assertRaises(ValidationError):
+                parse_extraction(invalid)
+        missing = deepcopy(raw)
+        del missing['coverage'][0]['note']
+        with self.assertRaises(ValidationError):
+            parse_extraction(missing)
+        invalid_rule = deepcopy(raw)
+        invalid_rule['rules'][0]['evidence'] = []
+        with self.assertRaises(ValidationError):
+            parse_extraction(invalid_rule)
+
     def test_recovery_does_not_hide_other_errors_or_invent_check_mappings(self):
         raw = self.extraction.model_dump(mode='json')
         raw['rules'][0]['verification'] = 'human'
