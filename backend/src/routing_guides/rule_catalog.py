@@ -109,7 +109,7 @@ def validate_delivery(spec):
     if spec.standard_check and spec.standard_check.check_id not in entry.check_ids:
         raise ValueError('The verification check does not match this rule type.')
     if spec.operational_category != entry.category:
-        raise ValueError('Operational category must match the rule type catalog.')
+        raise PydanticCustomError('rule_type_category_mismatch', 'Operational category must match the rule type catalog.')
     allowed = {(a.workflow, a.area) for a in entry.allowed_placements}
     used = [(p.workflow, p.area) for p in spec.placements]
     if not used or len(set(used)) != len(used) or any(pair not in allowed for pair in used):

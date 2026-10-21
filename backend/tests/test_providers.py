@@ -193,6 +193,39 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValidationError):
             parse_extraction(conflicting)
 
+    async def test_category_conflict_preserves_requirement_and_requires_mapping(self):
+        raw = self.extraction.model_dump(mode='json')
+        raw['rules'][0].update(purpose='general_guidance', subject='carton',
+            operational_category='warehouse_operations',
+            rule_type={'id': 'general.guidance', 'version': 1},
+            consumption_points=['supplier_management'],
+            placements=[{'workflow': 'supplier_management', 'area': 'general_guidance', 'enabled': True, 'behavior': 'display'}])
+        original = deepcopy(raw)
+        cached = self.directory / 'saved-category-conflict.json'
+        cached.write_text(json.dumps(dict(raw=raw, pages=[1], model='original-model',
+            usage={}, prompt_version='routing-extraction-1.12')))
+        before = cached.read_bytes()
+        with patch('routing_guides.analysis_provider.AsyncAnthropic') as client:
+            output = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+        client.assert_not_called()
+        self.assertEqual(cached.read_bytes(), before)
+        recovered = output.extraction.rules[0]
+        self.assertEqual(recovered.operational_category, 'warehouse_operations')
+        self.assertEqual(recovered.evidence, self.extraction.rules[0].evidence)
+        self.assertEqual(recovered.instruction, self.extraction.rules[0].instruction)
+        self.assertEqual(recovered.verification, 'unresolved')
+        self.assertIsNone(recovered.rule_type)
+        self.assertEqual(recovered.placements, [])
+        self.assertEqual(recovered.consumption_points, [])
+        self.assertIn('general.guidance', recovered.unresolved_questions[-1])
+        self.assertIn('operational_category warehouse_operations', output.extraction.warnings[-1])
+        self.assertEqual(raw, original)
+        with self.assertRaises(ValidationError):
+            Extraction.model_validate(raw)
+        raw['rules'][0]['evidence'] = []
+        with self.assertRaises(ValidationError):
+            parse_extraction(raw)
+
     async def test_saved_coverage_quote_note_is_recovered_without_provider_call(self):
         for quote_note in ('', 'Provider commentary, not verified evidence.'):
             with self.subTest(quote_note=quote_note):

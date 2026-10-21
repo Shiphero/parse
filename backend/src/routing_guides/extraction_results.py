@@ -38,7 +38,7 @@ def parse_extraction(raw: Any) -> Extraction:
         # editor/API still use strict RuleSpec validation, and all other errors
         # must pass full validation below. Never infer a check or change evidence.
         errors = {e['loc'][1]: e['type'] for e in exc.errors(include_input=False, include_context=False)
-                   if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch'} and len(e['loc']) == 2
+                   if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch', 'rule_type_category_mismatch'} and len(e['loc']) == 2
                    and e['loc'][0] == 'rules' and isinstance(e['loc'][1], int)}
         if not errors or not isinstance(raw, dict):
             raise
@@ -46,14 +46,15 @@ def parse_extraction(raw: Any) -> Extraction:
             normalized = deepcopy(raw)
         for index in sorted(errors):
             proposal = normalized['rules'][index]
-            if errors[index] == 'rule_type_subject_mismatch':
+            if errors[index] in {'rule_type_subject_mismatch', 'rule_type_category_mismatch'}:
                 # Recover instruction-only proposals, not conflicting executable
                 # checks or malformed fields that happen to share this error.
                 if proposal.get('standard_check') is not None or proposal.get('assertion') is not None:
                     continue
+                dimension = 'subject' if errors[index] == 'rule_type_subject_mismatch' else 'operational_category'
                 note = ('Needs rule type mapping: the provider proposed '
-                        f'{proposal["rule_type"]["id"]} for subject {proposal["subject"]}, '
-                        'which that rule type does not support. The disputed rule type and workflow '
+                        f'{proposal["rule_type"]["id"]} with {dimension} {proposal[dimension]}, '
+                        'which conflicts with that rule type. The disputed rule type and workflow '
                         'assignments were removed; choose a compatible mapping before approval. '
                         'The original provider response is retained.')
                 proposal.update(rule_type=None, placements=[], consumption_points=[], verification='unresolved')
