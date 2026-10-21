@@ -420,6 +420,47 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         old_result = await self.send('POST', f'/api/scenarios/{scenario["id"]}/evaluate/{original["id"]}', {})
         self.assertEqual(old_result['items'][0]['outcome'], 'pass')
 
+    async def test_concurrent_batches_split_in_place_and_save_in_page_order(self):
+        import asyncio
+        async with self.sessions.begin() as session:
+            guide = await session.get(Guide, self.gid)
+            guide.page_count = 4
+            for index in (1, 2, 3):
+                session.add(GuidePage(guide_id=self.gid, page_index=index, text=f'Page {index+1}: cartons must not exceed 50 lb.', text_status='extracted', image_status='ready'))
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'queued'
+            run.config = {'provider': 'anthropic', 'model': 'test'}
+            run.payload = {**run.payload, 'coverage': [], 'pending_batches': [[1, 2], [3], [4]]}
+        first_done = asyncio.Event()
+        in_flight = peak = 0
+        async def provider(_provider, _model, requested, *args, **kwargs):
+            nonlocal in_flight, peak
+            in_flight += 1
+            peak = max(peak, in_flight)
+            try:
+                await asyncio.sleep(0)
+                batch = [p['page'] for p in requested]
+                if batch == [1, 2]:
+                    raise ProviderFailure('Model output was truncated.', split=True)
+                if batch == [1]:
+                    # Page 1 finishes last, after later pages were already saved.
+                    await first_done.wait()
+                if batch == [4]:
+                    first_done.set()
+                evidence = [{'page': batch[0], 'quote': '50 lb'}]
+                return ProviderOutput(Extraction(rules=[rule(title=f'Page {batch[0]} rule', evidence=evidence)], coverage=[{'page': batch[0], 'outcome': 'rules_found', 'note': 'Found'}], warnings=[]), 'test', {})
+            finally:
+                in_flight -= 1
+        with patch.object(analysis_jobs, 'analyze', side_effect=provider):
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertGreater(peak, 1)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.status, 'complete')
+            self.assertEqual(saved.payload['pending_batches'], [])
+            self.assertEqual([c['page'] for c in saved.payload['coverage']], [1, 2, 3, 4])
+            self.assertEqual([r['spec']['title'] for r in saved.payload['rules']], [f'Page {n} rule' for n in (1, 2, 3, 4)])
+
     async def test_missing_coverage_is_not_completed(self):
         async with self.sessions.begin() as s:
             run=await s.get(AnalysisRun,self.rid);run.status='queued';run.config={'provider':'anthropic','model':'test'}

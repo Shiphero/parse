@@ -12,10 +12,19 @@ from pydantic import ValidationError
 from test_rules import rule
 
 
+class FakeStream:
+    def __init__(self, create, kwargs):
+        self.create, self.kwargs = create, kwargs
+    async def __aenter__(self):
+        message = await self.create(**self.kwargs)
+        return SimpleNamespace(get_final_message=AsyncMock(return_value=message))
+    async def __aexit__(self, *args): return None
+
+
 class FakeClient:
     def __init__(self, result):
         self.create = AsyncMock(return_value=result)
-        self.messages = SimpleNamespace(create=self.create)
+        self.messages = SimpleNamespace(create=self.create, stream=lambda **kwargs: FakeStream(self.create, kwargs))
         self.responses = SimpleNamespace(create=self.create)
     async def __aenter__(self):return self
     async def __aexit__(self,*args):return None
@@ -42,6 +51,11 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('full context',request['messages'][0]['content'][0]['text'])
         self.assertEqual(request['tool_choice'], {'type': 'auto'})
         self.assertEqual(request['tools'][0]['name'], 'submit_extraction')
+        # The system prompt and full-document context are cached; per-batch pages follow them.
+        self.assertEqual(request['system'][0]['cache_control'], {'type': 'ephemeral'})
+        self.assertEqual(request['messages'][0]['content'][0]['cache_control'], {'type': 'ephemeral'})
+        self.assertNotIn('Target PDF pages', request['messages'][0]['content'][0]['text'])
+        self.assertEqual(request['max_tokens'], 64000)
 
     async def test_openai_has_images_schema_and_no_stored_response(self):
         response=SimpleNamespace(status='completed',output_text=self.extraction.model_dump_json(),model='returned-openai',usage=None)
