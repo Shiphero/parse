@@ -1,6 +1,7 @@
 """Stable requirement identity and presentation contracts, independent of verification."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_core import PydanticCustomError
 from routing_guides.taxonomy import ConsumptionPoint, OperationalCategory
 from routing_guides.check_catalog import check_definition
 
@@ -103,7 +104,8 @@ def validate_delivery(spec):
     if entry.required_purpose == 'general_guidance' and (spec.assertion is not None or spec.verification == 'data' or any(p.behavior != 'display' for p in spec.placements)):
         raise ValueError('General guidance is display only and cannot contain an automatic check.')
     if spec.subject not in entry.subjects:
-        raise ValueError(f'{entry.label} requires subject: {", ".join(entry.subjects)}.')
+        raise PydanticCustomError('rule_type_subject_mismatch', '{label} requires subject: {subjects}.',
+                                  {'label': entry.label, 'subjects': ', '.join(entry.subjects)})
     if spec.standard_check and spec.standard_check.check_id not in entry.check_ids:
         raise ValueError('The verification check does not match this rule type.')
     if spec.operational_category != entry.category:

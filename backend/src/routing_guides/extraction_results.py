@@ -37,15 +37,29 @@ def parse_extraction(raw: Any) -> Extraction:
         # Only downgrade a known semantic mismatch in provider proposals. The
         # editor/API still use strict RuleSpec validation, and all other errors
         # must pass full validation below. Never infer a check or change evidence.
-        indexes = {e['loc'][1] for e in exc.errors(include_input=False, include_context=False)
-                   if e['type'] == 'unmapped_catalog_rule' and len(e['loc']) == 2
+        errors = {e['loc'][1]: e['type'] for e in exc.errors(include_input=False, include_context=False)
+                   if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch'} and len(e['loc']) == 2
                    and e['loc'][0] == 'rules' and isinstance(e['loc'][1], int)}
-        if not indexes or not isinstance(raw, dict):
+        if not errors or not isinstance(raw, dict):
             raise
         if normalized is raw:
             normalized = deepcopy(raw)
-        for index in sorted(indexes):
+        for index in sorted(errors):
             proposal = normalized['rules'][index]
+            if errors[index] == 'rule_type_subject_mismatch':
+                # Recover instruction-only proposals, not conflicting executable
+                # checks or malformed fields that happen to share this error.
+                if proposal.get('standard_check') is not None or proposal.get('assertion') is not None:
+                    continue
+                note = ('Needs rule type mapping: the provider proposed '
+                        f'{proposal["rule_type"]["id"]} for subject {proposal["subject"]}, '
+                        'which that rule type does not support. The disputed rule type and workflow '
+                        'assignments were removed; choose a compatible mapping before approval. '
+                        'The original provider response is retained.')
+                proposal.update(rule_type=None, placements=[], consumption_points=[], verification='unresolved')
+                proposal.setdefault('unresolved_questions', []).append(note)
+                warnings.append(f'Proposal {index + 1}: {note}')
+                continue
             original_verification = proposal['verification']
             removed_assertion = proposal.get('assertion') is not None
             note = ('Needs verification mapping: the provider proposed '

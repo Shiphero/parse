@@ -151,6 +151,48 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValidationError):
             Extraction.model_validate(raw)
 
+    async def test_saved_subject_mismatch_is_recovered_as_unresolved_without_changing_source(self):
+        raw = self.extraction.model_dump(mode='json')
+        proposal = {**deepcopy(raw['rules'][0]), 'purpose': 'general_guidance',
+                    'subject': 'shipment', 'verification': 'human',
+                    'operational_category': 'business_administration',
+                    'rule_type': {'id': 'billing.requirements', 'version': 1},
+                    'placements': [{'workflow': 'billing', 'area': 'billing', 'enabled': True, 'behavior': 'display'}],
+                    'consumption_points': ['billing']}
+        raw['rules'].append(proposal)
+        cached = self.directory / 'saved-subject-mismatch.json'
+        cached.write_text(json.dumps(dict(raw=raw, pages=[1], model='original-model',
+            usage={'input_tokens': 123}, prompt_version='routing-extraction-1.12')))
+        before = cached.read_bytes()
+        with patch('routing_guides.analysis_provider.AsyncAnthropic') as client:
+            first = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+            second = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+        client.assert_not_called()
+        self.assertEqual(cached.read_bytes(), before)
+        self.assertEqual(first.extraction, second.extraction)
+        self.assertEqual(len(first.extraction.rules), 2)
+        self.assertEqual(first.extraction.rules[0], self.extraction.rules[0])
+        recovered = first.extraction.rules[1]
+        for field in ('instruction', 'subject', 'purpose', 'evidence', 'obligation', 'applicability_text'):
+            self.assertEqual(recovered.model_dump(mode='json')[field], proposal[field])
+        self.assertIsNone(recovered.rule_type)
+        self.assertEqual(recovered.verification, 'unresolved')
+        self.assertEqual(recovered.placements, [])
+        self.assertEqual(recovered.consumption_points, [])
+        self.assertIn('Needs rule type mapping', recovered.unresolved_questions[-1])
+        self.assertIn('billing.requirements', first.extraction.warnings[-1])
+        with self.assertRaises(ValidationError):
+            Extraction.model_validate(raw)
+        # Recovery must not swallow other invalid proposals or conflicting checks.
+        malformed = deepcopy(raw)
+        del malformed['rules'][0]['instruction']
+        with self.assertRaises(ValidationError):
+            parse_extraction(malformed)
+        conflicting = deepcopy(raw)
+        conflicting['rules'][1]['assertion'] = {'op': 'lte', 'path': 'weight', 'value': 50, 'unit': 'lb'}
+        with self.assertRaises(ValidationError):
+            parse_extraction(conflicting)
+
     async def test_saved_coverage_quote_note_is_recovered_without_provider_call(self):
         for quote_note in ('', 'Provider commentary, not verified evidence.'):
             with self.subTest(quote_note=quote_note):
