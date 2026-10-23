@@ -3,7 +3,8 @@ name: routing-guides
 x-backend: &backend
   image: routing-guides-backend:local
   build:
-    context: ./backend
+    context: .
+    target: backend
   init: true
   environment: &backend-environment
     DATABASE_URL: postgresql+psycopg://routing:${POSTGRES_PASSWORD:?Run python3 scripts/setup.py first}@db:5432/routing

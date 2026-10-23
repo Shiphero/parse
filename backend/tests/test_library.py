@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from PIL import Image
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from routing_guides import guides_api
+from routing_guides import guides_api, app_settings
 from routing_guides.config import get_settings
 from routing_guides.models import Guide, Retailer
 from routing_guides.retailer_icons import MAX_ICON_BYTES, normalize_icon
@@ -49,6 +49,8 @@ class LibraryTests(unittest.IsolatedAsyncioTestCase):
         self.sessions = async_sessionmaker(self.conn, expire_on_commit=False, join_transaction_mode='create_savepoint')
         self.patch = patch.object(guides_api, 'sessions', self.sessions)
         self.patch.start()
+        self.settings_patch = patch.object(app_settings, 'sessions', self.sessions)
+        self.settings_patch.start()
         self.app = FastAPI(); self.app.include_router(guides_api.router)
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url='http://test')
         self.retailer = 'test-' + uuid4().hex
@@ -66,6 +68,7 @@ class LibraryTests(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         await self.client.aclose(); self.patch.stop()
+        self.settings_patch.stop()
         await self.transaction.rollback(); await self.conn.close(); await self.engine.dispose()
 
     async def library(self, **params):

@@ -61,6 +61,12 @@ class GuidePage(Base):
 from sqlalchemy.dialects.postgresql import JSONB
 
 
+class ApplicationSetting(Base):
+    __tablename__ = 'application_settings'
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[dict] = mapped_column(JSONB)
+
+
 class AnalysisRun(Base):
     __tablename__ = 'analysis_runs'
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)

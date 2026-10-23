@@ -15,6 +15,7 @@ from routing_guides.models import Retailer, ServiceHeartbeat
 from routing_guides.providers import ProviderStatus, provider_statuses
 from routing_guides.guides_api import router as guides_router
 from routing_guides.tasks import task_queue
+from routing_guides.frontend import mount_frontend
 from routing_guides.workflow_api import router as workflow_router
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ async def workspace() -> WorkspaceStatus:
     online = seen is not None and (datetime.now(timezone.utc) - seen).total_seconds() < 60
     return WorkspaceStatus(
         worker="online" if online else "waiting", worker_last_seen=seen,
-        providers=provider_statuses(),
+        providers=await provider_statuses(),
         retailers=[RetailerSummary(id=r.id, name=r.name, discovery_note=r.discovery_note) for r in retailers],
     )
 
@@ -90,3 +91,6 @@ async def contracts() -> dict:
         "expression": Expression.model_json_schema(),
         "scenario_input": {"schema_version": "1.0", "shipment": {}, "cartons": [], "pallets": [], "items": []},
     }
+
+
+mount_frontend(app)

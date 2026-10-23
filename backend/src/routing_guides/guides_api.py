@@ -17,6 +17,7 @@ from routing_guides.db import sessions
 from routing_guides.models import Guide, GuidePage, Retailer, ReleaseHead
 from routing_guides.retailer_icons import MAX_ICON_BYTES, normalize_icon
 from routing_guides.storage import InvalidUpload, guide_directory, save_original
+from routing_guides.app_settings import upload_settings
 from routing_guides.tasks import dsn, prepare_guide
 
 router = APIRouter(prefix="/api", tags=["Guide library"])
@@ -118,7 +119,7 @@ async def list_guides(
     return GuideLibrary(items=[GuideSummary.model_validate(g) for g in guides], total=total, offset=offset, limit=limit,
         retailers=[RetailerCount(id=id, name=name, guide_count=count, icon_url=retailer_icon_url(id, version))
             for id, name, version, count in counts],
-        max_upload_mb=get_settings().max_upload_mb)
+        max_upload_mb=(await upload_settings()).max_upload_mb)
 
 
 @router.get("/retailers/{retailer_id}/guide-choices", response_model=list[GuideSummary])
@@ -156,7 +157,7 @@ async def upload_guide(
     guide_id = uuid4()
     filename = Path((file.filename or "guide.pdf").replace("\\", "/")).name[:250]
     try:
-        digest, size = await run_in_threadpool(save_original, guide_id, file.file)
+        digest, size = await run_in_threadpool(save_original, guide_id, file.file, (await upload_settings()).max_upload_mb)
     except InvalidUpload as exc:
         raise HTTPException(422, str(exc)) from None
     finally:

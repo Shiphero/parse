@@ -14,7 +14,7 @@ QUERY = '''query RoutingGuideScenario($id: String!) {
 
 
 async def fetch_order(order_id: str) -> dict:
-    key = connection('shiphero')['key']
+    key = (await connection('shiphero'))['key']
     if not key:
         raise ValueError('Add a ShipHero access token in Connections.')
     try:

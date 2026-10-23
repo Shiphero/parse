@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,8 +11,9 @@ class Settings(BaseSettings):
     database_url: SecretStr
     storage_root: Path = Path("/data")
     max_upload_mb: int = Field(default=256, ge=1)
+    credentials_mode: Literal['local', 'environment'] = 'local'
     anthropic_api_key: SecretStr = SecretStr("")
-    anthropic_model: str = ""
+    anthropic_model: str = "claude-opus-5-5"
     openai_api_key: SecretStr = SecretStr("")
     openai_model: str = ""
     jev_api_key: SecretStr = SecretStr("")

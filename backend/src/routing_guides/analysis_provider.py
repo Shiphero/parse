@@ -117,7 +117,7 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
             save_response(response_path, value)
         return parsed_response(value)
 
-    secret = connection(provider)['key']
+    secret = (await connection(provider))['key']
     if not secret or not model:
         raise ProviderFailure('Configure a provider key and model in Connections before analysis.')
     # The shared document context comes first so providers can reuse it as a cached prefix across batches.

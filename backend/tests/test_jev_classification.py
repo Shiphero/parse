@@ -81,16 +81,18 @@ class JevClassificationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('Check the API key', str(raised.exception))
         self.assertNotIn('sensitive-provider-response', str(raised.exception))
 
-    def test_jev_credentials_are_masked_preserved_and_removable(self):
+    async def test_jev_credentials_are_masked_preserved_and_removable(self):
         with TemporaryDirectory() as folder:
             settings = Settings(database_url='postgresql://unused', storage_root=Path(folder),
                                 jev_api_key='environment-key')
-            with patch('routing_guides.connections.get_settings', return_value=settings):
-                self.assertEqual(connection('jev')['key'], 'environment-key')
-                save_connection('jev', 'synthetic-key', 'jev-1.14.0')
-                save_connection('jev', None, 'jev-preview')
-                self.assertEqual(connection('jev')['key'], 'synthetic-key')
-                self.assertNotIn('synthetic-key', str(statuses()))
+            with patch('routing_guides.connections.get_settings', return_value=settings), \
+                 patch('routing_guides.connections.setting', new=AsyncMock(return_value='jev-preview')), \
+                 patch('routing_guides.connections.save_setting', new=AsyncMock()):
+                self.assertEqual((await connection('jev'))['key'], 'environment-key')
+                await save_connection('jev', 'synthetic-key', 'jev-1.14.0')
+                await save_connection('jev', None, 'jev-preview')
+                self.assertEqual((await connection('jev'))['key'], 'synthetic-key')
+                self.assertNotIn('synthetic-key', str(await statuses()))
                 self.assertEqual((Path(folder) / 'connections.json').stat().st_mode & 0o777, 0o600)
-                save_connection('jev', '', 'jev-preview')
-                self.assertEqual(connection('jev')['key'], '')
+                await save_connection('jev', '', 'jev-preview')
+                self.assertEqual((await connection('jev'))['key'], '')

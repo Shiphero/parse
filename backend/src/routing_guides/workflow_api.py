@@ -12,6 +12,7 @@ from sqlalchemy import select
 from routing_guides.analysis_jobs import validate_evidence
 from routing_guides.analysis_provider import PROMPT_VERSION
 from routing_guides.connections import connection, statuses, save_connection
+from routing_guides.app_settings import UploadSettings, upload_settings, save_setting
 from routing_guides.db import sessions
 from routing_guides.evaluator import evaluate_release
 from routing_guides.models import AnalysisRun, AuditEvent, Evaluation, Guide, GuidePage, ReleaseHead, RuleRelease, Scenario
@@ -165,6 +166,7 @@ class DeliveryView(BaseModel):
 class ConnectionView(BaseModel):
     id: str
     credential_configured: bool
+    credential_managed: bool = False
     model: str
 
 
@@ -372,7 +374,20 @@ async def check_evidence(session, run, spec, source_guide_id=None):
 
 @router.get('/connections', response_model=list[ConnectionView])
 async def connections():
-    return statuses()
+    return await statuses()
+
+
+@router.get('/settings', response_model=UploadSettings)
+async def application_settings():
+    return await upload_settings()
+
+
+@router.put('/settings', response_model=UploadSettings)
+async def update_settings(body: UploadSettings, request: Request):
+    if request.headers.get('X-Requested-With') != 'routing-guide-parser':
+        raise HTTPException(403, 'Use the application to update settings.')
+    await save_setting('max_upload_mb', body.max_upload_mb)
+    return body
 
 
 @router.put('/connections/{provider}', response_model=list[ConnectionView])
@@ -383,8 +398,11 @@ async def update_connection(provider: Literal['anthropic', 'openai', 'jev', 'shi
     # Serialize all credential updates across API processes; write atomically with mode 0600.
     async with await psycopg.AsyncConnection.connect(dsn) as conn:
         await conn.execute('SELECT pg_advisory_xact_lock(914822)')
-        save_connection(provider, body.key.get_secret_value() if body.key is not None else None, body.model)
-    return statuses()
+        try:
+            await save_connection(provider, body.key.get_secret_value() if body.key is not None else None, body.model)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+    return await statuses()
 
 
 @router.get('/guides/{guide_id}/workflow', response_model=WorkflowView)
@@ -394,7 +412,7 @@ async def workflow(guide_id: UUID):
         runs = (await session.scalars(select(AnalysisRun).where(AnalysisRun.guide_id == guide_id).order_by(AnalysisRun.created_at.desc()))).all()
         releases = (await session.scalars(select(RuleRelease).join(AnalysisRun, RuleRelease.run_id == AnalysisRun.id).where(RuleRelease.retailer_id == guide.retailer_id, AnalysisRun.status != 'deleted').order_by(RuleRelease.created_at.desc()))).all()
         head = await session.get(ReleaseHead, guide.retailer_id)
-        return WorkflowView(runs=[RunView.model_validate(r) for r in runs if r.status != 'deleted'], deleted_runs=[RunView.model_validate(r) for r in runs if r.status == 'deleted'], releases=[ReleaseView.model_validate(r) for r in releases], active_release_id=head.release_id if head else None, connections=statuses())
+        return WorkflowView(runs=[RunView.model_validate(r) for r in runs if r.status != 'deleted'], deleted_runs=[RunView.model_validate(r) for r in runs if r.status == 'deleted'], releases=[ReleaseView.model_validate(r) for r in releases], active_release_id=head.release_id if head else None, connections=await statuses())
 
 
 @router.post('/guides/{guide_id}/analysis', response_model=RunView, status_code=201)
@@ -415,7 +433,7 @@ async def start_analysis(guide_id: UUID, body: StartAnalysis):
             raise HTTPException(409, 'No prepared pages.')
     model = body.model.strip()
     if body.provider != 'manual':
-        config = connection(body.provider)
+        config = await connection(body.provider)
         model = model or config['model']
         if not config['key'] or not model:
             raise HTTPException(422, 'Add a provider API key and model in Connections first.')
@@ -560,7 +578,7 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
 
 @router.post('/analysis/{run_id}/auto-classify')
 async def auto_classify(run_id: UUID, body: StartClassification):
-    config = connection(body.provider)
+    config = await connection(body.provider)
     model = body.model.strip() or config['model']
     if not model or not config['key']:
         raise HTTPException(422, 'Configure the classification provider and model in Connections first.')

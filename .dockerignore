@@ -1,10 +1,11 @@
-.git
-.env
-.env.*
+**/.git
+**/.env
+**/.env.*
 **/node_modules
 **/.venv
 **/__pycache__
 **/dist
+**/*.tsbuildinfo
+data
 sources
 analysis
-data

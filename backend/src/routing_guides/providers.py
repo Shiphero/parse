@@ -14,8 +14,8 @@ class ProviderStatus(BaseModel):
     connection_verified: bool = False
 
 
-def provider_statuses() -> list[ProviderStatus]:
-    anthropic, openai = connection("anthropic"), connection("openai")
+async def provider_statuses() -> list[ProviderStatus]:
+    anthropic, openai = await connection("anthropic"), await connection("openai")
     return [
         ProviderStatus(
             id="anthropic", name="Claude",

@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from routing_guides.db import engine, sessions
 from routing_guides.models import ServiceHeartbeat
 from routing_guides.tasks import task_queue
+from routing_guides.worker_health import mark_alive
 
 
 async def record_heartbeat() -> None:
@@ -21,6 +22,7 @@ async def record_heartbeat() -> None:
 async def heartbeat_loop() -> None:
     while True:
         await record_heartbeat()
+        mark_alive()
         await asyncio.sleep(15)
 
 

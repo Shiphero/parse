@@ -32,14 +32,14 @@ Frontend and API source changes reload during development. Dependency, migration
 
 - PDF upload, persistent retailer library, full-page rendering/text extraction and source viewer.
 - Configurable Claude and OpenAI adapters with durable page batches, retries, cancellation, coverage and model/usage records.
-- Local Connections screen for server-side credentials, with presence-only responses. Jev / TypeSafe is available for classification of existing rules.
+- Connections screen with database-backed model/upload preferences and presence-only credential responses. Production credentials are ECS-managed; local credentials remain editable. Jev / TypeSafe is available for classification of existing rules.
 - Manual and AI draft review with evidence images, edits, exact-revision approval and audit history.
 - Explicit retain/replace/retire update decisions, comparison, scenario impact and immutable releases.
 - JSON rule exports, Markdown instructions, release history and active-release restoration.
 - Pasted JSON and read-only ShipHero wholesale snapshots, explicit overrides and deterministic evaluations pinned to releases.
 - Bounded typed rule expressions, exact unit conversions and explicit unknown outcomes.
 
-Read the [end-to-end workflow](docs/workflow.md) for usage, contracts, integration references and limitations. AI analysis requires a configured provider key/model; ShipHero import requires an access token. Neither integration is claimed live-verified by local tests. Shared authentication, cloud deployment, dedicated OCR, non-PDF ingestion and model-quality benchmarking are not delivered by this local milestone.
+Read the [end-to-end workflow](docs/workflow.md) for usage and contracts, and [ECS deployment](docs/ecs-deployment.md) for the single-image cloud setup. AI analysis requires a configured provider key/model; ShipHero import requires an access token. Local tests do not establish live provider quality or cloud deployment success. Shared authentication, dedicated OCR, non-PDF ingestion and model-quality benchmarking remain external or future work.
 
 ## Working with guides
 
@@ -47,13 +47,13 @@ Choose a retailer and upload its original PDF. The worker counts all PDF pages, 
 
 Originals are immutable. Uploading identical bytes for the same retailer returns the existing guide without changing its metadata. Different files remain separate uploads; semantic version comparison is not yet available. Effective dates are entered explicitly and are not inferred from upload dates.
 
-Preparation can be retried after failure; completed page work is retained. The queue recovers jobs left behind by a terminated worker. A configurable `MAX_UPLOAD_MB` (256 MB by default) controls local resource usage and is shown in the upload form; there is no page-count truncation. Poppler operations have per-command timeouts, with failures recorded rather than silently omitted. Upload limits are enforced after multipart spooling in this local build; shared deployment must also limit incoming request size at its gateway.
+Preparation can be retried after failure; completed page work is retained. The queue recovers jobs left behind by a terminated worker. A database-backed upload limit (256 MB by default, editable in Connections) is shown in the upload form; there is no page-count truncation. Poppler operations have per-command timeouts, with failures recorded rather than silently omitted. Upload limits are enforced after multipart spooling; deployment ingress/disk limits must account for uploads.
 
 Document files live in the `documents` Docker volume. Unknown database commit outcomes retain files rather than risk deleting an original that was successfully saved. Orphan-file cleanup and storage quotas are future operational work.
 
 ## Configuration
 
-See `.env.example`. Optional environment credentials are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `JEV_API_KEY`, with separate model settings. Jev defaults to `jev-1.14.0` and supports existing-rule classification; guide extraction uses Claude or OpenAI. Having a key configured does not mean provider access has been verified. Connections in the app override these environment defaults. Keep `.env` out of Git. Recreate API/worker containers after environment changes with `make up`. Service health and provider configuration remain available through the API for developers; they are not the user's homepage.
+See `.env.example`. Credentials use `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `JEV_API_KEY`, and optionally `SHIPHERO_ACCESS_TOKEN`. The production image uses `CREDENTIALS_MODE=environment`, so UI edits cannot override injected secrets. Local Compose allows credential edits, stored outside Git in `/data/connections.json`. Provider models and upload limits live in PostgreSQL; bootstrap imports legacy non-secret defaults once. Jev supports classification; guide extraction uses Claude or OpenAI. Having a key configured does not verify access. Keep `.env` out of Git; recreate containers after changing injected secrets.
 
 Change `WEB_PORT` or `API_PORT` in `.env` if needed. The PostgreSQL password must match the existing database volume: changing the environment alone does not rotate an initialized database's password.
 
@@ -95,4 +95,4 @@ Procrastinate owns its queue schema. Bootstrap records its package version and s
 
 ## Deployment direction
 
-Local first, Railway for the first shared deployment, AWS later if needed. Reuse the Python image for API and worker processes. Use a production frontend build, shared object storage, environment-specific routing and internal sign-in before sharing. The included frontend production Docker target is a starting template and is not a deployed or validated Railway configuration.
+AWS ECS POC: one service, one task with `api` and `worker` containers using the same root-Dockerfile production image. FastAPI serves the bundled UI and API on port 8000. PostgreSQL holds settings/rules/jobs; EFS holds shared documents. GitHub Actions workflows run checks, publish to ECR, migrate and deploy. See [the complete infrastructure contract](docs/ecs-deployment.md) for setup, ownership and required GitHub variables. Internal access/SSO is supplied by infrastructure.

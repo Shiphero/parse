@@ -1,0 +1,45 @@
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: routing
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: routing
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U routing -d routing"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql+psycopg://routing:ci-only-password@127.0.0.1:5432/routing
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend
+        run: docker build --target backend -t parse-checks .
+      - name: Migrate disposable CI database
+        run: docker run --rm --network host -e DATABASE_URL parse-checks python -m routing_guides.bootstrap
+      - name: Backend tests
+        run: docker run --rm --network host -e DATABASE_URL parse-checks python -m unittest discover -s /app/tests -v
+      - name: Deployment script tests
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Frontend build and tests
+        run: |
+          docker build --target frontend -t parse-web-checks .
+          docker run --rm parse-web-checks npm test
+      - name: Production image
+        run: docker build --target production -t parse-production-checks .
+      - name: Production smoke test
+        run: python3 scripts/smoke_production.py parse-production-checks
+      - name: Whitespace
+        run: git diff --check

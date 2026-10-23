@@ -230,6 +230,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application Settings */
+        get: operations["application_settings_api_settings_get"];
+        /** Update Settings */
+        put: operations["update_settings_api_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/connections/{provider}": {
         parameters: {
             query?: never;
@@ -1123,6 +1141,11 @@ export interface components {
             id: string;
             /** Credential Configured */
             credential_configured: boolean;
+            /**
+             * Credential Managed
+             * @default false
+             */
+            credential_managed: boolean;
             /** Model */
             model: string;
         };
@@ -2251,6 +2274,14 @@ export interface components {
              */
             existing: boolean;
         };
+        /** UploadSettings */
+        UploadSettings: {
+            /**
+             * Max Upload Mb
+             * @default 256
+             */
+            max_upload_mb: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -2872,6 +2903,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConnectionView"][];
+                };
+            };
+        };
+    };
+    application_settings_api_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadSettings"];
+                };
+            };
+        };
+    };
+    update_settings_api_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadSettings"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

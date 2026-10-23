@@ -15,7 +15,7 @@ from routing_guides.config import get_settings
 from routing_guides.models import Retailer, ReleaseHead, Guide, GuidePage, AnalysisRun, RuleRelease
 from routing_guides.rules import Extraction
 from routing_guides.analysis_provider import ProviderOutput, ProviderFailure
-from routing_guides import workflow_api, analysis_jobs, classification_jobs
+from routing_guides import workflow_api, analysis_jobs, classification_jobs, app_settings
 from test_rules import rule
 
 
@@ -25,7 +25,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.conn = await self.engine.connect()
         self.transaction = await self.conn.begin()
         self.sessions = async_sessionmaker(self.conn,expire_on_commit=False,join_transaction_mode='create_savepoint')
-        self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions),patch.object(classification_jobs,'sessions',self.sessions)]
+        self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions),patch.object(classification_jobs,'sessions',self.sessions),patch.object(app_settings,'sessions',self.sessions)]
         for p in self.patches:p.start()
         self.retailer='test-'+uuid4().hex
         self.gid=uuid4(); self.rid=uuid4()
@@ -221,7 +221,8 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             # Simulate a release retaining a rule from an older guide.
             session.add(Guide(id=other_gid, retailer_id=self.retailer, title='Newer guide',
                 filename='new.pdf', sha256=uuid4().hex, size_bytes=1, status='ready',
-                page_count=1, processed_pages=1, attention_pages=0))
+                page_count=1, processed_pages=1, attention_pages=0,
+                series_id=self.gid, previous_guide_id=self.gid, edition_number=2))
             await session.flush()
             session.add(GuidePage(guide_id=other_gid, page_index=0, text='Different source text.',
                 text_status='extracted', image_status='ready'))
@@ -304,10 +305,9 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(candidate['spec']['schema_version'],'1.2')
         self.assertEqual(candidate['spec']['standard_check'],spec['standard_check'])
         self.assertEqual(candidate['check_status']['availability'],'not_implemented')
-        await self.send('POST',f'/api/analysis/{self.rid}/bulk-approve',{
-            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:candidate['revision']}},422)
-        run=await self.send('PUT',f'/api/analysis/{self.rid}/rules/{candidate["id"]}',{
-            'version':run['version'],'actor':'Reviewer','action':'approve'})
+        # Approval records the requirement; unavailable checks stay unavailable.
+        run=await self.send('POST',f'/api/analysis/{self.rid}/bulk-approve',{
+            'version':run['version'],'actor':'Reviewer','revisions':{candidate['id']:candidate['revision']}})
         release=await self.send('POST',f'/api/analysis/{self.rid}/publish',{
             'version':run['version'],'actor':'Reviewer','note':'Synthetic coverage',
             'name':'Catalog fixture','effective_date':'2026-01-01','scope':'Synthetic only',
@@ -830,7 +830,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             data = deepcopy(run.payload)
             data['rules'] = [{'id': rid, 'revision': 1, 'status': 'pending', 'spec': rule(title=f'Rule {i}', purpose='unclassified').model_dump(mode='json'),
                               'source_guide_id': str(self.gid), 'review': None, 'evidence_issues': []} for i, rid in enumerate(ids)]
-            data['classification_job'] = {'id': job_id, 'status': 'queued', 'provider': 'anthropic', 'model': 'test', 'actor': 'Reviewer',
+            data['classification_job'] = {'id': job_id, 'status': 'queued', 'provider': 'anthropic', 'model': 'test', 'actor': 'Reviewer', 'batch_size': 40,
                 'pending': [{'id': rid, 'revision': 1} for rid in ids], 'total': count, 'processed': 0, 'applied': 0, 'skipped': 0, 'batches': [], 'error': None}
             run.payload = data
         return job_id, ids
@@ -960,8 +960,43 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(legacy['unclassified_rule_count'], 1)
         self.assertFalse(legacy['routing_complete'])
 
+    async def test_managed_credentials_ignore_local_overrides_and_models_persist_in_database(self):
+        from routing_guides.config import Settings
+        from routing_guides.connections import connection, save_connection
+        from routing_guides.models import ApplicationSetting
+        settings = Settings(database_url='postgresql://unused', storage_root=Path(self.temp.name),
+            credentials_mode='environment', anthropic_api_key='environment-secret')
+        path = Path(self.temp.name) / 'connections.json'
+        path.write_text('{"anthropic":{"key":"stale-local-secret","model":"stale-model"}}')
+        before = path.read_bytes()
+        with patch('routing_guides.connections.get_settings', return_value=settings):
+            for value in ('new-key', ''):
+                with self.assertRaises(ValueError):
+                    await save_connection('anthropic', value, 'do-not-save')
+            await save_connection('anthropic', None, 'database-model')
+            self.assertEqual(await connection('anthropic'), {'key': 'environment-secret', 'model': 'database-model'})
+            response = await self.client.get('/api/connections')
+            self.assertTrue(next(c for c in response.json() if c['id'] == 'anthropic')['credential_managed'])
+            self.assertNotIn('environment-secret', response.text)
+            self.assertNotIn('stale-local-secret', response.text)
+        async with self.sessions() as session:
+            row = await session.get(ApplicationSetting, 'anthropic.model')
+            self.assertEqual(row.value, {'value': 'database-model'})
+        self.assertEqual(path.read_bytes(), before)
+
+    async def test_upload_settings_validate_and_are_saved_in_database(self):
+        response = await self.client.put('/api/settings', json={'max_upload_mb': 512})
+        self.assertEqual(response.status_code, 403)
+        headers = {'X-Requested-With': 'routing-guide-parser'}
+        for limit in (0, 1025):
+            response = await self.client.put('/api/settings', headers=headers, json={'max_upload_mb': limit})
+            self.assertEqual(response.status_code, 422)
+        response = await self.client.put('/api/settings', headers=headers, json={'max_upload_mb': 512})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual((await self.client.get('/api/settings')).json(), {'max_upload_mb': 512})
+
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
-        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='',jev_api_key=SimpleNamespace(get_secret_value=lambda:''),jev_model='jev-1.14.0')):
+        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(credentials_mode='local',storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='',jev_api_key=SimpleNamespace(get_secret_value=lambda:''),jev_model='jev-1.14.0')):
             response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})
             self.assertEqual(response.status_code,403)
             with patch.object(workflow_api.psycopg.AsyncConnection,'connect',new=AsyncMock()) as connect:

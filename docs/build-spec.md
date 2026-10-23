@@ -18,7 +18,7 @@ Convert retailer guides into source-backed, reviewed rules that supply human ins
 | AI | Native Anthropic Messages and OpenAI Responses SDK adapters; common validated extraction contract |
 | Execution | Docker Compose; localhost ports 5180 and 8180; database has no host port |
 
-No separate Redis or model orchestration framework is required. Dependency versions are locked. Queue schema migrations remain separate from application migrations. Credentials are environment defaults or local volume overrides saved atomically with mode 0600. They are never returned to the browser. Local reviewer names are self-declared, not authenticated identity.
+No separate Redis or model orchestration framework is required. Dependency versions are locked. Queue schema migrations remain separate from application migrations. Non-secret models and upload limits live in PostgreSQL. Production credentials are injected by ECS/Secrets Manager; local development supports volume overrides saved atomically with mode 0600. Credentials never enter PostgreSQL or browser responses. Reviewer names are self-declared, not authenticated identity.
 
 ## Delivered workflow
 
@@ -67,7 +67,7 @@ Repository changes are committed automatically at substantial milestones using t
 - Obtain an authentic same-scope older/newer guide pair for semantic extraction acceptance. Current comparison preserves explicit identity decisions but does not autonomously resolve splits, merges or contradictions.
 - Verify read-only ShipHero import with a real wholesale ID and token. Confirm destination semantics for each retailer workflow.
 - Dedicated OCR, non-PDF Word/Excel ingestion and trained classifiers are not implemented; vision models receive image-only PDF pages.
-- Shared deployment requires SSO/roles, account scoping, object storage, backups, request/storage quotas, credential management and deployment-specific validation. Railway is the next shared target; AWS remains optional. Do not expose the unauthenticated local app or Vite server publicly.
+- The ECS POC uses one service with API/UI and worker containers from one image, PostgreSQL, and shared EFS. GitHub Actions handles checks, image publication, migrations and application deployment; Terraform owns infrastructure. See `docs/ecs-deployment.md`. Internal access/SSO, backups, ingress/storage limits and live cloud validation are deployment responsibilities; the app still has no built-in authentication or tenant isolation.
 
 ## Source scope
 
