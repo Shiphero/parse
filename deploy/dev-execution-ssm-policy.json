@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadParseApplicationSecrets",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameters",
+      "Resource": [
+        "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/DATABASE_URL",
+        "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/ANTHROPIC_API_KEY",
+        "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/JEV_API_KEY"
+      ]
+    }
+  ]
+}

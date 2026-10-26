@@ -1,4 +1,5 @@
 import copy
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -21,6 +22,67 @@ def task():
 
 
 class DeploymentTests(unittest.TestCase):
+    def test_first_deployment_replaces_placeholder_and_migrates_before_service_update(self):
+        template = Path(__file__).resolve().parents[2] / 'deploy/dev-task-definition.json'
+        current = {'taskDefinition': 'placeholder', 'desiredCount': 0,
+                   'networkConfiguration': {'awsvpcConfiguration': {'subnets': ['subnet-existing']}},
+                   'loadBalancers': [{'containerName': 'parse', 'containerPort': 8000}]}
+        calls, registrations = [], []
+
+        def aws(*args, payload=None):
+            calls.append(args[0])
+            if args[0] == 'describe-services':
+                return {'services': [dict(current)]}
+            if args[0] == 'describe-task-definition':
+                return {'taskDefinition': {'family': 'dev-parse', 'containerDefinitions': []}}
+            if args[0] == 'register-task-definition':
+                registrations.append(payload)
+                return {'taskDefinition': {'taskDefinitionArn': payload['family']}}
+            if args[0] == 'run-task':
+                self.assertEqual(payload['networkConfiguration'], current['networkConfiguration'])
+                return {'tasks': [{'taskArn': 'migration-task'}]}
+            if args[0] == 'describe-tasks':
+                return {'tasks': [{'containers': [{'exitCode': 0}]}]}
+            if args[0] == 'update-service':
+                self.assertEqual(args[-2:], ('--desired-count', '1'))
+                current.update(taskDefinition='dev-parse', runningCount=1)
+            return {}
+
+        with patch.object(deploy, 'aws', side_effect=aws):
+            deploy.deploy('cluster', 'service', IMAGE, template)
+
+        self.assertLess(calls.index('describe-tasks'), calls.index('update-service'))
+        migration, production = registrations
+        self.assertEqual(len(migration['containerDefinitions']), 1)
+        self.assertEqual(migration['containerDefinitions'][0]['command'],
+                         ['python', '-m', 'routing_guides.bootstrap'])
+        self.assertNotIn('healthCheck', migration['containerDefinitions'][0])
+        self.assertNotIn('portMappings', migration['containerDefinitions'][0])
+        self.assertEqual(migration['volumes'], production['volumes'])
+        for container in production['containerDefinitions']:
+            self.assertEqual(container['image'], IMAGE)
+            self.assertEqual(container['mountPoints'][0]['containerPath'], '/data')
+            self.assertEqual({secret['name'] for secret in container['secrets']},
+                             {'DATABASE_URL', 'ANTHROPIC_API_KEY', 'JEV_API_KEY'})
+            self.assertTrue(all(secret['valueFrom'].startswith('arn:aws:ssm:')
+                                for secret in container['secrets']))
+
+    def test_wrong_family_or_alb_target_fails_before_any_aws_mutation(self):
+        for wrong_family in (False, True):
+            with self.subTest(wrong_family=wrong_family):
+                current = {'taskDefinition': 'old',
+                           'loadBalancers': [{'containerName': 'placeholder', 'containerPort': 80}]}
+                configured = task()
+                if wrong_family:
+                    configured['family'] = 'another-service'
+                with patch.object(Path, 'read_text', return_value=json.dumps(configured)), \
+                     patch.object(deploy, 'aws', side_effect=[{'services': [current]},
+                                                            {'taskDefinition': task()}]) as aws:
+                    with self.assertRaisesRegex(ValueError, 'family' if wrong_family else 'load balancer'):
+                        deploy.deploy('cluster', 'service', IMAGE, 'template.json')
+                self.assertEqual([call.args[0] for call in aws.call_args_list],
+                                 ['describe-services', 'describe-task-definition'])
+
     def test_migration_is_single_process_with_shared_storage_and_secret_references(self):
         original = task()
         before = copy.deepcopy(original)

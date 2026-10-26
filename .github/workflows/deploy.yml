@@ -6,6 +6,10 @@ on:
         description: Deploy after publishing (disable for the first infrastructure bootstrap)
         type: boolean
         default: true
+      configure_task:
+        description: Apply the dev task template (first deployment or deliberate task configuration update)
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -28,8 +32,17 @@ jobs:
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
       ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
       ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check deployment configuration
+        run: |
+          for name in AWS_REGION AWS_DEPLOY_ROLE_ARN ECR_REPOSITORY ECS_CLUSTER ECS_SERVICE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Set $name in the GitHub poc environment before running this workflow."
+              exit 1
+            fi
+          done
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
@@ -57,4 +70,5 @@ jobs:
         if: inputs.deploy
         env:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}@${{ steps.image.outputs.digest }}
+          TASK_DEFINITION_FILE: ${{ inputs.configure_task && 'deploy/dev-task-definition.json' || '' }}
         run: python3 scripts/ecs_deploy.py

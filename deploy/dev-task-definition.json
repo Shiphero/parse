@@ -1,0 +1,171 @@
+{
+  "family": "dev-parse",
+  "taskRoleArn": "arn:aws:iam::789248412670:role/dev-parse-task",
+  "executionRoleArn": "arn:aws:iam::789248412670:role/dev-parse-exec",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "2048",
+  "memory": "4096",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "volumes": [
+    {
+      "name": "documents",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-0e62adad061f3b99a",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-0f9cda99261722299",
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "parse",
+      "image": "IMAGE_REPLACED_BY_DEPLOY_WORKFLOW",
+      "essential": true,
+      "user": "10001:10001",
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "stopTimeout": 120,
+      "environment": [
+        {
+          "name": "CREDENTIALS_MODE",
+          "value": "environment"
+        },
+        {
+          "name": "STORAGE_ROOT",
+          "value": "/data"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/DATABASE_URL"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/ANTHROPIC_API_KEY"
+        },
+        {
+          "name": "JEV_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/JEV_API_KEY"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "documents",
+          "containerPath": "/data",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/dev-parse",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "api"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/ready', timeout=3)"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "command": [
+        "uvicorn",
+        "routing_guides.api:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "name": "worker",
+      "image": "IMAGE_REPLACED_BY_DEPLOY_WORKFLOW",
+      "essential": true,
+      "user": "10001:10001",
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "stopTimeout": 120,
+      "environment": [
+        {
+          "name": "CREDENTIALS_MODE",
+          "value": "environment"
+        },
+        {
+          "name": "STORAGE_ROOT",
+          "value": "/data"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/DATABASE_URL"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/ANTHROPIC_API_KEY"
+        },
+        {
+          "name": "JEV_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/JEV_API_KEY"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "documents",
+          "containerPath": "/data",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/dev-parse",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "worker"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD",
+          "python",
+          "-m",
+          "routing_guides.worker_health"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "command": [
+        "python",
+        "-m",
+        "routing_guides.worker"
+      ]
+    }
+  ]
+}

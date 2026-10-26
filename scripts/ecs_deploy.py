@@ -6,6 +6,7 @@ the service's task_definition. No database or provider secret values reach CI.
 import copy
 import json
 import os
+from pathlib import Path
 import subprocess
 import tempfile
 
@@ -38,17 +39,18 @@ def definition(current, image, migration=False):
     if result.get('runtimePlatform', {}).get('cpuArchitecture', 'X86_64') != 'X86_64':
         raise ValueError('The workflow builds linux/amd64; use an X86_64 task definition.')
     containers = {c['name']: c for c in result['containerDefinitions']}
-    if set(containers) != {'api', 'worker'}:
-        raise ValueError('Expected containers named api and worker.')
+    api_name = 'parse' if 'parse' in containers else 'api'
+    if set(containers) != {api_name, 'worker'}:
+        raise ValueError('Expected an api (or parse) container and a worker container.')
     for container in containers.values():
         container['image'] = image
         container['essential'] = True
         container.pop('entryPoint', None)
-    containers['api']['command'] = ['uvicorn', 'routing_guides.api:app', '--host', '0.0.0.0', '--port', '8000']
+    containers[api_name]['command'] = ['uvicorn', 'routing_guides.api:app', '--host', '0.0.0.0', '--port', '8000']
     containers['worker']['command'] = ['python', '-m', 'routing_guides.worker']
     if migration:
         result['family'] += '-migration'
-        api = containers['api']
+        api = containers[api_name]
         api['command'] = ['python', '-m', 'routing_guides.bootstrap']
         for key in ('healthCheck', 'dependsOn', 'portMappings'):
             api.pop(key, None)
@@ -63,14 +65,26 @@ def service(cluster, name):
     return response['services'][0]
 
 
-def deploy(cluster, name, image):
+def deploy(cluster, name, image, task_definition_file=None):
     current_service = service(cluster, name)
     if current_service.get('deploymentController', {}).get('type', 'ECS') != 'ECS':
         raise ValueError('An ECS rolling deployment service is required.')
     original = current_service['taskDefinition']
     task = aws('describe-task-definition', '--task-definition', original)['taskDefinition']
+    if task_definition_file:
+        configured = json.loads(Path(task_definition_file).read_text())
+        if configured.get('family') != task.get('family'):
+            raise ValueError('The configured task family must match the service task family.')
+        task = configured
     production = definition(task, image)
     migration = definition(task, image, migration=True)
+    ports = {(container['name'], port['containerPort'])
+             for container in production['containerDefinitions']
+             for port in container.get('portMappings', [])}
+    for target in current_service.get('loadBalancers', []):
+        if (target['containerName'], target['containerPort']) not in ports:
+            raise ValueError('Service load balancer mapping does not match the task. '
+                             'Match the ALB container name and port to the task before deploying.')
     migration_arn = aws('register-task-definition', payload=migration)['taskDefinition']['taskDefinitionArn']
     request = {'cluster': cluster, 'taskDefinition': migration_arn, 'launchType': 'FARGATE',
                'networkConfiguration': current_service['networkConfiguration'], 'count': 1,
@@ -103,4 +117,5 @@ def deploy(cluster, name, image):
 
 
 if __name__ == '__main__':
-    deploy(os.environ['ECS_CLUSTER'], os.environ['ECS_SERVICE'], os.environ['IMAGE'])
+    deploy(os.environ['ECS_CLUSTER'], os.environ['ECS_SERVICE'], os.environ['IMAGE'],
+           os.environ.get('TASK_DEFINITION_FILE'))
