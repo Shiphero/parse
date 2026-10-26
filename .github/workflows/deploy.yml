@@ -33,9 +33,12 @@ jobs:
       ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
       ECS_SERVICE: ${{ vars.ECS_SERVICE }}
       AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+      AWS_MIGRATION_ROLE_ARN: ${{ vars.AWS_MIGRATION_ROLE_ARN }}
     steps:
       - uses: actions/checkout@v4
       - name: Check deployment configuration
+        env:
+          DEPLOY: ${{ inputs.deploy }}
         run: |
           for name in AWS_REGION AWS_DEPLOY_ROLE_ARN ECR_REPOSITORY ECS_CLUSTER ECS_SERVICE; do
             if [ -z "${!name}" ]; then
@@ -43,10 +46,16 @@ jobs:
               exit 1
             fi
           done
-      - uses: aws-actions/configure-aws-credentials@v4
+          if [ "$DEPLOY" = "true" ] && [ -z "$AWS_MIGRATION_ROLE_ARN" ]; then
+            echo "::error::Set AWS_MIGRATION_ROLE_ARN in the GitHub poc environment before deploying."
+            exit 1
+          fi
+      - name: Assume deployment role
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          unset-current-credentials: true
       - id: ecr
         uses: aws-actions/amazon-ecr-login@v2
       - uses: docker/setup-buildx-action@v3
@@ -66,9 +75,32 @@ jobs:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}@${{ steps.image.outputs.digest }}
         run: |
           echo "Image to deploy (immutable digest): \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
-      - name: Migrate then deploy
+      - name: Prepare task definitions
         if: inputs.deploy
         env:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}@${{ steps.image.outputs.digest }}
           TASK_DEFINITION_FILE: ${{ inputs.configure_task && 'deploy/dev-task-definition.json' || '' }}
-        run: python3 scripts/ecs_deploy.py
+        run: python3 scripts/ecs_deploy.py prepare --state "$RUNNER_TEMP/parse-deployment.json"
+      - name: Assume migration role
+        if: inputs.deploy
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_MIGRATION_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          unset-current-credentials: true
+      - name: Run database migrations
+        if: inputs.deploy
+        run: python3 scripts/ecs_deploy.py migrate --state "$RUNNER_TEMP/parse-deployment.json"
+      - name: Restore deployment role
+        if: inputs.deploy
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          unset-current-credentials: true
+      - name: Deploy ECS service
+        if: inputs.deploy
+        run: python3 scripts/ecs_deploy.py deploy --state "$RUNNER_TEMP/parse-deployment.json"
+      - name: Remove deployment state
+        if: always()
+        run: rm -f "$RUNNER_TEMP/parse-deployment.json"

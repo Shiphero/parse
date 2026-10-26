@@ -1,6 +1,7 @@
 import copy
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -28,8 +29,13 @@ class DeploymentTests(unittest.TestCase):
                    'networkConfiguration': {'awsvpcConfiguration': {'subnets': ['subnet-existing']}},
                    'loadBalancers': [{'containerName': 'parse', 'containerPort': 8000}]}
         calls, registrations = [], []
+        phase = 'prepare'
+        allowed = {'prepare': {'describe-services', 'describe-task-definition', 'register-task-definition'},
+                   'migrate': {'run-task', 'wait', 'describe-tasks', 'stop-task'},
+                   'deploy': {'describe-services', 'register-task-definition', 'update-service', 'wait'}}
 
         def aws(*args, payload=None):
+            self.assertIn(args[0], allowed[phase], f'{phase} used an operation outside its role')
             calls.append(args[0])
             if args[0] == 'describe-services':
                 return {'services': [dict(current)]}
@@ -49,10 +55,15 @@ class DeploymentTests(unittest.TestCase):
             return {}
 
         with patch.object(deploy, 'aws', side_effect=aws):
-            deploy.deploy('cluster', 'service', IMAGE, template)
+            plan = deploy.prepare('cluster', 'service', IMAGE, template)
+            phase = 'migrate'
+            deploy.migrate(plan)
+            phase = 'deploy'
+            deploy.deploy(plan)
 
         self.assertLess(calls.index('describe-tasks'), calls.index('update-service'))
         migration, production = registrations
+        self.assertEqual(migration['family'], 'parse-migration')
         self.assertEqual(len(migration['containerDefinitions']), 1)
         self.assertEqual(migration['containerDefinitions'][0]['command'],
                          ['python', '-m', 'routing_guides.bootstrap'])
@@ -79,7 +90,7 @@ class DeploymentTests(unittest.TestCase):
                      patch.object(deploy, 'aws', side_effect=[{'services': [current]},
                                                             {'taskDefinition': task()}]) as aws:
                     with self.assertRaisesRegex(ValueError, 'family' if wrong_family else 'load balancer'):
-                        deploy.deploy('cluster', 'service', IMAGE, 'template.json')
+                        deploy.prepare('cluster', 'service', IMAGE, 'template.json')
                 self.assertEqual([call.args[0] for call in aws.call_args_list],
                                  ['describe-services', 'describe-task-definition'])
 
@@ -110,8 +121,11 @@ class DeploymentTests(unittest.TestCase):
                     'wait': {}, 'describe-tasks': {'tasks': [{'containers': [{'exitCode': 1}]}]}}[args[0]]
 
         with patch.object(deploy, 'aws', side_effect=aws):
+            plan = deploy.prepare('cluster', 'service', IMAGE)
             with self.assertRaisesRegex(RuntimeError, 'Migration failed'):
-                deploy.deploy('cluster', 'service', IMAGE)
+                deploy.migrate(plan)
+            with self.assertRaisesRegex(RuntimeError, 'successful migration'):
+                deploy.deploy(plan)
         self.assertNotIn('update-service', calls)
 
     def test_success_updates_both_containers_only_after_migration_and_detects_rollback(self):
@@ -132,10 +146,64 @@ class DeploymentTests(unittest.TestCase):
                 return {}
 
             with patch.object(deploy, 'aws', side_effect=aws):
+                plan = deploy.prepare('cluster', 'service', IMAGE)
+                deploy.migrate(plan)
                 if rolled_back:
                     with self.assertRaisesRegex(RuntimeError, 'requested revision'):
-                        deploy.deploy('cluster', 'service', IMAGE)
+                        deploy.deploy(plan)
                 else:
-                    deploy.deploy('cluster', 'service', IMAGE)
+                    deploy.deploy(plan)
             self.assertLess(calls.index('describe-tasks'), calls.index('update-service'))
             self.assertEqual([c['image'] for c in registrations[-1]['containerDefinitions']], [IMAGE, IMAGE])
+
+    def test_deploy_without_migration_receipt_makes_no_aws_calls(self):
+        for receipt in (None, False, 'true'):
+            with self.subTest(receipt=receipt), patch.object(deploy, 'aws') as aws:
+                with self.assertRaisesRegex(RuntimeError, 'successful migration'):
+                    deploy.deploy({'migration_succeeded': receipt})
+                aws.assert_not_called()
+
+    def test_service_change_during_migration_blocks_registration_and_update(self):
+        plan = {'cluster': 'cluster', 'service': 'service', 'original_task_definition': 'original',
+                'migration_succeeded': True}
+        with patch.object(deploy, 'aws', return_value={'services': [{'taskDefinition': 'changed'}]}) as aws:
+            with self.assertRaisesRegex(RuntimeError, 'Service changed'):
+                deploy.deploy(plan)
+            aws.assert_called_once_with('describe-services', '--cluster', 'cluster', '--services', 'service')
+
+    def test_interrupted_migration_stops_its_task_without_service_operations(self):
+        plan = {'cluster': 'cluster', 'migration_request': {'taskDefinition': 'parse-migration:1'}}
+        with patch.object(deploy, 'aws', side_effect=[{'tasks': [{'taskArn': 'migration-task'}]},
+                                                    TimeoutError('wait expired'), {}]) as aws:
+            with self.assertRaises(TimeoutError):
+                deploy.migrate(plan)
+            self.assertFalse(plan['migration_succeeded'])
+            self.assertEqual([call.args[0] for call in aws.call_args_list], ['run-task', 'wait', 'stop-task'])
+            self.assertIn('migration-task', aws.call_args.args)
+
+    def test_phase_handoff_is_persisted_and_failed_retry_invalidates_old_success(self):
+        plan = {'cluster': 'cluster', 'service': 'service', 'migration_succeeded': False}
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / 'plan.json'
+            with patch.dict('os.environ', ECS_CLUSTER='cluster', ECS_SERVICE='service', IMAGE=IMAGE), \
+                 patch.object(deploy, 'prepare', return_value=plan):
+                deploy.main(['prepare', '--state', str(state)])
+            self.assertEqual(state.stat().st_mode & 0o777, 0o600)
+
+            def succeed(plan):
+                plan['migration_succeeded'] = True
+
+            with patch.object(deploy, 'migrate', side_effect=succeed):
+                deploy.main(['migrate', '--state', str(state)])
+            with patch.object(deploy, 'deploy') as update:
+                deploy.main(['deploy', '--state', str(state)])
+                self.assertTrue(update.call_args.args[0]['migration_succeeded'])
+
+            with patch.object(deploy, 'migrate', side_effect=RuntimeError('migration failed')):
+                with self.assertRaisesRegex(RuntimeError, 'migration failed'):
+                    deploy.main(['migrate', '--state', str(state)])
+            self.assertFalse(json.loads(state.read_text())['migration_succeeded'])
+            with patch.object(deploy, 'aws') as aws:
+                with self.assertRaisesRegex(RuntimeError, 'successful migration'):
+                    deploy.main(['deploy', '--state', str(state)])
+                aws.assert_not_called()

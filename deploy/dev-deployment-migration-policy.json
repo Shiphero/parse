@@ -5,7 +5,7 @@
       "Sid": "RunParseMigration",
       "Effect": "Allow",
       "Action": "ecs:RunTask",
-      "Resource": "arn:aws:ecs:us-east-1:789248412670:task-definition/dev-parse-migration:*",
+      "Resource": "arn:aws:ecs:us-east-1:789248412670:task-definition/parse-migration:*",
       "Condition": {
         "ArnEquals": {
           "ecs:cluster": "arn:aws:ecs:us-east-1:789248412670:cluster/internal-tooling-dev"

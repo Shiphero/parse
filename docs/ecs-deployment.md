@@ -86,6 +86,13 @@ Anthropic and Jev. Use `awslogs` for both containers. Back up PostgreSQL and EFS
 - `deploy.yml`: manually dispatched from `master`; runs CI, uses AWS OIDC, pushes an immutable
   tagged image to ECR, runs migrations, and updates ECS using its digest. Deployment is serialized.
   Failed migrations prevent service updates; rollback is reported as failure, not success.
+  The deployment role builds/pushes the image and registers the migration task definition.
+  The dedicated migration role runs and waits for that task. The workflow then assumes the
+  deployment role again to register the application revision and update the service. Each switch
+  clears previous credentials and uses GitHub OIDC directly; no role chaining is needed.
+  The script's `prepare`, `migrate`, and `deploy` commands share a private runner-local state file,
+  deleted at job completion. Deployment requires a recorded successful migration and refuses to
+  overwrite a service whose task revision changed since preparation.
 - By default, the deployment script clones the service's active task definition, preserving secrets,
   mounts, roles, logging and resources, and updates both image references. For the first deployment
   over an infra placeholder, select `configure_task=true` to use `deploy/dev-task-definition.json`.
@@ -104,14 +111,18 @@ Configure these variables on the GitHub **`poc` environment**:
 | --- | --- |
 | `AWS_REGION` | Region |
 | `AWS_DEPLOY_ROLE_ARN` | OIDC-assumable deployment role |
+| `AWS_MIGRATION_ROLE_ARN` | OIDC-assumable migration role; required when `deploy=true` |
 | `ECR_REPOSITORY` | Repository name, e.g. `parse`, not a full URL |
 | `ECS_CLUSTER` | Cluster name or ARN |
 | `ECS_SERVICE` | Service name |
 
 Restrict the `poc` environment to `master`; scope OIDC trust to this repository/environment.
-The deployment role needs ECR login/push; ECS describe/register/run/stop tasks and update/describe
-service; and `iam:PassRole` for the task/execution roles, scoped to ECS. It does not need access
-to application secret values. The execution role needs ECR pull, logs, `ssm:GetParameters` for the
+The deployment role needs ECR login/push; ECS describe/register task definitions and update/describe
+service; and `iam:PassRole` for the task/execution roles, scoped to ECS. The migration role needs
+`ecs:RunTask` on the `parse-migration` family, `ecs:DescribeTasks` and `ecs:StopTask` on tasks in the
+dev cluster, and `iam:PassRole` for `dev-parse-exec` and `dev-parse-task`. It does not need task
+registration or service-update permissions. Neither GitHub role needs access to application
+secret values. The execution role needs ECR pull, logs, `ssm:GetParameters` for the
 three app parameters (or Secrets Manager access when using that store), and `kms:Decrypt` when
 using a customer-managed KMS key. EFS IAM access, if enabled, belongs on the task role.
 
@@ -129,8 +140,9 @@ and EFS identifiers. Their SSM parameter ARNs cannot be placed directly in `task
 | `ECS_CLUSTER` | `internal-tooling-dev` |
 | `ECS_SERVICE` | `dev-parse` |
 | `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::789248412670:role/github_oidc_ecs_deployments` |
+| `AWS_MIGRATION_ROLE_ARN` | `arn:aws:iam::789248412670:role/github_oidc_parse_db_migrations` |
 
-GitHub environment `poc` and its five variables were configured on October 26, 2026,
+GitHub environment `poc` and its six variables were configured on October 26, 2026,
 with a branch policy allowing `master`. No workflow was dispatched.
 
 The template contains API and worker containers, port 8000 on the API, both health checks,
@@ -168,24 +180,29 @@ provider credentials, EFS writes and application behavior have not been exercise
 
 Remaining infra setup before the first run:
 
-- The GitHub deployment role trusts audience `sts.amazonaws.com` and subject
+- Both GitHub roles must trust audience `sts.amazonaws.com` and subject
   `repo:Shiphero@5844322/parse@1431158881:environment:poc` using the account's GitHub OIDC provider, with the
-  deployment permissions described above. Infra confirmed `github_oidc_ecs_deployments` as
-  the intended role, and its ARN is saved as `AWS_DEPLOY_ROLE_ARN`. Infra still needs to add
-  `Shiphero/parse` to that role's trust policy; the earlier inspection showed it absent.
+  role-specific permissions described above. Infra confirmed the separate deployment and
+  migration roles, and both ARNs are saved in GitHub. The latest read-only inspection found
+  `repo:Shiphero/parse:*` in both trust policies, which does not match this repository's
+  current immutable subject format. Infra needs to update the subject on **both** roles.
   The repository's OIDC settings report `use_immutable_subject=true` and prefix
   `repo:Shiphero@5844322/parse@1431158881`; the older name-only subject will not match.
-- Add `ecs:RunTask`, `ecs:DescribeTasks`, and `ecs:StopTask` for migration tasks to that
-  deployment role. Its inspected policy includes ECR push, task registration, service updates
-  and `iam:PassRole`, but omits these migration operations.
-  `deploy/dev-deployment-migration-policy.json` contains a proposed addition scoped to the dev
-  cluster and migration task family. ECS task ARNs do not encode task family, so Describe/Stop
-  are scoped to tasks in `internal-tooling-dev`; infra can refine this with a tagging design.
-- Change the `parse-dev` target group's health path from `/` to `/api/health/ready`, HTTP 200,
-  coordinated with the first app rollout: nginx does not serve the app's readiness endpoint.
-  These ALB settings belong in Terraform, not the task definition.
+- The dedicated migration role's inspected policy already grants the required RunTask,
+  DescribeTasks, StopTask and PassRole operations. Its permitted family is `parse-migration`,
+  so preparation registers that family (not `dev-parse-migration`).
+  `deploy/dev-deployment-migration-policy.json` records the ECS operations for the **dedicated
+  migration role only**; do not add them to the shared deployment role. The live role also has
+  the required PassRole grants. Describe/Stop are scoped to tasks in `internal-tooling-dev`.
+- The `parse-dev` target group's health path was verified as `/api/health/ready`, HTTP 200.
+  The nginx placeholder does not serve this endpoint, so it cannot satisfy this health check;
+  application readiness still needs verification after the first approved rollout.
 - Add `ssm:GetParameters` on the three app secret ARNs to `dev-parse-exec`. Its current policy
-  covers logs and ECR only. `deploy/dev-execution-ssm-policy.json` is the minimal policy addition
+  still covers logs and ECR only on the latest read-only inspection, despite the report that
+  parameter access is configured. A read-only IAM simulation for `ssm:GetParameters` also
+  returned `implicitDeny`. Reading infrastructure parameters during deployment is
+  separate from ECS injecting application secrets at task startup.
+  `deploy/dev-execution-ssm-policy.json` is the minimal policy addition
   for infra to apply through Terraform. The current secrets use the AWS-managed SSM key; if
   moved to a customer-managed key, also provide the applicable `kms:Decrypt` permission.
 - Verify EFS mount targets, database access and outbound provider connectivity from the task
@@ -205,6 +222,8 @@ References: [ECS SSM secret injection](https://docs.aws.amazon.com/AmazonECS/lat
 [EFS task configuration](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specify-efs-config.html),
 [EFS access-point identity](https://docs.aws.amazon.com/efs/latest/ug/enforce-identity-access-points.html).
 See also [GitHub immutable OIDC subjects](https://docs.github.com/en/actions/reference/security/oidc).
+Role switches use the credential-reset input supported by
+[configure-aws-credentials v4](https://github.com/aws-actions/configure-aws-credentials/blob/v4/action.yml).
 
 ### Bootstrapping a new service from scratch
 
@@ -225,8 +244,9 @@ exit code before deploying. It is not another persistent service. Migrations use
 advisory lock. Use additive, backwards-compatible migrations while older tasks remain live.
 Image rollback does not undo schema migrations.
 
-AWS deployment has not been executed locally. Infra must supply ECR/OIDC/service identifiers.
-Local builds do not create a remote repo or cloud resources.
+No deployment was executed during this setup. Infrastructure identifiers and GitHub variables
+are configured; the trust/secret-permission issues above still need resolution. Local builds
+do not create cloud resources.
 
 Run `make check-production` locally to build the single image and exercise it with disposable
 PostgreSQL and document storage. The smoke test cleans up its own containers, network and volumes;
