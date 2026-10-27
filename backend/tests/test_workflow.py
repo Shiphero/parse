@@ -614,12 +614,86 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(run.payload['assessment_job']['reason'], 'configuration_required')
             self.assertEqual(run.payload['assessment_job']['status'], 'failed')
 
+    async def test_automatic_review_deduplicates_approves_and_allows_undo_without_reapproval(self):
+        from routing_guides import assessment_jobs, assessment_provider
+        from routing_guides.assessment import new_assessment_job
+        from routing_guides.resolution import ResolutionPlan
+        from test_assessment import candidate, response
+        rules = [candidate(source_guide_id=str(self.gid)) for _ in range(6)]
+        rules[2]['spec']['title'] = 'Another clear requirement'
+        rules[3]['spec'].update(title='Unclear scope', unresolved_questions=['Which destinations are covered?'])
+        rules[4]['spec']['title'] = 'Deliberately returned to manual review'
+        rules[4]['automation_hold'] = True
+        rules[5]['spec']['title'] = 'Unverified quotation'
+        rules[5]['spec']['evidence'][0]['quote'] = 'This quotation is not in the guide.'
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        async def answer(*args, **kwargs):
+            return httpx.Response(200, json=response(kwargs['json']['state']['similar_rule_candidates']))
+        client.post.side_effect = answer
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(resolution_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(resolution_jobs, 'propose', return_value=ResolutionPlan(proposed_spec=None)), \
+                patch.object(resolution_jobs, 'verify_changes', return_value={}), \
+                patch.object(assessment_provider, 'connection', return_value={'key': 'test-key', 'model': 'jev-test'}), \
+                patch.object(assessment_provider.httpx, 'AsyncClient', return_value=client):
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            saved = deepcopy(run.payload)
+            version = run.version
+            self.assertEqual([r['status'] for r in saved['rules']], ['approved', 'ignored', 'approved', 'pending', 'pending', 'pending'])
+            self.assertEqual(saved['assessment_job']['auto_approved'], 2)
+            self.assertEqual(saved['assessment_job']['duplicates_removed'], 1)
+            self.assertEqual(saved['rules'][1]['review']['duplicate_of'], rules[0]['id'])
+            self.assertEqual(saved['rules'][1]['spec'], rules[1]['spec'])
+            self.assertFalse(workflow_api.RunView.model_validate(run).payload.rules[3].assessment_stale)
+            self.assertTrue(saved['rules'][4]['assessment']['auto_approval_supported'])
+            self.assertEqual(saved['rules'][5]['assessment']['outcome'], 'needs_correction')
+        self.assertEqual(client.post.await_count, 5)
+        restored = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{rules[0]["id"]}',
+            {'version': version, 'actor': 'Reviewer', 'action': 'restore'})
+        self.assertTrue(restored['payload']['rules'][0]['automation_hold'])
+        spec = {**rules[0]['spec'], 'instruction': 'Keep every carton under 50 lb.'}
+        edited = await self.send('PUT', f'/api/analysis/{self.rid}/rules/{rules[0]["id"]}',
+            {'version': restored['version'], 'actor': 'Reviewer', 'action': 'save', 'note': 'Corrected wording', 'spec': spec})
+        self.assertEqual(edited['payload']['rules'][1]['status'], 'pending')
+        self.assertEqual(edited['payload']['rules'][1]['review']['mode'], 'duplicate_reopened')
+        self.assertTrue(edited['payload']['rules'][0]['automation_hold'])
+
+    async def test_old_assessment_job_stops_before_using_new_automatic_review(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import new_assessment_job
+        from test_assessment import candidate
+        rules = [candidate(source_guide_id=str(self.gid))]
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        job.update(prompt_version='older-contract', phase='resolve')
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(assessment_jobs, 'prepare_next') as prepare:
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+        prepare.assert_not_called()
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['rules'], rules)
+            self.assertEqual(run.payload['assessment_job']['status'], 'failed')
+            self.assertEqual(run.payload['assessment_job']['reason'], 'version_changed')
+
     async def test_all_preparations_finish_before_readiness_and_retain_audited_revisions(self):
         from routing_guides import assessment_jobs
         from routing_guides.assessment import new_assessment_job, AssessmentResult, assessment_fingerprint
         from test_assessment import candidate
         from test_resolution import proposal
         rules = [candidate(source_guide_id=str(self.gid)) for _ in range(2)]
+        rules[1]['spec']['title'] = 'Alternative carton weight instruction'
         job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
         await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
         async with self.sessions.begin() as session:

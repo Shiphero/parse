@@ -56,6 +56,7 @@ class Candidate(BaseModel):
     resolution: ResolutionRecord | None = None
     assessment: AssessmentResult | None = None
     assessment_stale: bool = False
+    automation_hold: bool = False
     carried_from_release_id: str | None = None
     carried_from_rule_id: str | None = None
 
@@ -571,8 +572,9 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
             await check_evidence(session, run, body.spec, rule['source_guide_id'])
             rule.update(spec=body.spec.model_dump(mode='json'), status='pending', revision=rule['revision']+1, review=None, evidence_issues=[], classification=None, carried_from_release_id=None, carried_from_rule_id=None)
         if body.action != 'save':
-            if body.action == 'restore' and rule['status'] != 'ignored':
-                raise HTTPException(422, 'Only ignored rules can be restored to review.')
+            if body.action == 'restore' and not (rule['status'] == 'ignored' or
+                    rule['status'] == 'approved' and (rule.get('review') or {}).get('mode') == 'automatic'):
+                raise HTTPException(422, 'Only ignored or automatically approved rules can be returned to review.')
             if body.action == 'reject' and not body.note.strip():
                 raise HTTPException(422, 'Add a note before rejecting a rule.')
             if body.action in {'approve', 'save_and_approve'}:
@@ -585,6 +587,10 @@ async def review_rule(run_id: UUID, rule_id: UUID, body: ReviewAction):
                     raise HTTPException(422, 'Map this requirement to a standard verification check before approving.')
                 await check_evidence(session, run, spec, rule['source_guide_id'])
             rule.update(carried_from_release_id=None, carried_from_rule_id=None, status={'approve': 'approved', 'save_and_approve': 'approved', 'reject': 'rejected', 'ignore': 'ignored', 'restore': 'pending'}[body.action], review={'actor': body.actor, 'note': body.note, 'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat()})
+            if body.action == 'restore':
+                rule['automation_hold'] = True
+        from routing_guides.automatic_review import restore_changed_duplicates
+        restore_changed_duplicates(session, run, data)
         run.payload, run.version = data, run.version+1
         audit(session, run.id, body.actor, body.action, {'before': before, 'after': rule, 'note': body.note})
         return RunView.model_validate(run)
@@ -676,6 +682,8 @@ async def classify_rules(run_id: UUID, body: ClassifyRules):
                         carried_from_release_id=None, carried_from_rule_id=None)
             audit(session, run.id, body.actor, 'rule_classified',
                   {'before': before, 'after': rule, 'note': body.note, 'batch_id': batch_id})
+        from routing_guides.automatic_review import restore_changed_duplicates
+        restore_changed_duplicates(session, run, data)
         run.payload, run.version = data, run.version + 1
         return RunView.model_validate(run)
 
@@ -740,6 +748,8 @@ async def bulk_decision(run_id: UUID, body: BulkDecision):
                                 'at': timestamp, 'mode': 'bulk', 'batch_id': batch_id})
             audit(session, run.id, body.actor, body.action,
                   {'before': before, 'after': rule, 'note': body.note.strip(), 'batch_id': batch_id})
+        from routing_guides.automatic_review import restore_changed_duplicates
+        restore_changed_duplicates(session, run, data)
         run.payload, run.version = data, run.version + 1
         return RunView.model_validate(run)
 

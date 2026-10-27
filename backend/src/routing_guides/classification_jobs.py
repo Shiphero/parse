@@ -93,6 +93,8 @@ async def run_classification(run_id, job_id):
                 job['skipped'] += len(batch) - applied
                 if output:
                     job['batches'].append({'model': output.model, 'usage': output.usage, 'applied': applied})
+                from routing_guides.automatic_review import restore_changed_duplicates
+                restore_changed_duplicates(session, run, data)
                 run.payload, run.version = data, run.version + 1
     except Exception as exc:
         async with sessions.begin() as session:

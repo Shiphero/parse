@@ -4,8 +4,9 @@ import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, Connection, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
 import AssessmentPanel from './AssessmentPanel';
-import { assessmentLabels, assessmentState, readyForApprovalSelection } from './assessmentReadiness';
+import { assessmentState, readyForApprovalSelection } from './assessmentReadiness';
 import type { AssessmentFilter } from './assessmentReadiness';
+import { reviewPresentation } from './reviewPresentation';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { activeWorkflows, operationalCategoryLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
 import { rulePurposeLabels, verificationSummary } from './rulePurpose';
@@ -94,7 +95,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
     (standardType==='all'||(standardType==='unmapped'?!r.spec.rule_type:r.spec.rule_type?.id===standardType)) &&
     (operationalCategory === 'all' || (operationalCategory === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === operationalCategory)) &&
     (consumptionPoint === 'all' || (consumptionPoint === 'unassigned' ? !activeWorkflows(r.spec).length : activeWorkflows(r.spec).some(p => p === consumptionPoint))) &&
-    (filter === 'all' || (filter === 'individual' ? r.status === 'pending' && !!r.individual_review_reasons.length : r.status === filter)) &&
+    (filter === 'all' || (filter === 'individual' ? r.status === 'pending' && !r.assessment_stale && !!r.assessment && !r.assessment.check_failed && r.assessment.outcome!=='ready' : r.status === filter)) &&
     (type === 'all' || r.spec.subject === type) &&
     (purpose === 'all' || (r.spec.purpose || 'unclassified') === purpose) &&
     (checkMode === 'all' || verificationSummary(r.spec,r.check_status).kind === checkMode) &&
@@ -130,7 +131,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const pendingInView = filtered.filter(r => r.status === 'pending');
   const selectedRules = run.payload.rules.filter(r => checked[r.id] === r.revision && r.status === 'pending');
   const selectedCount = selectedRules.length;
-  const selectedFlagged = selectedRules.filter(r => r.individual_review_reasons.length || needsClassification(r.spec) || r.evidence_issues?.length).length;
+  const selectedFlagged = selectedRules.filter(r => (r.assessment&&!r.assessment_stale&&r.assessment.outcome!=='ready') || needsClassification(r.spec) || r.evidence_issues?.length).length;
   const extraFilterCount = [type, purpose, operationalCategory, standardType].filter(v => v !== 'all').length;
   const selectRules = (rules: Candidate[]) => setChecked(Object.fromEntries(rules.map(r => [r.id, r.revision])));
   const openRule = (id: string, focus = false, afterVersion = run.version) => {
@@ -220,7 +221,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
           <label>Verification<select value={checkMode} onChange={e => { resetView(); setCheckMode(e.target.value); }}><option value="all">All methods</option><option value="automatic">Automatic verification</option><option value="manual">Manual verification</option><option value="external">External confirmation</option><option value="unresolved">Not configured / classified</option><option value="guidance">Guidance only</option></select></label>
           <label>Where it’s used<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option><option value="unassigned">No active workflow</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs individual review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Ignored</option><option value="all">All statuses</option></select></label>
+          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs your attention</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Ignored</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
         </div>
         {moreFilters && <div className="review-extra-filters" id="review-extra-filters">
@@ -247,20 +248,21 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           const standardTypeLabel = typeCatalog.data?.find(t=>t.id===r.spec.rule_type?.id&&t.version===r.spec.rule_type.version)?.label || r.spec.rule_type?.id || 'Type not assigned';
 
           const pages = [...new Set(r.spec.evidence.map(e => e.page))].join(', ') || '—';
+          const presentation = reviewPresentation(r,[],editable,assessmentJob);
           return <Fragment key={r.id}>
             <tr ref={expanded?activeRow:undefined} className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
               <td>{editable && r.status === 'pending' && <input type="checkbox" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const next = { ...previous }; if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; return next; })}/>}</td>
-              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span>{r.assessment && <span className={`assessment-badge ${assessmentState(r)}`}>{assessmentLabels[assessmentState(r)]}</span>}</th>
+              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span></th>
               <td><VerificationBadge spec={r.spec} status={r.check_status} compact/></td>
               <td><WorkflowUsage spec={r.spec}/></td>
               {detailedColumns && <><td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
               <td><span className="table-cell-text" title={rulePurposeLabels[r.spec.purpose || 'unclassified']}>{r.spec.purpose === 'general_guidance' ? 'Guidance' : r.spec.purpose === 'shipment_validation' ? 'Shipment check' : 'Unclassified'}</span></td></>}
               <td><span className="table-cell-text" title={`PDF pages ${pages}`}>{pages}</span></td>
-              <td><span className={`status-badge ${r.status} ${r.status === 'pending' && r.individual_review_reasons.length ? 'flagged' : ''}`} title={r.individual_review_reasons.join('; ')}>{r.status === 'pending' ? r.individual_review_reasons.length ? 'Flagged' : 'Pending' : r.status}</span></td>
+              <td><span className={`status-badge ${r.status} ${presentation.kind==='attention'?'flagged':''}`} title={presentation.detail}>{presentation.label}</span></td>
             </tr>
             {expanded && <tr className="review-detail-row"><td colSpan={detailedColumns ? 8 : 6}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
               <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={()=>openRule('')} busy={busy}
-                review={{actor,onActorChange,editable,error,onDirtyChange:setEditing,
+                review={{actor,onActorChange,editable,error,job:assessmentJob,onDirtyChange:setEditing,
                   onOpenRelated:id=>{resetFilters();setFilter('all');setSelected(id);focusAfterNavigation.current={afterVersion:run.version};},
                   onDecision:(kind,note)=>decision(r,kind,note),
                   onNext:next?()=>openRule(next.id,true):undefined,

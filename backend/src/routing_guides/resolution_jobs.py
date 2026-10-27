@@ -24,6 +24,8 @@ async def enable_resolution(job: dict, run_config: dict) -> None:
     job.update(phase='resolve', resolution_version=RESOLUTION_VERSION,
                resolution_provider=provider, resolution_model=model,
                preparing=deepcopy(job['pending']), prepared=0, updated=0, resolution_failed=0)
+    job.setdefault('auto_process', True)
+    job['selected_revisions'] = deepcopy(job['pending'])
 
 
 async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> bool:
@@ -37,6 +39,9 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
         data = deepcopy(run.payload)
         job = data['assessment_job']
         if not job['preparing']:
+            if job.get('auto_process'):
+                from routing_guides.automatic_review import remove_exact_duplicates
+                await remove_exact_duplicates(session, run, data, source_cache)
             job['phase'] = 'assess'
             run.payload, run.version = data, run.version + 1
             return True
@@ -91,6 +96,9 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
                 for pending in job['pending']:
                     if pending['id'] == current['id']:
                         pending['revision'] = current['revision']
+                for selected in job.get('selected_revisions', []):
+                    if selected['id'] == current['id']:
+                        selected['revision'] = current['revision']
                 job['updated'] += 1
             current['resolution'] = record.model_dump(mode='json')
             current.pop('assessment', None)
@@ -100,5 +108,7 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
                 payload={'before': before, 'after': deepcopy(current), 'job_id': job_id, 'requested_by': settings['actor']}))
         job['preparing'].pop(0)
         job['prepared'] += 1
+        from routing_guides.automatic_review import restore_changed_duplicates
+        restore_changed_duplicates(session, run, data)
         run.payload, run.version = data, run.version + 1
     return True

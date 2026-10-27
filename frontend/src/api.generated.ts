@@ -1004,6 +1004,11 @@ export interface components {
              * @default false
              */
             check_failed: boolean;
+            /**
+             * Auto Approval Supported
+             * @default false
+             */
+            auto_approval_supported: boolean;
             /** Execution Gaps */
             execution_gaps?: string[];
             /** Dimensions */
@@ -1040,7 +1045,7 @@ export interface components {
             model: string;
             /**
              * Prompt Version
-             * @default rule-review-assessment-2.0
+             * @default rule-review-assessment-3.0
              */
             prompt_version: string;
             /** Source Pages */
@@ -1141,6 +1146,11 @@ export interface components {
              * @default false
              */
             assessment_stale: boolean;
+            /**
+             * Automation Hold
+             * @default false
+             */
+            automation_hold: boolean;
             /** Carried From Release Id */
             carried_from_release_id?: string | null;
             /** Carried From Rule Id */
@@ -2049,7 +2059,7 @@ export interface components {
             input_fingerprint: string;
             /**
              * Prompt Version
-             * @default rule-resolution-1.0
+             * @default rule-resolution-1.1
              */
             prompt_version: string;
             /** Provider */
@@ -2512,6 +2522,11 @@ export interface components {
              * @default false
              */
             resume: boolean;
+            /**
+             * Auto Process
+             * @default true
+             */
+            auto_process: boolean;
         };
         /** StartClassification */
         StartClassification: {

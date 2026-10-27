@@ -28,6 +28,8 @@ def response(related=(), duplicate_choice='distinct'):
             'answers': {name: {'type': 'choice', 'choice': 'supported', 'confidence': 0.99,
                               'probabilities': {'supported': 0.99, 'correction': 0.005, 'uncertain': 0.005}}
                         for name in provider.DIMENSIONS}}
+    payload['answers']['automatic_approval'] = {'type': 'choice', 'choice': 'supported', 'confidence': 0.99,
+                                               'probabilities': {'supported': 0.99, 'unsupported': 0.01}}
     for rule in related:
         payload['answers'][f'duplicate:{rule["id"]}'] = {
             'type': 'choice', 'choice': duplicate_choice, 'confidence': 0.99,
@@ -124,24 +126,37 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
             await self.assess([peer])
         self.assertTrue(self.path.exists())
 
-    async def test_low_confidence_distinct_pair_still_needs_review(self):
+    async def test_distinct_comparison_is_not_blocked_by_a_second_confidence_score(self):
         peer = candidate()
         payload = response([peer])
         payload['answers'][f'duplicate:{peer["id"]}']['confidence'] = 0.6
         self.client.post.return_value = httpx.Response(200, json=payload)
         result = await self.assess([peer])
-        self.assertEqual(result.outcome, 'needs_review')
-        self.assertIn('could not confidently distinguish', result.issues[-1].action)
+        self.assertEqual(result.outcome, 'ready')
+        self.assertTrue(result.auto_approval_supported)
 
-    async def test_comparison_limit_is_visible_and_prevents_ready_recommendation(self):
+    async def test_additional_duplicate_batches_are_checked_and_cached(self):
         peers = [candidate() for _ in range(provider.MAX_DUPLICATE_COMPARISONS + 1)]
-        self.client.post.return_value = httpx.Response(200, json=response(peers[:provider.MAX_DUPLICATE_COMPARISONS]))
+        extra = response(peers[provider.MAX_DUPLICATE_COMPARISONS:])
+        extra['answers'] = {key: value for key, value in extra['answers'].items() if key.startswith('duplicate:')}
+        self.client.post.side_effect = [httpx.Response(200, json=response(peers[:provider.MAX_DUPLICATE_COMPARISONS])),
+                                       httpx.Response(200, json=extra)]
         result = await self.assess(peers)
-        self.assertEqual(result.outcome, 'needs_review')
+        self.assertEqual(result.outcome, 'ready')
         self.assertEqual(result.duplicate_candidates, len(peers))
-        self.assertEqual(len(result.duplicates), provider.MAX_DUPLICATE_COMPARISONS)
-        issue = next(i for i in result.issues if i.code == 'duplicate_search_limit')
-        self.assertEqual(issue.related_rule_ids, [peers[-1]['id']])
+        self.assertEqual(len(result.duplicates), len(peers))
+        self.assertEqual(result.usage, {'input_tokens': 200, 'output_tokens': 40})
+        self.assertEqual((await self.assess(peers)).duplicates, result.duplicates)
+        self.assertEqual(self.client.post.await_count, 2)
+
+    async def test_approval_gate_does_not_turn_supported_dimensions_into_automatic_approval(self):
+        payload = response()
+        payload['answers']['automatic_approval'].update(choice='unsupported',
+            probabilities={'supported': 0.1, 'unsupported': 0.9})
+        self.client.post.return_value = httpx.Response(200, json=payload)
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'ready')
+        self.assertFalse(result.auto_approval_supported)
 
     async def test_manual_shipment_inspection_does_not_require_manual_definition_review(self):
         self.rule['spec'] = mapped(title='Wrap pallets', instruction='Wrap pallets securely.',
@@ -263,6 +278,7 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         body = StartAssessment(version=1, actor='Reviewer', scope='all')
         job = prepare_job(data, body, 'jev-test')
         self.assertEqual(job['pending'], [{'id': self.rule['id'], 'revision': 1}])
+        self.assertTrue(job['auto_process'])
         with self.assertRaises(HTTPException):
             prepare_job(data, StartAssessment(version=1, actor='Reviewer', scope='selected', rule_ids=[uuid4()]), 'jev-test')
         data['assessment_job'] = {**job, 'status': 'failed'}
@@ -273,6 +289,14 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         data['classification_job'] = {'status': 'running'}
         with self.assertRaises(HTTPException):
             prepare_job(data, body, 'jev-test')
+
+    def test_check_only_mode_is_preserved_on_resume(self):
+        data = {'rules': [self.rule]}
+        job = prepare_job(data, StartAssessment(version=1, actor='Reviewer', scope='all', auto_process=False), 'jev-test')
+        self.assertFalse(job['auto_process'])
+        data['assessment_job'] = {**job, 'status': 'failed'}
+        resumed = prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True, auto_process=True), 'jev-test')
+        self.assertFalse(resumed['auto_process'])
 
     def test_failed_retry_selects_only_pending_failed_checks_with_new_response_storage(self):
         failed = candidate(assessment={'check_failed': True})

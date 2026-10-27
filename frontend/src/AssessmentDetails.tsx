@@ -10,16 +10,16 @@ const checkLabels: Record<string, string> = {
   classification: 'Rule classification', verification: 'How the rule is verified',
 };
 const resultLabels: Record<string, string> = {supported: 'No issue found', correction: 'Concern identified', uncertain: 'Needs review'};
-export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated}: {
-  candidate: Candidate; dirty: boolean; goTo: (section: ReviewSection) => void; onOpenRelated?: (id: string) => void;
+export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated, showSummary=true}: {
+  candidate: Candidate; dirty: boolean; goTo: (section: ReviewSection) => void; onOpenRelated?: (id: string) => void; showSummary?:boolean;
 }) {
   const assessment = candidate.assessment;
   if (!assessment) return null;
   const stale = dirty || candidate.assessment_stale;
   return <section className={`assessment-detail ${stale ? 'stale' : assessment.outcome}`} aria-label="Rule assessment">
-    <h3>{stale ? 'Check this rule again' : assessmentLabels[assessment.outcome]}</h3>
-    {stale ? <p>This rule or a similar rule has changed. Save your edits and check it again to update the recommendation.</p> : <>
-      {assessment.outcome === 'ready' ? <p>No outstanding issues were found in the checks performed. Review the source and approve when ready.</p>
+    {showSummary&&<h3>{stale ? 'Check this rule again' : assessmentLabels[assessment.outcome]}</h3>}
+    {stale ? showSummary&&<p>This rule or a similar rule has changed. Save your edits and check it again to update the recommendation.</p> : <>
+      {assessment.outcome === 'ready' ? showSummary&&<p>No outstanding issues were found in the checks performed. Review the source and approve when ready.</p>
         : <><strong>What needs attention</strong><ul>{assessment.issues.map((issue, i) => <li key={i}>
           <p>{issue.action.replaceAll('Jev', 'The automated check')}</p><div className="action-row"><button className="text-button" onClick={() => goTo(issue.section)}>{sections[issue.section]} →</button>
             {onOpenRelated && (issue.related_rule_ids || []).map((id, index) => <button className="text-button" key={id} onClick={() => onOpenRelated(id)}>Open matching rule {index + 1} →</button>)}
@@ -27,7 +27,7 @@ export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated
     </>}
     {!!assessment.duplicates?.length && <div className="assessment-duplicates"><strong>{stale ? 'Previous comparisons' : 'Similar rules'}</strong>
       <p>Compared {assessment.duplicates.length} of {assessment.duplicate_candidates} likely matches.</p>
-      <ul>{assessment.duplicates.map(match => <li key={match.rule_id}><strong>{Math.min(match.confidence, match.probabilities[match.choice]) < assessment.threshold ? 'Needs comparison' : duplicateLabels[match.choice]}</strong> · {match.title}
+      <ul>{assessment.duplicates.map(match => <li key={match.rule_id}><strong>{match.probabilities[match.choice] < assessment.threshold ? 'Needs comparison' : duplicateLabels[match.choice]}</strong> · {match.title}
         <span className="muted"> · PDF pages {match.source_pages.join(', ')}</span>
         {!stale && onOpenRelated && <button className="text-button" onClick={() => onOpenRelated(match.rule_id)}>Open compared rule →</button>}
       </li>)}</ul>

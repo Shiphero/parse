@@ -27,6 +27,20 @@ class ResolutionTests(unittest.TestCase):
     def setUp(self):
         self.rule = candidate()
 
+    def test_automatic_duplicates_require_identical_definitions_and_valid_sources(self):
+        from routing_guides.automatic_review import duplicate_key
+        other = deepcopy(self.rule)
+        other['spec']['evidence'][0]['page'] = 2
+        pages = {1: PAGES[1], 2: PAGES[1]}
+        self.assertEqual(duplicate_key(self.rule, pages), duplicate_key(other, pages))
+        other['spec']['applicability_text'] = 'Only international shipments'
+        self.assertNotEqual(duplicate_key(self.rule, pages), duplicate_key(other, pages))
+        other['spec']['evidence'][0]['quote'] = 'Unsupported quotation'
+        self.assertIsNone(duplicate_key(other, pages))
+        other = deepcopy(self.rule)
+        other['source_guide_id'] = 'another-edition'
+        self.assertNotEqual(duplicate_key(self.rule, pages), duplicate_key(other, pages))
+
     def resolve(self, plan, verdicts=None):
         return resolve_plan(self.rule, plan, verdicts if verdicts is not None else {c.field: True for c in plan.changes},
                             PAGES, 'anthropic', 'test', 'fingerprint')
@@ -51,10 +65,17 @@ class ResolutionTests(unittest.TestCase):
         self.assertTrue(record.changes[0].verified)
         self.assertFalse(any(c.applied for c in record.changes))
 
-    def test_existing_check_parameters_require_a_decision_even_if_verified(self):
+    def test_verified_existing_check_parameters_can_be_corrected_without_enforcement(self):
         binding = deepcopy(self.rule['spec']['standard_check'])
         binding['parameters']['threshold'] = 40
         spec, record = self.resolve(proposal(self.rule, standard_check=binding))
+        self.assertEqual(spec['standard_check'], binding)
+        self.assertTrue(record.changes[0].applied)
+
+    def test_existing_enforcement_still_requires_a_decision(self):
+        self.rule['spec']['placements'][0]['behavior'] = 'block'
+        plan = proposal(self.rule, instruction='Cartons must not exceed 50 lb.')
+        spec, record = self.resolve(plan)
         self.assertEqual(spec, self.rule['spec'])
         self.assertFalse(record.changes[0].applied)
 

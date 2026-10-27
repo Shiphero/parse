@@ -40,3 +40,8 @@ test('source issues link to evidence and corrected evidence is submitted for ser
   assert.deepEqual(tasks(value,'Reviewer',[],[],candidate).map(t=>t.section),['evidence']);
   assert.deepEqual(tasks({...value,evidence:[{page:2,quote:'Corrected quote'}]},'Reviewer',[],[],candidate),[]);
 });
+test('missing fields have precise targets and evidence identifies the affected page',()=>{
+  const value={...spec,purpose:'general_guidance',instruction:'',evidence:[{page:3,quote:'Valid source'},{page:8,quote:''}]};
+  assert.deepEqual(tasks(value).map(({field})=>field),['instruction','evidence:1']);
+  assert.match(tasks(value)[1].label,/PDF page 8/);
+});

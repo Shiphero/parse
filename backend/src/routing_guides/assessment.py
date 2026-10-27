@@ -1,4 +1,4 @@
-"""Preview-only review assessment. Never mutate rule definitions or review decisions."""
+"""Readiness contracts and pure checks used by manual and automatic draft review."""
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from hashlib import sha256
@@ -13,7 +13,7 @@ from routing_guides.rules import RuleSpec, StrictModel
 from routing_guides.check_catalog import needs_check_mapping
 from routing_guides.taxonomy import needs_classification
 
-PROMPT_VERSION = 'rule-review-assessment-2.0'
+PROMPT_VERSION = 'rule-review-assessment-3.0'
 MAX_DUPLICATE_COMPARISONS = 8
 CONFIDENCE_THRESHOLD = 0.95
 Section = Literal['instruction', 'classification', 'conditions', 'verification', 'evidence', 'advanced']
@@ -47,6 +47,7 @@ class AssessmentResult(StrictModel):
     outcome: Literal['ready', 'needs_correction', 'needs_review']
     issues: list[AssessmentIssue]
     check_failed: bool = False
+    auto_approval_supported: bool = False
     execution_gaps: list[str] = Field(default_factory=list)
     dimensions: list[AssessmentDimension]
     duplicates: list[DuplicateAssessment] = Field(default_factory=list)

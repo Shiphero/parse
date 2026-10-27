@@ -24,6 +24,7 @@ class StartAssessment(VersionedAction):
     sample_size: int = Field(default=25, ge=1, le=100)
     rule_ids: list[UUID] = Field(default_factory=list, max_length=10000)
     resume: bool = False
+    auto_process: bool = True
 
 
 def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
@@ -54,7 +55,7 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
             raise HTTPException(409, 'Select only current pending rules from this draft.')
     if not selected:
         raise HTTPException(409, 'No pending rules are selected for assessment.')
-    return new_assessment_job(selected, model, body.actor, body.scope)
+    return {**new_assessment_job(selected, model, body.actor, body.scope), 'auto_process': body.auto_process}
 
 
 @router.post('/analysis/{run_id}/assess')

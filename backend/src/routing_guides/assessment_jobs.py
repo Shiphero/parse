@@ -1,4 +1,4 @@
-"""Prepare pending definitions, then checkpoint readiness without changing approvals."""
+"""Prepare and check pending definitions, then apply enabled automatic draft decisions."""
 from copy import deepcopy
 import logging
 from uuid import UUID, uuid4
@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from routing_guides.analysis_provider import ProviderFailure
-from routing_guides.assessment import assessment_fingerprint, related_rules, duplicate_index, new_assessment_job
+from routing_guides.assessment import PROMPT_VERSION, assessment_fingerprint, related_rules, duplicate_index, new_assessment_job
 from routing_guides.assessment_provider import assess, AssessmentResponseError, failed_assessment
 from routing_guides.connections import connection
 from routing_guides.db import sessions
@@ -49,6 +49,18 @@ async def run_assessment(run_id: UUID, job_id: str):
     rule_id = None
     source_cache = {}
     try:
+        # Do not silently change the contract of a job resumed after deployment.
+        async with sessions.begin() as session:
+            run = await session.get(AnalysisRun, run_id, with_for_update=True)
+            job = (run.payload.get('assessment_job') or {}) if run else {}
+            if not run or run.status != 'complete' or job.get('id') != job_id or job.get('status') in {'complete', 'cancelled'}:
+                return
+            if job.get('prompt_version') != PROMPT_VERSION:
+                data = deepcopy(run.payload)
+                data['assessment_job'].update(status='failed', reason='version_changed',
+                    error='Automatic review has been updated. Start a new run to check the remaining rules. Completed work is saved.')
+                run.payload, run.version = data, run.version + 1
+                return
         while True:
             if await prepare_next(sessions, run_id, job_id, source_cache):
                 continue
@@ -60,6 +72,8 @@ async def run_assessment(run_id: UUID, job_id: str):
                 data = deepcopy(run.payload)
                 job = data['assessment_job']
                 if not job['pending']:
+                    from routing_guides.automatic_review import approve_completed_rules
+                    await approve_completed_rules(session, run, data, source_cache)
                     job['status'] = 'complete'
                     run.payload, run.version = data, run.version + 1
                     return

@@ -1,5 +1,6 @@
 import { useRemote } from './api';
 import type { RuleSpec, CheckDefinition, RuleTypeDefinition } from './api';
+import type { ReviewTask } from './reviewReadiness';
 
 const words = (value:string) => value.replaceAll('_',' ').replace(/^./,letter=>letter.toUpperCase());
 const fieldLabels: Record<string,string> = {
@@ -13,7 +14,7 @@ type Property = {type?:string;enum?:string[];items?:{enum?:string[]};minimum?:nu
 type Binding = NonNullable<RuleSpec['standard_check']>;
 export const availabilityLabels = {reference_only:'Reference requirement · automatic verification unavailable',implemented:'Automatic verification',not_implemented:'Automatic verification · unavailable',manual:'Manual verification',external:'External confirmation',needs_mapping:'Verification not configured',legacy:'Existing verification · not mapped',guidance:'Guidance only'};
 
-export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onChange:(spec:RuleSpec)=>void}) {
+export default function StandardCheckEditor({spec,onChange,issues=[]}: {spec:RuleSpec;onChange:(spec:RuleSpec)=>void;issues?:ReviewTask[]}) {
   const catalog=useRemote<CheckDefinition[]>('/api/check-catalog');
   const types=useRemote<RuleTypeDefinition[]>('/api/rule-types');
   const type=types.data?.find(entry=>entry.id===spec.rule_type?.id);
@@ -25,7 +26,7 @@ export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onCh
   if(type&&type.check_ids.length===0)return <fieldset className="condition-builder"><legend>Verification</legend><p className="muted">This standard type uses instructions and evidence; no automatic validator is registered.</p><label>Verification method<select value={spec.verification} onChange={e=>onChange({...spec,verification:e.target.value as RuleSpec['verification'],standard_check:null,assertion:null})}><option value="human">Human inspection</option><option value="external_evidence">External confirmation</option><option value="unresolved">Needs interpretation</option></select></label></fieldset>;
   return <fieldset className="condition-builder standard-check-editor"><legend>Standard verification check</legend>
     {catalog.error&&<p className="error" role="alert">{catalog.error} <button className="text-button" onClick={catalog.reload}>Retry catalog</button></p>}
-    <label>Check type<select value={spec.standard_check?.check_id||(spec.schema_version==='1.2'?'':'__legacy')} disabled={!catalog.data} onChange={e=>{
+    <label>Check type<select data-review-field="standard_check" aria-invalid={issues.some(issue=>issue.field==='standard_check')} value={spec.standard_check?.check_id||(spec.schema_version==='1.2'?'':'__legacy')} disabled={!catalog.data} onChange={e=>{
       if(!e.target.value){onChange({...spec,schema_version:'1.2',standard_check:null,verification:'unresolved',assertion:null});return;}
       const check=catalog.data?.find(entry=>entry.id===e.target.value);if(!check)return;
       const fields=check.parameters_schema.properties as Record<string,Property>;
@@ -35,17 +36,18 @@ export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onCh
       {spec.schema_version!=='1.2'&&!spec.standard_check&&<option value="__legacy">Existing verification (not mapped)</option>}
       <option value="">Needs mapping — select a standard check</option>
       {catalog.data?.filter(check=>!type||type.check_ids.includes(check.id)).map(check=><option key={`${check.id}:${check.version}`} value={check.id}>{check.label} · v{check.version}</option>)}
-    </select></label>
+    </select>{issues.filter(issue=>issue.field==='standard_check').map(issue=><span className="field-required-hint" key={issue.label}>{issue.label}</span>)}</label>
     {selected?<>
       <p><strong>{availabilityLabels[selected.availability]}</strong> · Evaluates {selected.subjects.join(' / ')}</p>
       <p className="muted">{selected.description}</p>
       {!selected.subjects.includes(spec.subject)&&<p className="error">Change the subject to {selected.subjects.join(' or ')} for this check.</p>}
       {selected.availability==='not_implemented'&&<p className="notice">You can approve this requirement after review. Scenario validation will report Cannot determine until its validator is implemented.</p>}
-      {Object.entries(properties).map(([key,property])=><div key={key}>
+      {Object.entries(properties).map(([key,property])=><div key={key} data-review-field={`check:${key}`} className={issues.some(issue=>issue.field===`check:${key}`)?'field-needs-information':''}>
         {property.type==='array'?<fieldset className="consumption-points"><legend>{fieldLabels[key]||words(key)}</legend>{property.items?.enum?.map(option=><label className="checkbox-label" key={option}><input type="checkbox" checked={Array.isArray(parameters[key])&&(parameters[key] as string[]).includes(option)} onChange={e=>changeParameter(key,e.target.checked?[...(parameters[key] as string[]||[]),option]:(parameters[key] as string[]||[]).filter(item=>item!==option))}/>{words(option)}</label>)}</fieldset>:
         <label>{fieldLabels[key]||words(key)}{property.enum?<select value={String(parameters[key]??'')} onChange={e=>changeParameter(key,e.target.value)}><option value="" disabled>Choose…</option>{property.enum.map(option=><option key={option} value={option}>{optionLabels[option]||words(option)}</option>)}</select>:
         property.type==='string'?<input type="text" minLength={property.minLength} maxLength={property.maxLength} value={String(parameters[key]??'')} onChange={e=>changeParameter(key,e.target.value)}/>:
         <input type="number" step={property.type==='integer'?1:'any'} min={property.minimum} max={property.maximum} value={typeof parameters[key]==='number'?parameters[key] as number:''} onChange={e=>changeParameter(key,e.target.value===''?null:Number(e.target.value))}/>}</label>}
+        {issues.filter(issue=>issue.field===`check:${key}`).map(issue=><span className="field-required-hint" key={issue.label}>Complete {fieldLabels[key]||words(key)}</span>)}
       </div>)}
       <details><summary>Required data</summary><ul>{selected.required_data.map(item=><li key={item}>{item}</li>)}</ul></details>
     </>:<p className="muted">{spec.schema_version==='1.2'?'Choose a shared check before approving a shipment requirement. If none fits, keep Needs mapping; new check types must be added to the catalog.':'This existing rule retains its current verification. Map it explicitly to adopt the shared catalog.'}</p>}

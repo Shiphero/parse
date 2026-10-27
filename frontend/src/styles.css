@@ -1068,3 +1068,18 @@ main:has(.guide-workspace) { max-width:none; padding:20px 24px; }
 .resolution-comparison dd { margin: 4px 0 10px; }
 .assessment-execution { margin-top: 12px; padding: 12px; background: #f1f5f9; border-radius: 6px; }
 @media (max-width: 640px) { .resolution-comparison { grid-template-columns: 1fr; } }
+
+.guided-rule-review [hidden] { display: none !important; }
+.review-readiness.informational { background: #eef4fb; border-color: #b8cce4; border-left-color: #647fa1; }
+.rule-reading-view h3 { margin: 0 0 12px; }
+.rule-reading-instruction { font-size: 16px; line-height: 1.7; white-space: pre-wrap; }
+.rule-reading-view dl { margin: 20px 0; }
+.rule-reading-view dt { font-weight: 600; margin-bottom: 5px; }
+.rule-reading-view dd { margin: 0 0 16px; line-height: 1.6; }
+.rule-reading-view .rule-usage-summary { margin: 20px 0; }
+.rule-open-questions { padding: 14px; margin: 16px 0; background: #fff9ed; border: 1px solid #e9d6aa; border-radius: 6px; }
+.field-required-hint { display: block; font-size: 12px; color: #9a4310; margin: 5px 0 8px; }
+.review-editable-fields [aria-invalid="true"], .field-needs-information input, .field-needs-information select { border-color: #ba631f; background: #fffcf5; }
+.technical-rule-settings { margin-top: 20px; }
+.rule-question-editor { margin: 12px 0 18px; }
+.review-action-identity label small { max-width: 330px; font-weight: 400; color: var(--muted); }

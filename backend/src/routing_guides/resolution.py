@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import Field
 from routing_guides.rules import EvidenceRef, RuleSpec, StrictModel
 
-RESOLUTION_VERSION = 'rule-resolution-1.0'
+RESOLUTION_VERSION = 'rule-resolution-1.1'
 ChangeField = Literal['title', 'instruction', 'purpose', 'operational_category', 'consumption_points',
     'rule_type', 'placements', 'verification', 'standard_check', 'applicability_text', 'applicability',
     'exceptions', 'unresolved_questions', 'execution_mode', 'evidence', 'subject', 'obligation', 'assertion', 'schema_version']
@@ -81,12 +81,11 @@ def automatic_change_allowed(original: dict, proposed: dict) -> bool:
     for key in ('obligation', 'subject', 'schema_version', 'assertion'):
         if original[key] != proposed[key]:
             return False
-    for key in ('rule_type', 'standard_check'):
-        if original.get(key) and original[key] != proposed[key]:
-            return False
-    if any(p.get('behavior') != 'display' or not p.get('enabled', True) for p in proposed['placements']):
+    # Verified catalog corrections and display routing can replace existing mappings.
+    # Shipment enforcement still requires an explicit decision.
+    if any(p.get('behavior') != 'display' or not p.get('enabled', True) for p in original['placements']):
         return False
-    if original['placements'] and original['placements'] != proposed['placements']:
+    if any(p.get('behavior') != 'display' or not p.get('enabled', True) for p in proposed['placements']):
         return False
     return True
 
