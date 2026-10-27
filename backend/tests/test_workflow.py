@@ -775,14 +775,12 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_assessment_checkpoints_resume_without_changing_rules_or_approvals(self):
         from routing_guides import assessment_jobs
-        from routing_guides.assessment import AssessmentResult, assessment_fingerprint
+        from routing_guides.assessment import AssessmentResult, assessment_fingerprint, new_assessment_job
         from test_assessment import candidate
         rules = [candidate(source_guide_id=str(self.gid)), candidate(source_guide_id=str(self.gid))]
         rules[1]['spec']['title'] = 'Second requirement'
-        job_id = str(uuid4())
-        job = {'id': job_id, 'status': 'queued', 'model': 'jev-test', 'actor': 'Reviewer',
-               'pending': [{'id': r['id'], 'revision': 1} for r in rules], 'total': 2,
-               'processed': 0, 'assessed': 0, 'skipped': 0, 'error': None}
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        job_id = job['id']
         async with self.sessions.begin() as session:
             run = await session.get(AnalysisRun, self.rid)
             run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
@@ -897,18 +895,16 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_assessment_discards_results_after_edits_or_cancellation(self):
         from routing_guides import assessment_jobs
-        from routing_guides.assessment import AssessmentResult, assessment_fingerprint
+        from routing_guides.assessment import AssessmentResult, assessment_fingerprint, new_assessment_job
         from test_assessment import candidate
         for cancel, invalid in ((False, False), (True, False), (False, True), (True, True)):
             with self.subTest(cancel=cancel, invalid=invalid):
                 original = candidate(source_guide_id=str(self.gid))
-                job_id = str(uuid4())
+                job = new_assessment_job([original], 'jev-test', 'Reviewer', 'all')
+                job_id = job['id']
                 async with self.sessions.begin() as session:
                     run = await session.get(AnalysisRun, self.rid)
-                    run.payload = {**run.payload, 'rules': [original], 'assessment_job': {
-                        'id': job_id, 'status': 'queued', 'model': 'jev-test', 'actor': 'Reviewer',
-                        'pending': [{'id': original['id'], 'revision': 1}], 'total': 1,
-                        'processed': 0, 'assessed': 0, 'skipped': 0}}
+                    run.payload = {**run.payload, 'rules': [original], 'assessment_job': job}
                 async def assess(current, related, pages, model, path, job_id):
                     async with self.sessions.begin() as session:
                         run = await session.get(AnalysisRun, self.rid)
