@@ -10,3 +10,9 @@ export function assessmentState(candidate: Candidate): Exclude<AssessmentFilter,
   if (candidate.assessment_stale) return 'stale';
   return candidate.assessment.outcome;
 }
+
+export function readyForApprovalSelection(candidate: Candidate): boolean {
+  if (candidate.status !== 'pending' || candidate.evidence_issues?.length) return false;
+  if (candidate.assessment) return !candidate.assessment_stale && !candidate.assessment.check_failed && candidate.assessment.outcome === 'ready';
+  return !candidate.individual_review_reasons.length;
+}

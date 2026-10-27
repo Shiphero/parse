@@ -19,7 +19,7 @@ export default function RuleDeliveryEditor({spec,onChange,compact=false}:{spec:R
       if(!type){onChange({...spec,rule_type:null,placements:[],...(spec.schema_version==='1.2'&&spec.purpose==='shipment_validation'&&!spec.standard_check?{verification:'unresolved',assertion:null}:{})});return;}
       const subject=type.subjects.includes(spec.subject)?spec.subject:type.subjects[0] as RuleSpec['subject'];
       const keepCheck=spec.standard_check&&type.check_ids.includes(spec.standard_check.check_id)&&subject===spec.subject;
-      onChange({...spec,schema_version:'1.2',rule_type:{id:type.id,version:1},subject,
+      onChange({...spec,schema_version:'1.2',execution_mode:'standard',rule_type:{id:type.id,version:1},subject,
         purpose:type.required_purpose||spec.purpose,operational_category:type.category,placements:type.default_placements,
         consumption_points:[...new Set(type.default_placements.map(p=>p.workflow))].sort(),
         standard_check:keepCheck?spec.standard_check:null,assertion:null,
@@ -31,7 +31,7 @@ export default function RuleDeliveryEditor({spec,onChange,compact=false}:{spec:R
         const area=selected.allowed_placements.find(a=>a.workflow===p.workflow&&a.area===p.area);
         return <tr key={`${p.workflow}:${p.area}`}><td><input type="checkbox" aria-label={`Use in ${consumptionPointLabels[p.workflow]} / ${area?.label||p.area}`} checked={p.enabled??true} onChange={e=>changePlacements(placements.map((old,j)=>j===i?{...old,enabled:e.target.checked}:old))}/></td>
           <td>{consumptionPointLabels[p.workflow]}<small style={{display:'block'}}>{area?.label||p.area}</small></td>
-          <td><select aria-label={`Behavior in ${consumptionPointLabels[p.workflow]} / ${p.area}`} value={p.behavior||'display'} onChange={e=>changePlacements(placements.map((old,j)=>j===i?{...old,behavior:e.target.value as Placement['behavior']}:old))}>{Object.entries(behaviorLabels).map(([id,label])=><option key={id} value={id} disabled={(selected.required_purpose==='general_guidance'&&id!=='display')||(id==='warn'||id==='block')&&(!automatic||id==='block'&&!['required','prohibited'].includes(spec.obligation))}>{label}</option>)}</select></td>
+          <td><select aria-label={`Behavior in ${consumptionPointLabels[p.workflow]} / ${p.area}`} value={p.behavior||'display'} onChange={e=>changePlacements(placements.map((old,j)=>j===i?{...old,behavior:e.target.value as Placement['behavior']}:old))}>{Object.entries(behaviorLabels).map(([id,label])=><option key={id} value={id} disabled={((selected.required_purpose==='general_guidance'||spec.execution_mode==='reference_only')&&id!=='display')||(id==='warn'||id==='block')&&(!automatic||id==='block'&&!['required','prohibited'].includes(spec.obligation))}>{label}</option>)}</select></td>
           <td><button className="text-button" disabled={placements.length===1} onClick={()=>changePlacements(placements.filter((_,j)=>i!==j))}>Remove</button></td></tr>;
       })}</tbody></table>
       <label>Add workflow area<select value="" onChange={e=>{const a=selected.allowed_placements.find(a=>`${a.workflow}:${a.area}`===e.target.value);if(a)changePlacements([...placements,{workflow:a.workflow,area:a.area,enabled:true,behavior:'display'}]);}}><option value="">Choose an area…</option>{selected.allowed_placements.filter(a=>!placements.some(p=>p.workflow===a.workflow&&p.area===a.area)).map(a=><option key={`${a.workflow}:${a.area}`} value={`${a.workflow}:${a.area}`}>{consumptionPointLabels[a.workflow]} → {a.label}</option>)}</select></label>

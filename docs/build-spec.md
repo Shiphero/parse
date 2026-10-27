@@ -79,7 +79,13 @@ Operational category and explicit consumption points are independent of rule pur
 
 ## Standard verification contracts
 
-Rule schema 1.2 adds the shared, versioned `standard_check` catalog. The builder and extraction prompt use the same API-owned definitions and typed parameters. Measurement checks execute with the existing evaluator; other initial automatic contracts are visibly unavailable until implemented. New unmatched shipment requirements need mapping before approval, and legacy rules remain readable without implicit migration. See [workflow.md](workflow.md#shared-verification-catalog-schema-12) for contracts and limitations.
+Rule schema 1.2 adds the shared, versioned `standard_check` catalog. The builder and extraction prompt use the same API-owned definitions and typed parameters. Measurement checks execute with the existing evaluator; other initial automatic contracts are visibly unavailable until implemented. Unmatched shipment requirements need a mapping or an explicit `reference_only` execution mode before approval. Reference requirements preserve shipment purpose, source scope and exceptions, cannot execute or request confirmation/warning/blocking, and never imply compliance. Legacy rules remain readable without implicit migration. See [workflow.md](workflow.md#shared-verification-catalog-schema-12) for contracts and limitations.
+
+## Automatic rule preparation and review readiness
+
+Checks run in two checkpointed passes. First, the configured analysis provider proposes source-backed changes to pending drafts using cited pages, adjacent context and a bounded search for related source pages. Exact quotations and full rule contracts are validated locally. Jev independently verifies each changed field. Only a fully verified proposal preserving obligation, subject, custom assertions, existing bindings and existing workflow placements can apply automatically; new placements must be enabled and display-only. Every applied edit increments the revision, clears prior readiness and records before/after values, citations and the requesting actor in history. Concurrent edits, decisions and cancellation take precedence. Unverified or protected changes remain reviewable proposals.
+
+The second pass checks the prepared rules and possible duplicates against the final draft definitions. This avoids invalidating early results as later rules change. Generic model concerns without a verified, specific correction are questions for review; unavailable shipment automation is reported separately from source accuracy. Original evidence, visual inspection needs and unresolved policy are preserved. Approval, duplicate removal and publication remain explicit decisions. Old assessment versions need a fresh run; aggregate completion is shown separately from the last retry's count. Model and retrieval quality require live acceptance evaluation; synthetic contract tests do not establish accuracy.
 
 ## Normalized consumer delivery
 

@@ -28,6 +28,7 @@ from routing_guides.classification_mapping import needs_auto_classification
 from routing_guides.rule_catalog import RULE_TYPES, RuleTypeDefinition, Placement, delivery_label
 from routing_guides.delivery import DeliveryRequest, DeliveredSubject, subjects_for, selected_placements, validate_selection
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
+from routing_guides.resolution import ResolutionRecord
 from routing_guides.assessment import AssessmentResult, assessment_fingerprint, related_rules, duplicate_index, PROMPT_VERSION as ASSESSMENT_PROMPT_VERSION
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
@@ -52,6 +53,7 @@ class Candidate(BaseModel):
     review: dict[str, Any] | None = None
     evidence_issues: list[str] = Field(default_factory=list)
     classification: dict[str, Any] | None = None
+    resolution: ResolutionRecord | None = None
     assessment: AssessmentResult | None = None
     assessment_stale: bool = False
     carried_from_release_id: str | None = None

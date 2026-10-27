@@ -81,6 +81,7 @@ class RuleSpec(StrictModel):
     purpose: Literal['general_guidance', 'shipment_validation', 'unclassified'] = Field(default='unclassified', description='Intended use, independent of verification method. General guidance is excluded from shipment checks; unclassified requires review.')
     rule_type: RuleTypeBinding | None = None
     placements: list[Placement] = Field(default_factory=list, description="Versioned consumer configuration; disabling a placement does not remove the retailer requirement.")
+    execution_mode: Literal['standard', 'reference_only'] = Field(default='standard', description='Reference-only requirements may be approved as source-backed instructions but never execute, confirm, warn or block shipments.')
     title: str = Field(min_length=1, max_length=250)
     instruction: str = Field(min_length=1)
     subject: Literal['shipment', 'order', 'pallet', 'carton', 'item', 'label', 'document']
@@ -102,6 +103,10 @@ class RuleSpec(StrictModel):
     @model_validator(mode='after')
     def executable(self):
         validate_delivery(self)
+        if self.execution_mode == 'reference_only':
+            if (self.purpose != 'shipment_validation' or self.standard_check is not None or self.assertion is not None
+                    or self.verification != 'unresolved' or any(p.behavior != 'display' for p in self.placements)):
+                raise ValueError('Reference-only requirements must preserve shipment scope with unresolved verification, no executable check and display-only placements.')
         if self.standard_check is not None:
             definition = check_definition(self.standard_check)
             if self.schema_version != '1.2':

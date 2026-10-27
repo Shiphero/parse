@@ -154,7 +154,7 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.outcome, 'ready')
         self.assertEqual(self.rule['spec']['verification'], 'human')
 
-    async def test_uncertainty_and_low_confidence_route_to_review_with_actions(self):
+    async def test_uncertainty_requires_review_but_supported_dimensions_do_not_invent_corrections(self):
         payload = response()
         payload['answers']['exceptions'].update(choice='uncertain',
             probabilities={'supported': 0.01, 'correction': 0.01, 'uncertain': 0.98})
@@ -162,8 +162,26 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         self.client.post.return_value = httpx.Response(200, json=payload)
         result = await self.assess()
         self.assertEqual(result.outcome, 'needs_review')
-        self.assertEqual({i.code for i in result.issues}, {'exceptions', 'classification'})
+        self.assertEqual({i.code for i in result.issues}, {'exceptions'})
         self.assertTrue(all(i.action and i.section for i in result.issues))
+
+    async def test_correction_requires_a_specific_verified_proposal(self):
+        payload = response()
+        payload['answers']['exceptions'].update(choice='correction',
+            probabilities={'supported': 0.3, 'correction': 0.4, 'uncertain': 0.3})
+        self.client.post.return_value = httpx.Response(200, json=payload)
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertTrue(all(i.kind == 'manual' for i in result.issues))
+
+    async def test_reference_requirement_is_ready_with_execution_gap_separate(self):
+        from test_rules import rule
+        self.rule['spec'] = rule(schema_version='1.2', assertion=None, verification='unresolved',
+                                 execution_mode='reference_only').model_dump(mode='json')
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'ready')
+        self.assertTrue(result.execution_gaps)
+        self.assertEqual(self.rule['status'], 'pending')
 
     async def test_visual_and_missing_text_are_never_ready(self):
         self.rule['spec']['evidence'][0]['kind'] = 'visual'

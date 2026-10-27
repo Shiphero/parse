@@ -14,7 +14,7 @@ def individual_review_reasons(spec, evidence_issues=(), duplicate=False):
         reasons.append('Choose an operational category and consumption points before approval.')
     if duplicate:
         reasons.append('Possible duplicate or conflict: review matching titles together.')
-    if spec.unresolved_questions or spec.verification == 'unresolved':
+    if spec.unresolved_questions or spec.verification == 'unresolved' and spec.execution_mode != 'reference_only':
         reasons.append('Unresolved interpretation requires individual review.')
     if needs_check_mapping(spec):
         reasons.append('Map this requirement to a standard verification check before approval.')

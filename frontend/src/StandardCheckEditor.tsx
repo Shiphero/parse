@@ -11,7 +11,7 @@ const fieldLabels: Record<string,string> = {
 const optionLabels: Record<string,string> = {lte:'At most (≤)',gte:'At least (≥)',original_order:'Original PO quantities',approved_current_order:'Approved current PO revision'};
 type Property = {type?:string;enum?:string[];items?:{enum?:string[]};minimum?:number;maximum?:number;exclusiveMinimum?:number;minLength?:number;maxLength?:number;description?:string};
 type Binding = NonNullable<RuleSpec['standard_check']>;
-export const availabilityLabels = {implemented:'Automatic verification',not_implemented:'Automatic verification · unavailable',manual:'Manual verification',external:'External confirmation',needs_mapping:'Verification not configured',legacy:'Existing verification · not mapped',guidance:'Guidance only'};
+export const availabilityLabels = {reference_only:'Reference requirement · automatic verification unavailable',implemented:'Automatic verification',not_implemented:'Automatic verification · unavailable',manual:'Manual verification',external:'External confirmation',needs_mapping:'Verification not configured',legacy:'Existing verification · not mapped',guidance:'Guidance only'};
 
 export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onChange:(spec:RuleSpec)=>void}) {
   const catalog=useRemote<CheckDefinition[]>('/api/check-catalog');
@@ -21,6 +21,7 @@ export default function StandardCheckEditor({spec,onChange}: {spec:RuleSpec;onCh
   const properties=(selected?.parameters_schema.properties||{}) as Record<string,Property>;
   const parameters=(spec.standard_check?.parameters||{}) as Record<string,unknown>;
   const changeParameter=(key:string,value:unknown)=>onChange({...spec,standard_check:{...spec.standard_check!,parameters:{...parameters,[key]:value}} as Binding});
+  if(spec.execution_mode==='reference_only')return <fieldset className="condition-builder"><legend>Verification</legend><p>This requirement can be approved as an instruction. Automatic shipment verification is unavailable.</p><button type="button" className="secondary" onClick={()=>onChange({...spec,execution_mode:'standard'})}>Set up verification</button></fieldset>;
   if(type&&type.check_ids.length===0)return <fieldset className="condition-builder"><legend>Verification</legend><p className="muted">This standard type uses instructions and evidence; no automatic validator is registered.</p><label>Verification method<select value={spec.verification} onChange={e=>onChange({...spec,verification:e.target.value as RuleSpec['verification'],standard_check:null,assertion:null})}><option value="human">Human inspection</option><option value="external_evidence">External confirmation</option><option value="unresolved">Needs interpretation</option></select></label></fieldset>;
   return <fieldset className="condition-builder standard-check-editor"><legend>Standard verification check</legend>
     {catalog.error&&<p className="error" role="alert">{catalog.error} <button className="text-button" onClick={catalog.reload}>Retry catalog</button></p>}

@@ -9,7 +9,7 @@ const checkLabels: Record<string, string> = {
   source_accuracy: 'Matches the source', applicability: 'When the rule applies', exceptions: 'Exceptions',
   classification: 'Rule classification', verification: 'How the rule is verified',
 };
-const resultLabels: Record<string, string> = {supported: 'No issue found', correction: 'Needs correction', uncertain: 'Needs review'};
+const resultLabels: Record<string, string> = {supported: 'No issue found', correction: 'Concern identified', uncertain: 'Needs review'};
 export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated}: {
   candidate: Candidate; dirty: boolean; goTo: (section: ReviewSection) => void; onOpenRelated?: (id: string) => void;
 }) {
@@ -32,11 +32,12 @@ export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated
         {!stale && onOpenRelated && <button className="text-button" onClick={() => onOpenRelated(match.rule_id)}>Open compared rule →</button>}
       </li>)}</ul>
     </div>}
+    {!!assessment.execution_gaps?.length && <div className="assessment-execution"><strong>Automatic verification</strong><ul>{assessment.execution_gaps.map((gap,i)=><li key={i}>{gap}</li>)}</ul><p>These are system capabilities, separate from the accuracy of the requirement.</p></div>}
     <details><summary>{stale ? 'Previous check details' : 'What was checked'}</summary>
       <p>{assessment.check_failed ? 'Last attempted' : 'Checked'} {new Date(assessment.assessed_at).toLocaleString()}.</p>
       <p>Source: PDF pages {assessment.source_pages.join(', ') || 'unavailable'}. Checks cover source text and likely matches with other rules. Images and less obvious duplicates may need your review.</p>
       {assessment.dimensions.length ? <table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>{assessment.dimensions.map(d => <tr key={d.name}>
-        <td>{checkLabels[d.name] || 'Additional check'}</td><td>{Math.min(d.confidence, d.probabilities[d.choice]) < assessment.threshold ? 'Needs review' : resultLabels[d.choice] || 'Needs review'}</td>
+        <td>{checkLabels[d.name] || 'Additional check'}</td><td>{resultLabels[d.choice] || 'Needs review'}</td>
       </tr>)}</tbody></table> : <p>{assessment.check_failed ? 'Automated checks did not produce a usable result. This does not establish whether the rule is correct.' : 'The source information needs attention before checks can be completed.'}</p>}
     </details>
   </section>;

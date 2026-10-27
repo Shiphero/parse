@@ -1,4 +1,4 @@
-"""Explicit, preview-only Jev assessment requests."""
+"""Explicit requests to prepare pending rules and assess their review readiness."""
 from copy import deepcopy
 import json
 from typing import Literal
@@ -10,6 +10,7 @@ import psycopg
 from routing_guides.assessment import PROMPT_VERSION, choose_sample, new_assessment_job
 from routing_guides.connections import connection
 from routing_guides.db import sessions
+from routing_guides.resolution_jobs import enable_resolution
 from routing_guides.models import AnalysisRun
 from routing_guides.tasks import assess_guide_rules, dsn
 from routing_guides.workflow_api import VersionedAction, RunView, required, guard, audit
@@ -62,16 +63,21 @@ async def start_assessment(run_id: UUID, body: StartAssessment):
     model = body.model.strip() or config['model']
     if not model or not config['key']:
         raise HTTPException(422, 'Configure Jev and its model in Connections first.')
-    # Job enqueue and preview selection commit together, just like classification.
+    # Job enqueue and rule selection commit together, just like classification.
     async with await psycopg.AsyncConnection.connect(dsn) as conn:
-        cursor = await conn.execute('SELECT status, version, payload FROM analysis_runs WHERE id=%s FOR UPDATE', (run_id,))
+        cursor = await conn.execute('SELECT status, version, payload, config FROM analysis_runs WHERE id=%s FOR UPDATE', (run_id,))
         row = await cursor.fetchone()
         if not row:
             raise HTTPException(404, 'Analysis not found.')
-        status, version, data = row
+        status, version, data, run_config = row
         if status != 'complete' or version != body.version:
             raise HTTPException(409, 'Refresh the completed draft before assessing.')
         job = prepare_job(data, body, model)
+        if not body.resume:
+            try:
+                await enable_resolution(job, run_config)
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from None
         data['assessment_job'] = job
         await conn.execute('UPDATE analysis_runs SET payload=%s::jsonb, version=version+1 WHERE id=%s', (json.dumps(data), run_id))
         await assess_guide_rules.configure(connection=conn, lock=f'assessment:{run_id}', queueing_lock=f'assessment:{run_id}').defer_async(run_id=str(run_id), job_id=job['id'])

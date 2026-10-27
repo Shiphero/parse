@@ -1059,3 +1059,12 @@ main:has(.guide-workspace) { max-width:none; padding:20px 24px; }
 .assessment-badge { display: block; width: fit-content; margin: 5px 0 0 24px; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; background: #fff3cd; color: #71450b; }
 .assessment-badge.ready { background: #e1f3e7; color: #235b39; }
 .assessment-badge.stale { background: #e2e8f0; color: #475569; }
+
+.resolution-details { margin-bottom: 16px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; }
+.resolution-details details { margin: 12px 0; }
+.resolution-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; overflow-wrap: anywhere; }
+.resolution-comparison > div { padding: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; }
+.resolution-comparison dt { font-weight: 600; }
+.resolution-comparison dd { margin: 4px 0 10px; }
+.assessment-execution { margin-top: 12px; padding: 12px; background: #f1f5f9; border-radius: 6px; }
+@media (max-width: 640px) { .resolution-comparison { grid-template-columns: 1fr; } }

@@ -13,7 +13,7 @@ from routing_guides.rules import RuleSpec, StrictModel
 from routing_guides.check_catalog import needs_check_mapping
 from routing_guides.taxonomy import needs_classification
 
-PROMPT_VERSION = 'rule-review-assessment-1.1'
+PROMPT_VERSION = 'rule-review-assessment-2.0'
 MAX_DUPLICATE_COMPARISONS = 8
 CONFIDENCE_THRESHOLD = 0.95
 Section = Literal['instruction', 'classification', 'conditions', 'verification', 'evidence', 'advanced']
@@ -47,6 +47,7 @@ class AssessmentResult(StrictModel):
     outcome: Literal['ready', 'needs_correction', 'needs_review']
     issues: list[AssessmentIssue]
     check_failed: bool = False
+    execution_gaps: list[str] = Field(default_factory=list)
     dimensions: list[AssessmentDimension]
     duplicates: list[DuplicateAssessment] = Field(default_factory=list)
     duplicate_candidates: int = 0
@@ -134,11 +135,11 @@ def local_issues(candidate: dict, related: list[dict], pages: dict[int, str | No
     for issue in dict.fromkeys([*candidate.get('evidence_issues', []), *evidence_issues(spec, pages)]):
         add('source_mismatch', 'evidence', issue, 'correction')
     if needs_classification(candidate['spec']):
-        add('classification_missing', 'classification', 'Choose the rule purpose, operational category and consuming workflows.', 'correction')
-    if spec.rule_type is None:
-        add('type_missing', 'classification', 'Choose a compatible standard rule type; use automatic classification to propose a mapping.', 'correction')
+        add('classification_missing', 'classification', 'Choose the rule purpose, operational category and consuming workflows.')
+    if spec.rule_type is None and spec.execution_mode != 'reference_only':
+        add('type_missing', 'classification', 'A compatible rule type has not been established. Resolve the mapping or record the requirement for reference.')
     if needs_check_mapping(spec):
-        add('check_missing', 'verification', 'Map this requirement to a compatible standard check or instruction-only rule type.', 'correction')
+        add('check_missing', 'verification', 'Automatic verification has not been configured. Resolve the mapping or record the requirement for reference.')
     for question in spec.unresolved_questions:
         add('unresolved_question', 'advanced', f'Resolve this question against the source: {question}')
     for reference in spec.evidence:

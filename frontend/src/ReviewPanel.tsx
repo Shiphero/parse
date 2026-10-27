@@ -4,7 +4,7 @@ import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, Connection, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
 import AssessmentPanel from './AssessmentPanel';
-import { assessmentLabels, assessmentState } from './assessmentReadiness';
+import { assessmentLabels, assessmentState, readyForApprovalSelection } from './assessmentReadiness';
 import type { AssessmentFilter } from './assessmentReadiness';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { activeWorkflows, operationalCategoryLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
@@ -56,7 +56,9 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const focusAfterNavigation = useRef<{afterVersion:number}|null>(null);
   const activeHeading = useRef<HTMLButtonElement>(null);
   const activeRow = useRef<HTMLTableRowElement>(null);
-  const editable = run.status === 'complete';
+  const assessmentJob = run.payload.assessment_job;
+  const resolving = assessmentJob?.phase === 'resolve' && ['queued', 'running'].includes(String(assessmentJob.status));
+  const editable = run.status === 'complete' && !resolving;
   const current = run.payload.rules.find(r => r.id === selected);
   const classificationJob = run.payload.classification_job;
   const [classificationProvider,setClassificationProvider] = useState(String(classificationJob?.provider || (run.config.provider==='openai'?'openai':'anthropic')));
@@ -124,7 +126,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
     setPage(next); setSelected(''); setError('');
     tableHeading.current?.scrollIntoView({ block: 'start' });
   };
-  const eligible = filtered.filter(r => r.status === 'pending' && !r.individual_review_reasons.length && !needsClassification(r.spec) && !r.evidence_issues?.length);
+  const eligible = filtered.filter(r => readyForApprovalSelection(r) && !needsClassification(r.spec));
   const pendingInView = filtered.filter(r => r.status === 'pending');
   const selectedRules = run.payload.rules.filter(r => checked[r.id] === r.revision && r.status === 'pending');
   const selectedCount = selectedRules.length;
@@ -180,6 +182,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       <div className="review-heading-actions"><button className="secondary" aria-pressed={detailedColumns} onClick={() => setDetailedColumns(v => !v)}>{detailedColumns ? 'Fewer columns' : 'More columns'}</button>{editable && <button className="secondary" disabled={busy || editing || adding} onClick={() => { setInitialRule(undefined); setAdding(true); }}><Plus size={16}/> Add rule</button>}</div></div>
     {(editable || run.payload.assessment_job) && <AssessmentPanel run={run} actor={actor} connections={connections} selectedIds={selectedRules.map(r => r.id)} locked={busy || editing || adding} reload={reload}
       filter={assessmentFilter} onFilter={value => {resetFilters(); setFilter('pending'); setAssessmentFilter(value);}}/>}
+    {resolving && <p className="notice">Rules are being prepared automatically. You can browse the source and changes now; editing resumes when preparation finishes or you stop checking.</p>}
     {editable && !!run.config.source_release_id && <p className="notice">Draft of {String(run.config.source_release_name)}.</p>}
     {message && <p className="notice" role="status">{message}</p>}
     {error && !current && !selectedCount && <div className="error" role="alert">{error}</div>}

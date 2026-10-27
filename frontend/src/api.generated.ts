@@ -1004,6 +1004,8 @@ export interface components {
              * @default false
              */
             check_failed: boolean;
+            /** Execution Gaps */
+            execution_gaps?: string[];
             /** Dimensions */
             dimensions: components["schemas"]["AssessmentDimension"][];
             /** Duplicates */
@@ -1038,7 +1040,7 @@ export interface components {
             model: string;
             /**
              * Prompt Version
-             * @default rule-review-assessment-1.1
+             * @default rule-review-assessment-2.0
              */
             prompt_version: string;
             /** Source Pages */
@@ -1132,6 +1134,7 @@ export interface components {
             classification?: {
                 [key: string]: unknown;
             } | null;
+            resolution?: components["schemas"]["ResolutionRecord"] | null;
             assessment?: components["schemas"]["AssessmentResult"] | null;
             /**
              * Assessment Stale
@@ -1202,7 +1205,7 @@ export interface components {
              * Availability
              * @enum {string}
              */
-            availability: "implemented" | "not_implemented" | "manual" | "external" | "needs_mapping" | "legacy" | "guidance";
+            availability: "implemented" | "not_implemented" | "manual" | "external" | "needs_mapping" | "legacy" | "guidance" | "reference_only";
         };
         /** ClassifyRules */
         ClassifyRules: {
@@ -2000,6 +2003,73 @@ export interface components {
              */
             created_at: string;
         };
+        /** RemainingQuestion */
+        RemainingQuestion: {
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "instruction" | "classification" | "conditions" | "verification" | "evidence" | "advanced";
+            /** Question */
+            question: string;
+            /** Sources */
+            sources?: components["schemas"]["EvidenceRef"][];
+        };
+        /** ResolutionChange */
+        ResolutionChange: {
+            /**
+             * Field
+             * @enum {string}
+             */
+            field: "title" | "instruction" | "purpose" | "operational_category" | "consumption_points" | "rule_type" | "placements" | "verification" | "standard_check" | "applicability_text" | "applicability" | "exceptions" | "unresolved_questions" | "execution_mode" | "evidence" | "subject" | "obligation" | "assertion" | "schema_version";
+            /** Explanation */
+            explanation: string;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+            /** Before */
+            before: unknown;
+            /** After */
+            after: unknown;
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+            /**
+             * Applied
+             * @default false
+             */
+            applied: boolean;
+        };
+        /** ResolutionRecord */
+        ResolutionRecord: {
+            /** Revision */
+            revision: number;
+            /** Input Fingerprint */
+            input_fingerprint: string;
+            /**
+             * Prompt Version
+             * @default rule-resolution-1.0
+             */
+            prompt_version: string;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** At */
+            at: string;
+            /** Changes */
+            changes?: components["schemas"]["ResolutionChange"][];
+            /** Questions */
+            questions?: components["schemas"]["RemainingQuestion"][];
+            /** Capability Gaps */
+            capability_gaps?: string[];
+            /**
+             * Failed
+             * @default false
+             */
+            failed: boolean;
+        };
         /** RestoreAction */
         RestoreAction: {
             /** Expected Active Id */
@@ -2097,6 +2167,13 @@ export interface components {
              * @description Versioned consumer configuration; disabling a placement does not remove the retailer requirement.
              */
             placements?: components["schemas"]["Placement"][];
+            /**
+             * Execution Mode
+             * @description Reference-only requirements may be approved as source-backed instructions but never execute, confirm, warn or block shipments.
+             * @default standard
+             * @enum {string}
+             */
+            execution_mode: "standard" | "reference_only";
             /** Title */
             title: string;
             /** Instruction */
@@ -2166,6 +2243,13 @@ export interface components {
              * @description Versioned consumer configuration; disabling a placement does not remove the retailer requirement.
              */
             placements?: components["schemas"]["Placement"][];
+            /**
+             * Execution Mode
+             * @description Reference-only requirements may be approved as source-backed instructions but never execute, confirm, warn or block shipments.
+             * @default standard
+             * @enum {string}
+             */
+            execution_mode: "standard" | "reference_only";
             /** Title */
             title: string;
             /** Instruction */

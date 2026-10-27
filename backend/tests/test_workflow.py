@@ -17,7 +17,7 @@ from routing_guides.config import get_settings
 from routing_guides.models import Retailer, ReleaseHead, Guide, GuidePage, AnalysisRun, RuleRelease
 from routing_guides.rules import Extraction
 from routing_guides.analysis_provider import ProviderOutput, ProviderFailure
-from routing_guides import workflow_api, analysis_jobs, classification_jobs, app_settings
+from routing_guides import workflow_api, analysis_jobs, classification_jobs, app_settings, resolution_jobs
 from test_rules import rule
 
 
@@ -28,6 +28,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.transaction = await self.conn.begin()
         self.sessions = async_sessionmaker(self.conn,expire_on_commit=False,join_transaction_mode='create_savepoint')
         self.patches = [patch.object(workflow_api,'sessions',self.sessions),patch.object(analysis_jobs,'sessions',self.sessions),patch.object(classification_jobs,'sessions',self.sessions),patch.object(app_settings,'sessions',self.sessions)]
+        self.patches.append(patch.object(resolution_jobs, 'connection', AsyncMock(return_value={'key': 'test-key', 'model': 'test-model'})))
         for p in self.patches:p.start()
         self.retailer='test-'+uuid4().hex
         self.gid=uuid4(); self.rid=uuid4()
@@ -612,6 +613,91 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(run.payload['rules']), 30)
             self.assertEqual(run.payload['assessment_job']['reason'], 'configuration_required')
             self.assertEqual(run.payload['assessment_job']['status'], 'failed')
+
+    async def test_all_preparations_finish_before_readiness_and_retain_audited_revisions(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import new_assessment_job, AssessmentResult, assessment_fingerprint
+        from test_assessment import candidate
+        from test_resolution import proposal
+        rules = [candidate(source_guide_id=str(self.gid)) for _ in range(2)]
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': rules, 'assessment_job': job}
+
+        async def propose(current, *args):
+            plan = proposal(current, instruction='Cartons must not exceed 50 lb.')
+            plan.changes[0].sources[0].quote = 'Cartons must not exceed 50 lb.'
+            return plan
+
+        async def assess(current, related, pages, model, path, job_id):
+            async with self.sessions() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                self.assertEqual(run.payload['assessment_job']['phase'], 'assess')
+                self.assertEqual([r['revision'] for r in run.payload['rules']], [2, 2])
+            self.assertTrue(all(r['revision'] == 2 for r in related))
+            return AssessmentResult(outcome='ready', issues=[], dimensions=[],
+                fingerprint=assessment_fingerprint(current, related), revision=current['revision'],
+                job_id=job_id, assessed_at='2026-10-27T00:00:00+00:00', model=model, source_pages=[1])
+
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(resolution_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(resolution_jobs, 'propose', side_effect=propose) as proposed, \
+                patch.object(resolution_jobs, 'verify_changes', return_value={'instruction': True}), \
+                patch.object(assessment_jobs, 'assess', side_effect=assess):
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+        self.assertEqual(proposed.await_count, 2)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['updated'], 2)
+            self.assertEqual(run.payload['assessment_job']['assessed'], 2)
+            self.assertFalse(any(r.assessment_stale for r in workflow_api.RunView.model_validate(run).payload.rules))
+            for saved in run.payload['rules']:
+                self.assertEqual(saved['status'], 'pending')
+                self.assertIsNone(saved['review'])
+                self.assertTrue(saved['resolution']['changes'][0]['applied'])
+        count = await self.conn.scalar(text("SELECT count(*) FROM audit_events WHERE entity_id=:id AND action='rule_auto_resolved'"), {'id': self.rid})
+        self.assertEqual(count, 2)
+
+    async def test_preparation_never_overwrites_a_concurrent_edit_or_applies_after_cancel(self):
+        from routing_guides.assessment import new_assessment_job
+        from test_assessment import candidate
+        from test_resolution import proposal
+        for cancel in (False, True):
+            original = candidate(source_guide_id=str(self.gid))
+            job = new_assessment_job([original], 'jev-test', 'Reviewer', 'all')
+            await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                run.payload = {**run.payload, 'rules': [deepcopy(original)], 'assessment_job': job}
+
+            async def propose(current, *args):
+                async with self.sessions.begin() as session:
+                    run = await session.get(AnalysisRun, self.rid)
+                    payload = deepcopy(run.payload)
+                    if cancel:
+                        payload['assessment_job']['status'] = 'cancelled'
+                    else:
+                        payload['rules'][0]['revision'] += 1
+                        payload['rules'][0]['spec']['title'] = 'User edit'
+                    run.payload, run.version = payload, run.version + 1
+                plan = proposal(current, instruction='Cartons must not exceed 50 lb.')
+                plan.changes[0].sources[0].quote = 'Cartons must not exceed 50 lb.'
+                return plan
+
+            with patch.object(resolution_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                    patch.object(resolution_jobs, 'propose', side_effect=propose), \
+                    patch.object(resolution_jobs, 'verify_changes', return_value={'instruction': True}):
+                await resolution_jobs.prepare_next(self.sessions, self.rid, job['id'], {})
+            async with self.sessions() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                saved = run.payload['rules'][0]
+                self.assertNotIn('resolution', saved)
+                self.assertEqual(saved['spec']['instruction'], original['spec']['instruction'])
+                self.assertEqual(saved['spec']['title'], original['spec']['title'] if cancel else 'User edit')
 
     async def test_assessment_checkpoints_resume_without_changing_rules_or_approvals(self):
         from routing_guides import assessment_jobs

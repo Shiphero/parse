@@ -24,6 +24,10 @@ test('manual catalog instructions do not request an invented automatic check',()
   const value={...spec,rule_type:{id:'pallet.wrapping'},verification:'human'};
   assert.deepEqual(tasks(value,'Reviewer',[{id:'pallet.wrapping',check_ids:[]}]),[]);
 });
+test('reference requirements preserve shipment purpose without demanding an unavailable check',()=>{
+  assert.deepEqual(tasks({...spec,execution_mode:'reference_only'}),[]);
+  assert.deepEqual(tasks({...spec,execution_mode:'reference_only'},'').map(t=>t.section),['reviewer']);
+});
 test('empty or out-of-range typed parameters are actionable even for an unavailable validator',()=>{
   const check={id:'test',availability:'not_implemented',parameters_schema:{required:['percent','basis'],properties:{percent:{type:'number',minimum:0,maximum:100},basis:{enum:['packed','shipped']}}}};
   const value={...spec,standard_check:{check_id:'test',parameters:{percent:101,basis:''}}};

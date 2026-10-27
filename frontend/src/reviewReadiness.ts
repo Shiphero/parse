@@ -16,7 +16,7 @@ export function reviewTasks(spec: RuleSpec, candidate: Candidate, actor: string,
   if (!spec.applicability_text.trim()) add('conditions', 'Describe when this rule applies');
   const type = types.find(t => t.id === spec.rule_type?.id);
   const instructionOnly = type && !type.check_ids.length && ['human', 'external_evidence'].includes(spec.verification) && !spec.assertion;
-  if (spec.schema_version === '1.2' && spec.purpose === 'shipment_validation' && !spec.standard_check && !instructionOnly)
+  if (spec.execution_mode !== 'reference_only' && spec.schema_version === '1.2' && spec.purpose === 'shipment_validation' && !spec.standard_check && !instructionOnly)
     add('verification', 'Choose a standard verification check');
   const check = checks.find(c => c.id === spec.standard_check?.check_id);
   if (check && spec.standard_check) {

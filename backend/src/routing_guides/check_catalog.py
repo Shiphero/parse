@@ -200,10 +200,12 @@ def check_definition(binding):
 
 def needs_check_mapping(spec):
     from routing_guides.rule_catalog import instruction_only_check
-    return not instruction_only_check(spec) and spec.schema_version == '1.2' and spec.purpose == 'shipment_validation' and spec.standard_check is None
+    return spec.execution_mode != 'reference_only' and not instruction_only_check(spec) and spec.schema_version == '1.2' and spec.purpose == 'shipment_validation' and spec.standard_check is None
 
 
 def check_summary(spec):
+    if spec.execution_mode == 'reference_only':
+        return 'Requirement recorded · automatic verification unavailable'
     if spec.purpose == 'general_guidance':
         return 'General guidance'
     if spec.standard_check:
@@ -217,10 +219,12 @@ def check_summary(spec):
 
 class CheckStatus(BaseModel):
     label: str
-    availability: Literal['implemented', 'not_implemented', 'manual', 'external', 'needs_mapping', 'legacy', 'guidance']
+    availability: Literal['implemented', 'not_implemented', 'manual', 'external', 'needs_mapping', 'legacy', 'guidance', 'reference_only']
 
 
 def check_status(spec) -> CheckStatus:
+    if spec.execution_mode == 'reference_only':
+        return CheckStatus(label='Requirement recorded · automatic verification unavailable', availability='reference_only')
     if spec.purpose == 'general_guidance':
         return CheckStatus(label='General guidance', availability='guidance')
     if spec.standard_check:

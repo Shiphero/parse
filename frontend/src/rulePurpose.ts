@@ -9,6 +9,7 @@ type VerificationKind = 'automatic' | 'manual' | 'external' | 'unresolved' | 'gu
 type VerificationSummary = {kind:VerificationKind; label:string; detail:string; unavailable?:boolean};
 
 export function resolveCheckStatus(rule:RuleSpec, checks:CheckDefinition[]|null, types:RuleTypeDefinition[]|null):CheckStatus|undefined {
+  if (rule.execution_mode === 'reference_only') return {label:'Automatic verification unavailable',availability:'reference_only'};
   if (rule.standard_check) {
     return checks?.find(check=>check.id===rule.standard_check?.check_id&&check.version===rule.standard_check.version);
   }
@@ -21,6 +22,7 @@ export function resolveCheckStatus(rule:RuleSpec, checks:CheckDefinition[]|null,
 }
 
 export function verificationSummary(rule: RuleSpec, status?:CheckStatus): VerificationSummary {
+  if (rule.execution_mode === 'reference_only') return {kind:'unresolved',label:'Reference requirement',detail:'Can be approved as an instruction; automatic verification is unavailable.',unavailable:true};
   if (rule.purpose === 'general_guidance') return {kind:'guidance',label:'Guidance only',detail:'Reference instructions; no shipment verification.'};
   if (rule.purpose !== 'shipment_validation') return {kind:'unresolved',label:'Not classified',detail:'Choose how this rule will be used before setting verification.'};
   if (status?.availability === 'needs_mapping') return {kind:'unresolved',label:'Not configured',detail:'Choose a verification check.'};

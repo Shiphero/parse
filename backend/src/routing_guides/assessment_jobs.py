@@ -1,4 +1,4 @@
-"""Checkpoint each assessment without changing rule revisions, statuses or approvals."""
+"""Prepare pending definitions, then checkpoint readiness without changing approvals."""
 from copy import deepcopy
 import logging
 from uuid import UUID, uuid4
@@ -13,6 +13,7 @@ from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun, AuditEvent, GuidePage
 from routing_guides.storage import guide_directory
 from routing_guides.tasks import assess_guide_rules
+from routing_guides.resolution_jobs import enable_resolution, prepare_next
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,11 @@ async def queue_initial_assessment(session: AsyncSession, run: AnalysisRun, payl
         job.update(status='failed', reason='configuration_required',
                    error='Set up automated checks in Connections, then check all rules. Extracted rules are saved.')
         return
+    try:
+        await enable_resolution(job, run.config)
+    except ValueError as exc:
+        job.update(status='failed', reason='configuration_required', error=str(exc))
+        return
     # Procrastinate uses the existing psycopg connection without committing it.
     sql_connection = await session.connection()
     raw_connection = await sql_connection.get_raw_connection()
@@ -41,8 +47,11 @@ async def queue_initial_assessment(session: AsyncSession, run: AnalysisRun, payl
 
 async def run_assessment(run_id: UUID, job_id: str):
     rule_id = None
+    source_cache = {}
     try:
         while True:
+            if await prepare_next(sessions, run_id, job_id, source_cache):
+                continue
             async with sessions.begin() as session:
                 run = await session.get(AnalysisRun, run_id, with_for_update=True)
                 job = (run.payload.get('assessment_job') or {}) if run else {}
@@ -68,7 +77,13 @@ async def run_assessment(run_id: UUID, job_id: str):
                 candidate = deepcopy(candidate)
                 fingerprint = assessment_fingerprint(candidate, related)
                 source_id = UUID(candidate.get('source_guide_id') or str(run.guide_id))
-                indices = {index for e in candidate['spec']['evidence']
+                if (candidate.get('resolution') or {}).get('revision') != candidate['revision']:
+                    candidate.pop('resolution', None)
+                resolution = candidate.get('resolution') or {}
+                references = [*candidate['spec']['evidence'],
+                    *(source for item in [*resolution.get('changes', []), *resolution.get('questions', [])]
+                      for source in item.get('sources', []))]
+                indices = {index for e in references
                            for index in (e['page'] - 2, e['page'] - 1, e['page']) if index >= 0}
                 source = (await session.execute(select(GuidePage.page_index, GuidePage.text).where(
                     GuidePage.guide_id == source_id, GuidePage.page_index.in_(indices)))).all()

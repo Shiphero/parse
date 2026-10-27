@@ -10,10 +10,11 @@ import RuleUsage from './RuleUsage';
 import { useRemote } from './api';
 import type { Candidate, RuleSpec, RuleTypeDefinition, CheckDefinition } from './api';
 import AssessmentDetails from './AssessmentDetails';
+import ResolutionDetails from './ResolutionDetails';
 import { reviewTasks } from './reviewReadiness';
 import type { ReviewSection } from './reviewReadiness';
 
-export const blankRule = (): RuleSpec => ({schema_version:'1.2',standard_check:null,rule_type:null,placements:[],operational_category:'unclassified',consumption_points:[],purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'unresolved',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
+export const blankRule = (): RuleSpec => ({schema_version:'1.2',execution_mode:'standard',standard_check:null,rule_type:null,placements:[],operational_category:'unclassified',consumption_points:[],purpose:'unclassified', title:'',instruction:'',subject:'carton',obligation:'required',verification:'unresolved',applicability_text:'',applicability:null,exceptions:[],assertion:null,evidence:[{page:1,quote:'',kind:'text',region:null}],unresolved_questions:[]});
 
 export function Evidence({guideId, spec, collapsibleImage=false}: {guideId:string;spec:RuleSpec;collapsibleImage?:boolean}) {
   const [chosen, setChosen] = useState(0);
@@ -99,6 +100,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
     if (spec.standard_check && spec.assertion) throw new Error('Standard checks use catalog parameters. Remove the custom assertion from Advanced JSON.');
     await onSave(spec,review?correction():note);} catch(e){setError((e as Error).message);} };
   return <div className={review?'guided-rule-review':''}>
+    {review&&candidate&&<ResolutionDetails candidate={candidate} dirty={dirty||advanced!==null} disabled={busy||!review.editable} names={{...operationalCategoryLabels,...Object.fromEntries(consumptionPointOptions),...Object.fromEntries([...(types.data||[]),...(checks.data||[])].map(entry=>[entry.id,entry.label]))}} onUse={value=>{setSpec(value);setNote('Applied source-backed proposed corrections.');}}/>}
     {review&&candidate&&<AssessmentDetails candidate={candidate} dirty={dirty||advanced!==null} goTo={goTo} onOpenRelated={review.onOpenRelated}/>}
     {review&&candidate&&<div className={`review-readiness ${tasks.length?'needs-input':'ready'}`}>
       <div><strong>{!review.editable?'Read-only review':candidate.status==='ignored'?'Ignored rule':tasks.length?`${tasks.length} ${tasks.length===1?'item':'items'} to complete before approval`:dirty?'Changes ready for review':candidate.status==='approved'?'Approved':'Ready for your approval'}</strong>
@@ -122,7 +124,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
           <label>Add workflow<select value="" onChange={e=>{if(e.target.value)set('consumption_points',[...(spec.consumption_points||[]),e.target.value as NonNullable<RuleSpec['consumption_points']>[number]]);}}><option value="">Choose a workflow…</option>{consumptionPointOptions.filter(([id])=>!spec.consumption_points?.includes(id as NonNullable<RuleSpec['consumption_points']>[number])).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
         </div>
       </>}
-      <div className="form-row"><label>Rule use<select disabled={spec.rule_type?.id==='general.guidance'} value={spec.purpose||'unclassified'} onChange={e=>setSpec(s=>({...s,purpose:e.target.value as RuleSpec['purpose'],...(s.schema_version==='1.2'&&!s.standard_check&&!s.rule_type&&e.target.value==='shipment_validation'?{verification:'unresolved',assertion:null}:{})}))}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
+      <div className="form-row"><label>Rule use<select disabled={spec.rule_type?.id==='general.guidance'} value={spec.purpose||'unclassified'} onChange={e=>setSpec(s=>({...s,purpose:e.target.value as RuleSpec['purpose'],...(e.target.value!=='shipment_validation'?{execution_mode:'standard' as const}:{}),...(s.schema_version==='1.2'&&!s.standard_check&&!s.rule_type&&e.target.value==='shipment_validation'?{verification:'unresolved',assertion:null}:{})}))}>{Object.entries(rulePurposeLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
       <label>Obligation<select value={spec.obligation} onChange={e=>set('obligation',e.target.value as RuleSpec['obligation'])}>{['required','prohibited','recommended','informational'].map(v=><option key={v}>{v}</option>)}</select></label></div>
       <p className="field-hint">Guidance appears in instructions; shipment rules can also be checked.</p>
     </div></details>

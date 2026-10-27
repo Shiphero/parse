@@ -130,6 +130,8 @@ def evaluate_rule(rule_id: str, rule: RuleSpec, snapshot: dict) -> dict[str, Any
                 why = 'An exception cannot be determined from the supplied facts.'
             elif rule.unresolved_questions:
                 why = 'Unresolved: ' + '; '.join(rule.unresolved_questions)
+            elif rule.execution_mode == 'reference_only':
+                why = 'Requirement recorded for reference; automatic verification is unavailable. No pass is inferred.'
             elif needs_check_mapping(rule):
                 why = 'Needs mapping to a standard verification check.'
             elif rule.standard_check is not None:

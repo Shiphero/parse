@@ -25,6 +25,8 @@ class DeliveredSubject(BaseModel):
 
 
 def scope(rule, facts):
+    if rule.execution_mode == 'reference_only':
+        return 'unknown', 'Reference requirement: applicability and compliance must not be inferred automatically.'
     applicable, reason = expression(rule.applicability, facts) if rule.applicability else (True, 'Unconditional rule.')
     if applicable is False:
         return 'not_applicable', 'Applicability condition is false.'
