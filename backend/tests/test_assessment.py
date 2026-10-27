@@ -1,0 +1,248 @@
+"""Assessment preview contracts use synthetic sources and mocked provider calls."""
+from copy import deepcopy
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
+
+from fastapi import HTTPException
+import httpx
+from routing_guides import assessment_provider as provider
+from routing_guides.analysis_provider import ProviderFailure
+from routing_guides.assessment import choose_sample, duplicate_index, related_rules
+from routing_guides.assessment_api import StartAssessment, prepare_job
+from routing_guides.workflow_api import RunPayload
+from test_delivery import mapped
+
+
+def candidate(**changes):
+    spec = mapped(placements=[{'workflow': 'mobile_packing', 'area': 'carton_selection', 'behavior': 'display'}]).model_dump(mode='json')
+    return {'id': str(uuid4()), 'revision': 1, 'status': 'pending', 'source_guide_id': str(uuid4()),
+            'review': None, 'evidence_issues': [], 'spec': spec, **changes}
+
+
+def response(related=(), duplicate_choice='distinct'):
+    payload = {'model': 'jev-test', 'usage': {'input_tokens': 100, 'output_tokens': 20},
+            'answers': {name: {'type': 'choice', 'choice': 'supported', 'confidence': 0.99,
+                              'probabilities': {'supported': 0.99, 'correction': 0.005, 'uncertain': 0.005}}
+                        for name in provider.DIMENSIONS}}
+    for rule in related:
+        payload['answers'][f'duplicate:{rule["id"]}'] = {
+            'type': 'choice', 'choice': duplicate_choice, 'confidence': 0.99,
+            'probabilities': {choice: 1.0 if choice == duplicate_choice else 0.0 for choice in provider.DUPLICATE_CHOICES}}
+    return payload
+
+
+class AssessmentTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.path = Path(self.temp.name) / 'response.json'
+        self.rule = candidate()
+        self.pages = {1: 'Cartons must not exceed 50 lb.', 2: 'Additional packaging guidance.'}
+        self.client = AsyncMock()
+        self.client.__aenter__.return_value = self.client
+        self.client.post.return_value = httpx.Response(200, json=response())
+        self.patches = [patch.object(provider.httpx, 'AsyncClient', return_value=self.client),
+                        patch.object(provider, 'connection', return_value={'key': 'private-test-key', 'model': 'jev-test'})]
+        for item in self.patches:
+            item.start()
+
+    def tearDown(self):
+        for item in reversed(self.patches):
+            item.stop()
+        self.temp.cleanup()
+
+    async def assess(self, related=None):
+        return await provider.assess(self.rule, related or [], self.pages, 'jev-test', self.path, 'job-1')
+
+    async def test_ready_preview_preserves_rule_and_reuses_source_aware_response(self):
+        before = deepcopy(self.rule)
+        first = await self.assess()
+        saved = self.path.read_bytes()
+        second = await self.assess()
+        self.assertEqual(first.outcome, 'ready')
+        self.assertEqual(second.dimensions, first.dimensions)
+        self.assertEqual(self.rule, before)
+        self.assertEqual(self.path.read_bytes(), saved)
+        self.client.post.assert_awaited_once()
+        request = self.client.post.call_args.kwargs['json']
+        self.assertEqual(request['state']['rule']['exceptions'], before['spec']['exceptions'])
+        self.assertEqual(request['state']['source_pages'][0]['text'], self.pages[1])
+        self.assertEqual(request['state']['source_pages'][1]['page'], 2)
+        self.assertNotIn('private-test-key', saved.decode())
+        self.assertEqual(first.usage, {'input_tokens': 100, 'output_tokens': 20})
+
+    async def test_high_confidence_cannot_override_source_or_duplicate_issues(self):
+        peer = candidate(spec=deepcopy(self.rule['spec']))
+        self.rule['spec']['evidence'][0]['quote'] = 'Invented source quotation'
+        self.client.post.return_value = httpx.Response(200, json=response([peer], 'duplicate'))
+        result = await self.assess([peer])
+        self.assertEqual(result.outcome, 'needs_correction')
+        self.assertIn('source_mismatch', [i.code for i in result.issues])
+        duplicate = next(i for i in result.issues if i.code == 'duplicate_duplicate')
+        self.assertEqual(duplicate.related_rule_ids, [peer['id']])
+        self.assertIn('PDF pages 1', duplicate.action)
+
+    def test_cross_title_candidate_search_finds_matching_instructions_and_numeric_conflicts(self):
+        match = candidate(spec=deepcopy(self.rule['spec']))
+        match['spec']['title'] = 'Maximum package weight'
+        conflict = candidate(spec=deepcopy(self.rule['spec']))
+        conflict['spec']['title'] = 'Maximum allowed carton mass'
+        conflict['spec']['instruction'] = 'Keep carton weight at or below 40 lb.'
+        unrelated = candidate(spec=deepcopy(self.rule['spec']))
+        unrelated['spec'].update(title='Electronic transmission timing', instruction='Send advance shipping notices before dispatch.')
+        ignored = candidate(status='ignored', spec=deepcopy(self.rule['spec']))
+        matches = related_rules(self.rule, duplicate_index([self.rule, match, conflict, unrelated, ignored]))
+        self.assertEqual({r['id'] for r in matches}, {match['id'], conflict['id']})
+
+    async def test_jev_distinguishes_duplicates_distinct_scope_conflicts_and_uncertainty(self):
+        peer = candidate(spec=deepcopy(self.rule['spec']))
+        peer['spec']['title'] = 'Maximum package weight'
+        original = deepcopy(peer)
+        for choice in provider.DUPLICATE_CHOICES:
+            with self.subTest(choice=choice):
+                self.path = Path(self.temp.name) / f'{choice}.json'
+                self.client.post.return_value = httpx.Response(200, json=response([peer], choice))
+                result = await self.assess([peer])
+                self.assertEqual(result.duplicates[0].choice, choice)
+                self.assertEqual(result.duplicates[0].rule_id, peer['id'])
+                self.assertEqual(result.duplicate_candidates, 1)
+                self.assertEqual(result.outcome, 'ready' if choice == 'distinct' else 'needs_review')
+                if choice != 'distinct':
+                    self.assertEqual(result.issues[-1].related_rule_ids, [peer['id']])
+                self.assertEqual(peer, original)
+                self.assertEqual(self.rule['status'], 'pending')
+        request = self.client.post.call_args.kwargs['json']
+        self.assertEqual(request['state']['similar_rule_candidates'][0]['spec']['exceptions'], peer['spec']['exceptions'])
+        self.assertIn('numeric thresholds', request['questions'][f'duplicate:{peer["id"]}']['instructions'])
+
+    async def test_missing_pair_answer_cannot_be_treated_as_distinct(self):
+        peer = candidate()
+        with self.assertRaises(ProviderFailure):
+            await self.assess([peer])
+        self.assertTrue(self.path.exists())
+
+    async def test_low_confidence_distinct_pair_still_needs_review(self):
+        peer = candidate()
+        payload = response([peer])
+        payload['answers'][f'duplicate:{peer["id"]}']['confidence'] = 0.6
+        self.client.post.return_value = httpx.Response(200, json=payload)
+        result = await self.assess([peer])
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertIn('could not confidently distinguish', result.issues[-1].action)
+
+    async def test_comparison_limit_is_visible_and_prevents_ready_recommendation(self):
+        peers = [candidate() for _ in range(provider.MAX_DUPLICATE_COMPARISONS + 1)]
+        self.client.post.return_value = httpx.Response(200, json=response(peers[:provider.MAX_DUPLICATE_COMPARISONS]))
+        result = await self.assess(peers)
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertEqual(result.duplicate_candidates, len(peers))
+        self.assertEqual(len(result.duplicates), provider.MAX_DUPLICATE_COMPARISONS)
+        issue = next(i for i in result.issues if i.code == 'duplicate_search_limit')
+        self.assertEqual(issue.related_rule_ids, [peers[-1]['id']])
+
+    async def test_manual_shipment_inspection_does_not_require_manual_definition_review(self):
+        self.rule['spec'] = mapped(title='Wrap pallets', instruction='Wrap pallets securely.',
+            subject='pallet', rule_type={'id': 'pallet.wrapping', 'version': 1},
+            standard_check=None, verification='human', consumption_points=['pallet_building'],
+            placements=[{'workflow': 'pallet_building', 'area': 'wrapping', 'behavior': 'display'}],
+            evidence=[{'page': 1, 'quote': 'Wrap pallets securely.'}]).model_dump(mode='json')
+        self.pages = {1: 'Wrap pallets securely.'}
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'ready')
+        self.assertEqual(self.rule['spec']['verification'], 'human')
+
+    async def test_uncertainty_and_low_confidence_route_to_review_with_actions(self):
+        payload = response()
+        payload['answers']['exceptions'].update(choice='uncertain',
+            probabilities={'supported': 0.01, 'correction': 0.01, 'uncertain': 0.98})
+        payload['answers']['classification']['confidence'] = 0.5
+        self.client.post.return_value = httpx.Response(200, json=payload)
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertEqual({i.code for i in result.issues}, {'exceptions', 'classification'})
+        self.assertTrue(all(i.action and i.section for i in result.issues))
+
+    async def test_visual_and_missing_text_are_never_ready(self):
+        self.rule['spec']['evidence'][0]['kind'] = 'visual'
+        self.pages = {1: None}
+        result = await self.assess()
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertIsNone(result.confidence)
+        self.assertFalse(result.dimensions)
+        self.client.post.assert_not_awaited()
+
+    async def test_context_limit_does_not_silently_truncate_or_call_provider(self):
+        with patch.object(provider, 'MAX_CONTEXT_CHARACTERS', 1):
+            result = await self.assess()
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertIn('context_limit', [i.code for i in result.issues])
+        self.client.post.assert_not_awaited()
+
+    async def test_invalid_answers_are_retained_and_not_repaid_on_resume(self):
+        payload = response()
+        del payload['answers']['exceptions']
+        self.client.post.return_value = httpx.Response(200, json=payload)
+        for _ in range(2):
+            with self.assertRaises(ProviderFailure):
+                await self.assess()
+        self.client.post.assert_awaited_once()
+        self.assertEqual(json.loads(self.path.read_text())['raw'], payload)
+
+    def test_invalid_and_inconsistent_probabilities_fail_closed(self):
+        for changes in ({'confidence': float('nan')}, {'confidence': True},
+                        {'choice': 'correction'}, {'choice': []}, {'probabilities': {'supported': 1}}):
+            payload = response()
+            payload['answers']['classification'].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ProviderFailure):
+                provider.parse_dimensions(payload)
+
+    async def test_provider_access_error_is_safe(self):
+        self.client.post.return_value = httpx.Response(403, text='private-test-key source text')
+        with self.assertRaises(ProviderFailure) as error:
+            await self.assess()
+        self.assertNotIn('private-test-key', str(error.exception))
+        self.assertFalse(self.path.exists())
+
+    async def test_stale_results_after_edits_decisions_or_duplicate_changes(self):
+        result = await self.assess()
+        self.rule['assessment'] = result.model_dump(mode='json')
+        self.assertFalse(RunPayload(rules=[self.rule]).rules[0].assessment_stale)
+        for change in ({'revision': 2}, {'status': 'approved'}):
+            changed = {**self.rule, **change}
+            self.assertTrue(RunPayload(rules=[changed]).rules[0].assessment_stale)
+        peer = candidate(spec=deepcopy(self.rule['spec']))
+        self.assertTrue(RunPayload(rules=[self.rule, peer]).rules[0].assessment_stale)
+        changed = deepcopy(self.rule)
+        changed['spec']['instruction'] += ' Edited.'
+        self.assertTrue(RunPayload(rules=[changed]).rules[0].assessment_stale)
+        self.assertEqual(self.rule['status'], 'pending')
+
+    def test_preview_selection_and_resume_never_select_decided_or_foreign_rules(self):
+        approved = candidate(status='approved')
+        data = {'rules': [self.rule, approved]}
+        body = StartAssessment(version=1, actor='Reviewer', scope='all')
+        job = prepare_job(data, body, 'jev-test')
+        self.assertEqual(job['pending'], [{'id': self.rule['id'], 'revision': 1}])
+        with self.assertRaises(HTTPException):
+            prepare_job(data, StartAssessment(version=1, actor='Reviewer', scope='selected', rule_ids=[uuid4()]), 'jev-test')
+        data['assessment_job'] = {**job, 'status': 'failed'}
+        resumed = prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True), 'jev-test')
+        self.assertEqual(resumed['id'], job['id'])
+        with self.assertRaises(HTTPException):
+            prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True), 'other-model')
+        data['classification_job'] = {'status': 'running'}
+        with self.assertRaises(HTTPException):
+            prepare_job(data, body, 'jev-test')
+
+    def test_sample_includes_different_review_needs_without_selecting_approved_rules(self):
+        rules = [candidate() for _ in range(30)]
+        flagged = candidate()
+        flagged['spec']['unresolved_questions'] = ['Confirm destination scope.']
+        rules += [flagged, candidate(status='approved')]
+        selected = choose_sample(rules, 3)
+        self.assertEqual(len(selected), 3)
+        self.assertIn(flagged['id'], [r['id'] for r in selected])
+        self.assertTrue(all(r['status'] == 'pending' for r in selected))

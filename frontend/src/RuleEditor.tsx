@@ -9,6 +9,7 @@ import { resolveCheckStatus, rulePurposeLabels, verificationSummary } from './ru
 import RuleUsage from './RuleUsage';
 import { useRemote } from './api';
 import type { Candidate, RuleSpec, RuleTypeDefinition, CheckDefinition } from './api';
+import AssessmentDetails from './AssessmentDetails';
 import { reviewTasks } from './reviewReadiness';
 import type { ReviewSection } from './reviewReadiness';
 
@@ -24,7 +25,7 @@ type ReviewControls = {
   actor:string; onActorChange:(value:string)=>void; editable:boolean; error:string;
   onApprove:(spec:RuleSpec,note:string,changed:boolean)=>Promise<void>;
   onDecision:(kind:'ignore'|'restore'|'reject',note:string)=>Promise<void>;
-  onDirtyChange:(dirty:boolean)=>void; onNext?:()=>void; onVariant?:()=>void;
+  onDirtyChange:(dirty:boolean)=>void; onOpenRelated?:(id:string)=>void; onNext?:()=>void; onVariant?:()=>void;
 };
 
 export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,busy,review}: {candidate?:Candidate;initial?:RuleSpec;guideId:string;onSave:(spec:RuleSpec,note:string)=>Promise<void>;onCancel:()=>void;busy:boolean;review?:ReviewControls}) {
@@ -98,6 +99,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
     if (spec.standard_check && spec.assertion) throw new Error('Standard checks use catalog parameters. Remove the custom assertion from Advanced JSON.');
     await onSave(spec,review?correction():note);} catch(e){setError((e as Error).message);} };
   return <div className={review?'guided-rule-review':''}>
+    {review&&candidate&&<AssessmentDetails candidate={candidate} dirty={dirty||advanced!==null} goTo={goTo} onOpenRelated={review.onOpenRelated}/>}
     {review&&candidate&&<div className={`review-readiness ${tasks.length?'needs-input':'ready'}`}>
       <div><strong>{!review.editable?'Read-only review':candidate.status==='ignored'?'Ignored rule':tasks.length?`${tasks.length} ${tasks.length===1?'item':'items'} to complete before approval`:dirty?'Changes ready for review':candidate.status==='approved'?'Approved':'Ready for your approval'}</strong>
         <span>{candidate.status==='ignored'?'Excluded from publication. Restore it to continue.':tasks.length?'Complete the fields below. Select an item to go straight to it.':'Compare the instruction with its source, then approve. No decision note is required.'}</span></div>

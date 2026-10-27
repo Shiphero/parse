@@ -28,6 +28,7 @@ from routing_guides.classification_mapping import needs_auto_classification
 from routing_guides.rule_catalog import RULE_TYPES, RuleTypeDefinition, Placement, delivery_label
 from routing_guides.delivery import DeliveryRequest, DeliveredSubject, subjects_for, selected_placements, validate_selection
 from routing_guides.tasks import analyze_guide, classify_guide_rules, dsn
+from routing_guides.assessment import AssessmentResult, assessment_fingerprint, related_rules, duplicate_index, PROMPT_VERSION as ASSESSMENT_PROMPT_VERSION
 
 router = APIRouter(prefix='/api', tags=['Rules and scenarios'])
 
@@ -51,6 +52,8 @@ class Candidate(BaseModel):
     review: dict[str, Any] | None = None
     evidence_issues: list[str] = Field(default_factory=list)
     classification: dict[str, Any] | None = None
+    assessment: AssessmentResult | None = None
+    assessment_stale: bool = False
     carried_from_release_id: str | None = None
     carried_from_rule_id: str | None = None
 
@@ -74,6 +77,7 @@ class RunPayload(BaseModel):
     batches: list[dict[str, Any]] = []
     pending_batches: list[list[int]] = []
     classification_job: dict[str, Any] | None = None
+    assessment_job: dict[str, Any] | None = None
 
 
     @model_validator(mode='after')
@@ -81,6 +85,12 @@ class RunPayload(BaseModel):
         duplicates = duplicate_titles([{'spec': {'title': r.spec.title}, 'status': r.status} for r in self.rules])
         for rule in self.rules:
             rule._duplicate = rule.status not in {'rejected', 'ignored'} and rule.spec.title.strip().casefold() in duplicates
+        records = [r.model_dump(mode='json', exclude={'assessment', 'assessment_stale', 'check_status', 'individual_review_reasons'}) for r in self.rules]
+        groups = duplicate_index(records)
+        for rule, record in zip(self.rules, records):
+            rule.assessment_stale = bool(rule.assessment and (
+                rule.assessment.prompt_version != ASSESSMENT_PROMPT_VERSION or
+                rule.assessment.fingerprint != assessment_fingerprint(record, related_rules(record, groups))))
         return self
 
 
@@ -469,6 +479,8 @@ async def delete_version(run_id: UUID, body: VersionedAction, request: Request):
             raise HTTPException(409, 'Stop the analysis before deleting this version.')
         if (run.payload.get('classification_job') or {}).get('status') in {'queued', 'running'}:
             raise HTTPException(409, 'Stop classification before deleting this version.')
+        if (run.payload.get('assessment_job') or {}).get('status') in {'queued', 'running'}:
+            raise HTTPException(409, 'Stop assessment before deleting this version.')
         release = await session.scalar(select(RuleRelease).where(RuleRelease.run_id == run_id))
         if release:
             head = await required(session, ReleaseHead, release.retailer_id, True)
@@ -590,6 +602,8 @@ async def auto_classify(run_id: UUID, body: StartClassification):
         status, version, data = row
         if status != 'complete' or version != body.version:
             raise HTTPException(409, 'Refresh the completed draft before classifying.')
+        if (data.get('assessment_job') or {}).get('status') in {'queued', 'running'}:
+            raise HTTPException(409, 'Wait for assessment to finish or stop it before classifying.')
         job = data.get('classification_job') or {}
         if job.get('status') in {'queued', 'running'}:
             raise HTTPException(409, 'Automatic classification is already running.')
@@ -827,6 +841,8 @@ def assemble_release(run, base, body):
     rules = run.payload['rules']
     if (run.payload.get('classification_job') or {}).get('status') in {'queued', 'running'}:
         raise HTTPException(409, 'Wait for automatic classification to finish or stop it before publishing.')
+    if (run.payload.get('assessment_job') or {}).get('status') in {'queued', 'running'}:
+        raise HTTPException(409, 'Wait for assessment to finish or stop it before publishing.')
     if any(r['status'] == 'pending' for r in rules):
         raise HTTPException(409, 'Review every candidate before publishing.')
     approved = {r['id']: r for r in rules if r['status'] == 'approved'}

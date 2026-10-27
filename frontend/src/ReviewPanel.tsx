@@ -3,6 +3,9 @@ import { Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, EyeOff, Plus,
 import { jsonRequest, useRemote } from './api';
 import type { Candidate, Comparison, Connection, RuleSpec, Run, RuleTypeDefinition } from './api';
 import RuleEditor from './RuleEditor';
+import AssessmentPanel from './AssessmentPanel';
+import { assessmentLabels, assessmentState } from './assessmentReadiness';
+import type { AssessmentFilter } from './assessmentReadiness';
 import CategorizeRulesDialog from './CategorizeRulesDialog';
 import { activeWorkflows, operationalCategoryLabels, consumptionPointOptions, needsClassification } from './ruleTaxonomy';
 import { rulePurposeLabels, verificationSummary } from './rulePurpose';
@@ -30,6 +33,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const [checkMode, setCheckMode] = useState('all');
   const [type, setType] = useState<RuleSpec['subject'] | 'all'>('all');
   const [search, setSearch] = useState('');
+  const [assessmentFilter, setAssessmentFilter] = useState<AssessmentFilter>('all');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
   const tableHeading = useRef<HTMLTableElement>(null);
@@ -79,11 +83,12 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   useEffect(() => { onEditingChange?.(editing || adding); return () => onEditingChange?.(false); }, [editing, adding, onEditingChange]);
   const resetView = () => { focusAfterNavigation.current=null; setPage(0); setSelected(''); setChecked({}); setBulkRejecting(false); setRejectionReason(''); setError(''); };
   const resetFilters = () => {
-    resetView(); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
+    resetView(); setAssessmentFilter('all'); setSearch(''); setOperationalCategory('all'); setConsumptionPoint('all');
     setFilter(run.status === 'published' || run.config.source_release_id ? 'all' : 'pending'); setType('all'); setPurpose('all'); setCheckMode('all'); setStandardType('all');
   };
   const query = search.trim().toLowerCase();
   const filtered = run.payload.rules.filter(r =>
+    (assessmentFilter === 'all' || assessmentState(r) === assessmentFilter) &&
     (standardType==='all'||(standardType==='unmapped'?!r.spec.rule_type:r.spec.rule_type?.id===standardType)) &&
     (operationalCategory === 'all' || (operationalCategory === 'unclassified' ? needsClassification(r.spec) : r.spec.operational_category === operationalCategory)) &&
     (consumptionPoint === 'all' || (consumptionPoint === 'unassigned' ? !activeWorkflows(r.spec).length : activeWorkflows(r.spec).some(p => p === consumptionPoint))) &&
@@ -173,6 +178,8 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   return <div className="review-panel review-workspace">
     <div className="section-heading"><div><h2>Rules</h2><p>{pending} pending · {run.payload.rules.length - pending} decided · {run.payload.rules.length} total</p></div>
       <div className="review-heading-actions"><button className="secondary" aria-pressed={detailedColumns} onClick={() => setDetailedColumns(v => !v)}>{detailedColumns ? 'Fewer columns' : 'More columns'}</button>{editable && <button className="secondary" disabled={busy || editing || adding} onClick={() => { setInitialRule(undefined); setAdding(true); }}><Plus size={16}/> Add rule</button>}</div></div>
+    {(editable || run.payload.assessment_job) && <AssessmentPanel run={run} actor={actor} connections={connections} selectedIds={selectedRules.map(r => r.id)} locked={busy || editing || adding} reload={reload}
+      filter={assessmentFilter} onFilter={value => {resetFilters(); setFilter('pending'); setAssessmentFilter(value);}}/>}
     {editable && !!run.config.source_release_id && <p className="notice">Draft of {String(run.config.source_release_name)}.</p>}
     {message && <p className="notice" role="status">{message}</p>}
     {error && !current && !selectedCount && <div className="error" role="alert">{error}</div>}
@@ -240,7 +247,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           return <Fragment key={r.id}>
             <tr ref={expanded?activeRow:undefined} className={`review-table-row ${expanded ? 'expanded' : ''} ${checked[r.id] === r.revision ? 'checked' : ''}`}>
               <td>{editable && r.status === 'pending' && <input type="checkbox" aria-label={`Select ${r.spec.title}`} disabled={busy || editing} checked={checked[r.id] === r.revision} onChange={e => setChecked(previous => { const next = { ...previous }; if (e.target.checked) next[r.id] = r.revision; else delete next[r.id]; return next; })}/>}</td>
-              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span></th>
+              <th scope="row"><button className="review-table-title" ref={expanded ? activeHeading : undefined} title={r.spec.title} aria-expanded={expanded} aria-controls={expanded ? `rule-detail-${r.id}` : undefined} disabled={busy || editing} onClick={() => openRule(expanded ? '' : r.id)}>{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}<span>{r.spec.title}</span></button><span className={`review-rule-type ${r.spec.rule_type?'':'unmapped'}`}>{standardTypeLabel}</span>{r.assessment && <span className={`assessment-badge ${assessmentState(r)}`}>{assessmentLabels[assessmentState(r)]}</span>}</th>
               <td><VerificationBadge spec={r.spec} status={r.check_status} compact/></td>
               <td><WorkflowUsage spec={r.spec}/></td>
               {detailedColumns && <><td><span className="table-cell-text" title={operationalCategoryLabels[r.spec.operational_category || 'unclassified']}>{operationalCategoryLabels[r.spec.operational_category || 'unclassified']}</span></td>
@@ -251,6 +258,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
             {expanded && <tr className="review-detail-row"><td colSpan={detailedColumns ? 8 : 6}><div className="review-inline-detail" id={`rule-detail-${r.id}`}>
               <RuleEditor key={`${r.id}:${r.revision}`} candidate={r} guideId={r.source_guide_id} onSave={save} onCancel={()=>openRule('')} busy={busy}
                 review={{actor,onActorChange,editable,error,onDirtyChange:setEditing,
+                  onOpenRelated:id=>{resetFilters();setFilter('all');setSelected(id);focusAfterNavigation.current={afterVersion:run.version};},
                   onDecision:(kind,note)=>decision(r,kind,note),
                   onNext:next?()=>openRule(next.id,true):undefined,
                   onVariant:r.source_guide_id===run.guide_id?()=>{setInitialRule({...structuredClone(r.spec),title:`${r.spec.title.slice(0,230)} — variant`});setAdding(true);setSelected('');}:undefined,

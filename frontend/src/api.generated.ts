@@ -782,6 +782,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analysis/{run_id}/assess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Assessment */
+        post: operations["start_assessment_api_analysis__run_id__assess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analysis/{run_id}/cancel-assessment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Assessment */
+        post: operations["cancel_assessment_api_analysis__run_id__cancel_assessment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health/live": {
         parameters: {
             query?: never;
@@ -921,6 +955,94 @@ export interface components {
              */
             reconcile_by: "po_line" | "carton";
         };
+        /** AssessmentDimension */
+        AssessmentDimension: {
+            /** Name */
+            name: string;
+            /**
+             * Choice
+             * @enum {string}
+             */
+            choice: "supported" | "correction" | "uncertain";
+            /** Confidence */
+            confidence: number;
+            /** Probabilities */
+            probabilities: {
+                [key: string]: number;
+            };
+        };
+        /** AssessmentIssue */
+        AssessmentIssue: {
+            /** Code */
+            code: string;
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "instruction" | "classification" | "conditions" | "verification" | "evidence" | "advanced";
+            /** Action */
+            action: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "correction" | "manual";
+            /** Related Rule Ids */
+            related_rule_ids?: string[];
+        };
+        /** AssessmentResult */
+        AssessmentResult: {
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "ready" | "needs_correction" | "needs_review";
+            /** Issues */
+            issues: components["schemas"]["AssessmentIssue"][];
+            /** Dimensions */
+            dimensions: components["schemas"]["AssessmentDimension"][];
+            /** Duplicates */
+            duplicates?: components["schemas"]["DuplicateAssessment"][];
+            /**
+             * Duplicate Candidates
+             * @default 0
+             */
+            duplicate_candidates: number;
+            /** Confidence */
+            confidence?: number | null;
+            /**
+             * Threshold
+             * @default 0.95
+             */
+            threshold: number;
+            /** Fingerprint */
+            fingerprint: string;
+            /** Revision */
+            revision: number;
+            /** Job Id */
+            job_id: string;
+            /** Assessed At */
+            assessed_at: string;
+            /**
+             * Provider
+             * @default jev
+             * @constant
+             */
+            provider: "jev";
+            /** Model */
+            model: string;
+            /**
+             * Prompt Version
+             * @default rule-review-assessment-1.1
+             */
+            prompt_version: string;
+            /** Source Pages */
+            source_pages: number[];
+            /** Usage */
+            usage?: {
+                [key: string]: unknown;
+            };
+        };
         /** Body_upload_guide_api_guides_post */
         Body_upload_guide_api_guides_post: {
             /** File */
@@ -1005,6 +1127,12 @@ export interface components {
             classification?: {
                 [key: string]: unknown;
             } | null;
+            assessment?: components["schemas"]["AssessmentResult"] | null;
+            /**
+             * Assessment Stale
+             * @default false
+             */
+            assessment_stale: boolean;
             /** Carried From Release Id */
             carried_from_release_id?: string | null;
             /** Carried From Rule Id */
@@ -1316,6 +1444,26 @@ export interface components {
             request_id: string;
             /** Actor */
             actor: string;
+        };
+        /** DuplicateAssessment */
+        DuplicateAssessment: {
+            /** Rule Id */
+            rule_id: string;
+            /** Title */
+            title: string;
+            /** Source Pages */
+            source_pages: number[];
+            /**
+             * Choice
+             * @enum {string}
+             */
+            choice: "duplicate" | "distinct" | "conflict" | "uncertain";
+            /** Confidence */
+            confidence: number;
+            /** Probabilities */
+            probabilities: {
+                [key: string]: number;
+            };
         };
         /** EvaluationItem */
         EvaluationItem: {
@@ -2121,6 +2269,10 @@ export interface components {
             classification_job?: {
                 [key: string]: unknown;
             } | null;
+            /** Assessment Job */
+            assessment_job?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** RunView */
         RunView: {
@@ -2236,6 +2388,41 @@ export interface components {
              * Format: uuid
              */
             request_id: string;
+        };
+        /** StartAssessment */
+        StartAssessment: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /**
+             * Scope
+             * @default sample
+             * @enum {string}
+             */
+            scope: "sample" | "all" | "selected";
+            /**
+             * Sample Size
+             * @default 25
+             */
+            sample_size: number;
+            /** Rule Ids */
+            rule_ids?: string[];
+            /**
+             * Resume
+             * @default false
+             */
+            resume: boolean;
         };
         /** StartClassification */
         StartClassification: {
@@ -4026,6 +4213,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvaluationView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_assessment_api_analysis__run_id__assess_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartAssessment"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_assessment_api_analysis__run_id__cancel_assessment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"];
                 };
             };
             /** @description Validation Error */

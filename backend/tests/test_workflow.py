@@ -537,6 +537,90 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(saved.payload['warnings'])
             self.assertTrue(individual_review_reasons(RuleSpec.model_validate(candidate['spec'])))
 
+    async def test_assessment_checkpoints_resume_without_changing_rules_or_approvals(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import AssessmentResult, assessment_fingerprint
+        from test_assessment import candidate
+        rules = [candidate(source_guide_id=str(self.gid)), candidate(source_guide_id=str(self.gid))]
+        rules[1]['spec']['title'] = 'Second requirement'
+        job_id = str(uuid4())
+        job = {'id': job_id, 'status': 'queued', 'model': 'jev-test', 'actor': 'Reviewer',
+               'pending': [{'id': r['id'], 'revision': 1} for r in rules], 'total': 2,
+               'processed': 0, 'assessed': 0, 'skipped': 0, 'error': None}
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
+        calls = []
+        fail = True
+        async def assess(current, related, pages, model, path, job_id):
+            calls.append(current['id'])
+            self.assertIn('50 lb', pages[1])
+            if current['id'] == rules[1]['id'] and fail:
+                raise ProviderFailure('Jev temporarily unavailable.')
+            return AssessmentResult(outcome='needs_review', issues=[], dimensions=[],
+                fingerprint=assessment_fingerprint(current, related), revision=current['revision'],
+                job_id=job_id, assessed_at='2026-10-27T12:00:00+00:00', model=model, source_pages=[1])
+        with patch.object(assessment_jobs, 'sessions', self.sessions), patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), patch.object(assessment_jobs, 'assess', side_effect=assess):
+            with self.assertRaises(RuntimeError):
+                await assessment_jobs.run_assessment(self.rid, job_id)
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                self.assertEqual(run.status, 'complete')
+                self.assertEqual(run.payload['assessment_job']['processed'], 1)
+                self.assertEqual(run.payload['assessment_job']['status'], 'failed')
+                self.assertIn('assessment', run.payload['rules'][0])
+                self.assertNotIn('assessment', run.payload['rules'][1])
+                payload = deepcopy(run.payload)
+                payload['assessment_job']['status'] = 'queued'
+                run.payload = payload
+            fail = False
+            await assessment_jobs.run_assessment(self.rid, job_id)
+        self.assertEqual(calls, [rules[0]['id'], rules[1]['id'], rules[1]['id']])
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['status'], 'complete')
+            self.assertEqual(run.payload['assessment_job']['assessed'], 2)
+            for original, saved in zip(rules, run.payload['rules']):
+                self.assertEqual({k: v for k, v in saved.items() if k != 'assessment'}, original)
+            self.assertFalse(any(r.assessment_stale for r in workflow_api.RunView.model_validate(run).payload.rules))
+
+    async def test_assessment_discards_results_after_edits_or_cancellation(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import AssessmentResult, assessment_fingerprint
+        from test_assessment import candidate
+        for cancel in (False, True):
+            with self.subTest(cancel=cancel):
+                original = candidate(source_guide_id=str(self.gid))
+                job_id = str(uuid4())
+                async with self.sessions.begin() as session:
+                    run = await session.get(AnalysisRun, self.rid)
+                    run.payload = {**run.payload, 'rules': [original], 'assessment_job': {
+                        'id': job_id, 'status': 'queued', 'model': 'jev-test', 'actor': 'Reviewer',
+                        'pending': [{'id': original['id'], 'revision': 1}], 'total': 1,
+                        'processed': 0, 'assessed': 0, 'skipped': 0}}
+                async def assess(current, related, pages, model, path, job_id):
+                    async with self.sessions.begin() as session:
+                        run = await session.get(AnalysisRun, self.rid)
+                        payload = deepcopy(run.payload)
+                        if cancel:
+                            payload['assessment_job']['status'] = 'cancelled'
+                        else:
+                            payload['rules'][0]['revision'] = 2
+                            payload['rules'][0]['spec']['instruction'] = 'Human correction'
+                        run.payload = payload
+                    return AssessmentResult(outcome='ready', issues=[], dimensions=[],
+                        fingerprint=assessment_fingerprint(current, related), revision=1,
+                        job_id=job_id, assessed_at='2026-10-27T12:00:00+00:00', model=model, source_pages=[1])
+                with patch.object(assessment_jobs, 'sessions', self.sessions), patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), patch.object(assessment_jobs, 'assess', side_effect=assess):
+                    await assessment_jobs.run_assessment(self.rid, job_id)
+                async with self.sessions() as session:
+                    run = await session.get(AnalysisRun, self.rid)
+                    self.assertNotIn('assessment', run.payload['rules'][0])
+                    self.assertEqual(run.payload['rules'][0]['status'], 'pending')
+                    self.assertEqual(run.payload['assessment_job']['status'], 'cancelled' if cancel else 'complete')
+                    if not cancel:
+                        self.assertEqual(run.payload['assessment_job']['skipped'], 1)
+
     async def test_missing_coverage_is_not_completed(self):
         async with self.sessions.begin() as s:
             run=await s.get(AnalysisRun,self.rid);run.status='queued';run.config={'provider':'anthropic','model':'test'}
