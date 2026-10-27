@@ -1,5 +1,6 @@
 """Resumable full-page extraction. Completed batches and decisions survive retries."""
 import asyncio
+import logging
 import re
 import unicodedata
 from copy import deepcopy
@@ -12,6 +13,11 @@ from routing_guides.models import AnalysisRun, GuidePage
 from routing_guides.storage import guide_directory
 
 ANALYSIS_CONCURRENCY = 3
+logger = logging.getLogger(__name__)
+
+
+class AnalysisFailed(Exception):
+    """Report a persisted analysis failure to the queue without leaking source data."""
 
 
 def normalized_excerpt(value: str | None) -> str:
@@ -80,7 +86,7 @@ async def run_analysis(run_id: UUID):
             extraction = output.extraction
             numbers = [p.page for p in extraction.coverage]
             if sorted(numbers) != sorted(batch):
-                raise ProviderFailure('Model coverage did not match every requested page. Retry this batch.')
+                raise ProviderFailure('Model coverage did not match every requested page. The saved response needs investigation; resuming alone will reuse it. Completed batches are preserved.')
             candidates = []
             for rule in extraction.rules:
                 issues = evidence_issues(rule, pages)
@@ -122,6 +128,7 @@ async def run_analysis(run_id: UUID):
         return True
 
     running: dict[asyncio.Task, list[int]] = {}
+    failed_batch: list[int] | None = None
     try:
         async with sessions() as session:
             source = (await session.scalars(select(GuidePage).where(GuidePage.guide_id == guide_id).order_by(GuidePage.page_index))).all()
@@ -155,17 +162,32 @@ async def run_analysis(run_id: UUID):
             # After a failure or cancellation, in-flight batches still finish so paid results are saved.
             done, _ = await asyncio.wait(running, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
-                del running[task]
+                batch = running.pop(task)
                 try:
                     if not task.result():
                         stopped = True
                 except Exception as exc:
-                    failure = failure or exc
+                    # Do not log exception bodies, provider output, or document text.
+                    logger.error('Analysis batch failed: run_id=%s guide_id=%s pages=%s error_type=%s',
+                                 run_id, guide_id, batch, type(exc).__name__)
+                    if failure is None:
+                        failure, failed_batch = exc, batch
     except Exception as exc:
         for task in running:
             task.cancel()
+        if running:
+            await asyncio.gather(*running, return_exceptions=True)
         async with sessions.begin() as session:
             run = await session.get(AnalysisRun, run_id, with_for_update=True)
-            if run.status not in {'cancelled', 'deleted'}:
-                run.status = 'failed'
-                run.error = str(exc) if isinstance(exc, (ProviderFailure, ValueError)) else 'Analysis stopped unexpectedly. Completed batches are saved; retry to resume.'
+            if run.status in {'cancelled', 'deleted'}:
+                return
+            run.status = 'failed'
+            detail = str(exc) if isinstance(exc, ProviderFailure) else 'Analysis stopped unexpectedly. Completed batches are saved; investigate the failure before resuming.'
+            prefix = f'PDF pages {", ".join(map(str, failed_batch))}: ' if failed_batch else ''
+            run.error = prefix + detail
+            run.version += 1
+        logger.error('Analysis stopped: run_id=%s guide_id=%s pages=%s error_type=%s',
+                     run_id, guide_id, failed_batch, type(exc).__name__)
+        # The application failure is durable before the queue marks this job failed.
+        # Do not attach the original exception, which may contain sensitive inputs.
+        raise AnalysisFailed(f'Analysis {run_id} stopped. See the saved run error and batch failure log.') from None

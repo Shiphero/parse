@@ -109,6 +109,9 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
             return parsed_response(saved)
         except ProviderFailure:
             raise
+        except ValidationError as exc:
+            failure = provider_failure(exc)
+            raise ProviderFailure(str(failure) + ' The saved response needs a parser correction; resuming alone will reuse the same response.') from None
         except Exception as exc:
             raise provider_failure(exc) from None
     def retain_and_parse(raw, actual_model, usage):

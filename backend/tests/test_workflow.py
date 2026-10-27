@@ -1,4 +1,5 @@
 """Integration checks use a rollback-only transaction, never the user's guide records."""
+import asyncio
 import unittest
 from copy import deepcopy
 from datetime import date
@@ -371,10 +372,12 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             run.payload={**run.payload,'coverage':[],'pending_batches':[[1]]}
         output=ProviderOutput(Extraction(rules=[rule()],coverage=[{'page':1,'outcome':'rules_found','note':'Text rule'}],warnings=[]),'returned-model',{'input_tokens':100})
         with patch.object(analysis_jobs,'analyze',AsyncMock(side_effect=ProviderFailure('Provider unavailable'))):
-            await analysis_jobs.run_analysis(self.rid)
+            with self.assertRaises(analysis_jobs.AnalysisFailed):
+                await analysis_jobs.run_analysis(self.rid)
         async with self.sessions() as s:
             run=await s.get(AnalysisRun,self.rid)
             self.assertEqual(run.status,'failed');self.assertEqual(run.payload['pending_batches'],[[1]])
+            self.assertIn('PDF pages 1:', run.error)
         mocked=AsyncMock(return_value=output)
         with patch.object(analysis_jobs,'analyze',mocked):
             await analysis_jobs.run_analysis(self.rid)
@@ -461,12 +464,86 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual([c['page'] for c in saved.payload['coverage']], [1, 2, 3, 4])
             self.assertEqual([r['spec']['title'] for r in saved.payload['rules']], [f'Page {n} rule' for n in (1, 2, 3, 4)])
 
+    async def test_failed_batch_preserves_inflight_work_and_logs_without_source_values(self):
+        async with self.sessions.begin() as session:
+            guide = await session.get(Guide, self.gid)
+            guide.page_count = 3
+            for index in (1, 2):
+                session.add(GuidePage(guide_id=self.gid, page_index=index, text='Maximum weight is 50 lb.',
+                                      text_status='extracted', image_status='ready'))
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'queued'
+            run.config = {'provider': 'anthropic', 'model': 'test'}
+            run.payload = {**run.payload, 'coverage': [], 'pending_batches': [[1], [2], [3]]}
+        second_started = asyncio.Event()
+        failure_recorded = asyncio.Event()
+        log_error = analysis_jobs.logger.error
+        def record_failure(*args, **kwargs):
+            log_error(*args, **kwargs)
+            failure_recorded.set()
+        async def provider(_provider, _model, requested, *args, **kwargs):
+            number = requested[0]['page']
+            if number == 1:
+                await second_started.wait()
+                raise ValueError('private document text and secret-key must not reach logs')
+            self.assertEqual(number, 2)
+            second_started.set()
+            await failure_recorded.wait()
+            return ProviderOutput(Extraction(rules=[rule(evidence=[{'page': 2, 'quote': '50 lb'}])],
+                coverage=[{'page': 2, 'outcome': 'rules_found', 'note': 'Found'}], warnings=[]), 'test', {})
+        with patch.object(analysis_jobs, 'ANALYSIS_CONCURRENCY', 2), patch.object(analysis_jobs, 'analyze', side_effect=provider), patch.object(analysis_jobs.logger, 'error', side_effect=record_failure):
+            with self.assertLogs('routing_guides.analysis_jobs', level='ERROR') as logs:
+                with self.assertRaises(analysis_jobs.AnalysisFailed) as failure:
+                    await analysis_jobs.run_analysis(self.rid)
+        messages = ' '.join(logs.output)
+        self.assertIn(str(self.rid), messages)
+        self.assertIn('pages=[1]', messages)
+        self.assertIn('error_type=ValueError', messages)
+        self.assertNotIn('secret-key', messages + str(failure.exception))
+        self.assertTrue(failure.exception.__suppress_context__)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.status, 'failed')
+            self.assertEqual(saved.payload['pending_batches'], [[1], [3]])
+            self.assertEqual([c['page'] for c in saved.payload['coverage']], [2])
+            self.assertEqual(len(saved.payload['rules']), 1)
+            self.assertIn('PDF pages 1:', saved.error)
+            self.assertNotIn('secret-key', saved.error)
+
+    async def test_recovered_workflow_rule_is_saved_and_flagged_for_review(self):
+        from test_delivery import mapped
+        from routing_guides.extraction_results import parse_extraction
+        from routing_guides.review import individual_review_reasons
+        from routing_guides.rules import RuleSpec
+        raw = dict(rules=[mapped(placements=[{'workflow': 'mobile_packing', 'area': 'carton_selection',
+                                            'behavior': 'display'}]).model_dump(mode='json')],
+                   coverage=[{'page': 1, 'outcome': 'rules_found', 'note': 'Found'}], warnings=[])
+        raw['rules'][0]['consumption_points'] = ['asn_generation']
+        output = ProviderOutput(parse_extraction(raw), 'test', {})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'queued'
+            run.config = {'provider': 'anthropic', 'model': 'test'}
+            run.payload = {**run.payload, 'coverage': [], 'pending_batches': [[1]]}
+        with patch.object(analysis_jobs, 'analyze', return_value=output):
+            await analysis_jobs.run_analysis(self.rid)
+        async with self.sessions() as session:
+            saved = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(saved.status, 'complete')
+            self.assertEqual(saved.payload['pending_batches'], [])
+            candidate = saved.payload['rules'][0]
+            self.assertEqual(candidate['status'], 'pending')
+            self.assertIn('Needs workflow review', candidate['spec']['unresolved_questions'][-1])
+            self.assertTrue(saved.payload['warnings'])
+            self.assertTrue(individual_review_reasons(RuleSpec.model_validate(candidate['spec'])))
+
     async def test_missing_coverage_is_not_completed(self):
         async with self.sessions.begin() as s:
             run=await s.get(AnalysisRun,self.rid);run.status='queued';run.config={'provider':'anthropic','model':'test'}
             run.payload={**run.payload,'coverage':[],'pending_batches':[[1]]}
         with patch.object(analysis_jobs,'analyze',AsyncMock(return_value=ProviderOutput(Extraction(rules=[],coverage=[],warnings=[]),'test',{}))):
-            await analysis_jobs.run_analysis(self.rid)
+            with self.assertRaises(analysis_jobs.AnalysisFailed):
+                await analysis_jobs.run_analysis(self.rid)
         async with self.sessions() as s:
             run=await s.get(AnalysisRun,self.rid)
             self.assertEqual(run.status,'failed');self.assertEqual(run.payload['coverage'],[])

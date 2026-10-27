@@ -12,6 +12,13 @@
 8. In **Scenarios**, paste canonical JSON or a wholesale order containing `packing_layout`. Save an immutable snapshot. Optional overrides replace named top-level fields and are retained separately. Choose an exact release and run deterministic checks. Results show pass, fail, cannot determine or not applicable for each subject. Prior evaluations stay pinned to their release.
 9. To fetch ShipHero data, save an access token in Connections, choose the appropriate retailer, and enter a public wholesale order ID. Fetch & save performs one read-only query and records source/account/time. The import excludes names, email, phone, billing and payment data. It includes postal destination fields needed for rules; snapshots can still contain business-sensitive information. Tokens are refreshed manually. There are no ShipHero mutations.
 
+
+### Analysis recovery and diagnostics
+
+When a provider's Consumed by list conflicts with otherwise valid workflow placements, ingestion derives the draft list from those placements, including disabled placements, and adds a **Needs workflow review** question and analysis notice. Original responses, evidence, instructions, check parameters, and placement settings are preserved. This recovery applies to both new and previously saved responses. The rule stays pending and flagged for review; ordinary approval controls remain unchanged. Unknown fields, malformed evidence, invalid checks, and unsupported placements still fail validation. The editor/API contract remains strict.
+
+Stopped batches identify their PDF pages in the saved error. Run details show completed batch pages, remaining pages, and review notices. Responses that still fail validation when resumed explain that another resume will reuse the same response. In-flight successful batches finish and checkpoint before a failure is recorded. The worker logs run/guide IDs, page numbers, and exception types without document text or raw exception bodies, then reports the job as failed after persisting the stopped state.
+
 ## General guidance versus shipment validation
 
 Rule `purpose` is independent of subject, obligation and verification:

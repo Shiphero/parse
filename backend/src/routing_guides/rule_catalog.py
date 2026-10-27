@@ -115,7 +115,8 @@ def validate_delivery(spec):
     if not used or len(set(used)) != len(used) or any(pair not in allowed for pair in used):
         raise ValueError('Choose at least one unique, supported workflow area for this rule type.')
     if set(spec.consumption_points) != {p.workflow for p in spec.placements}:
-        raise ValueError('Consumed by must match the assigned workflow placements, including disabled placements.')
+        raise PydanticCustomError('workflow_consumption_mismatch',
+                                  'Consumed by must match the assigned workflow placements, including disabled placements.')
     for placement in spec.placements:
         if placement.behavior in {'warn', 'block'}:
             if (spec.purpose != 'shipment_validation' or spec.standard_check is None

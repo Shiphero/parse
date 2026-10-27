@@ -31,21 +31,39 @@ def parse_extraction(raw: Any) -> Extraction:
                 if quote_note.strip():
                     item['note'] = '\n'.join(part for part in (item['note'], quote_note) if part)
                 warnings.append(f'Coverage item {index + 1}: provider quote_note normalized into note; original response retained.')
-    try:
-        extraction = Extraction.model_validate(normalized)
-    except ValidationError as exc:
+    handled: set[tuple[int, str]] = set()
+    while True:
+        try:
+            extraction = Extraction.model_validate(normalized)
+            break
+        except ValidationError as exc:
+            errors = {e['loc'][1]: e['type'] for e in exc.errors(include_input=False, include_context=False)
+                      if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch',
+                                       'rule_type_category_mismatch', 'workflow_consumption_mismatch'}
+                      and len(e['loc']) == 2 and e['loc'][0] == 'rules'
+                      and isinstance(e['loc'][1], int) and (e['loc'][1], e['type']) not in handled}
+            if not errors or not isinstance(raw, dict):
+                raise
         # Only downgrade a known semantic mismatch in provider proposals. The
         # editor/API still use strict RuleSpec validation, and all other errors
-        # must pass full validation below. Never infer a check or change evidence.
-        errors = {e['loc'][1]: e['type'] for e in exc.errors(include_input=False, include_context=False)
-                   if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch', 'rule_type_category_mismatch'} and len(e['loc']) == 2
-                   and e['loc'][0] == 'rules' and isinstance(e['loc'][1], int)}
-        if not errors or not isinstance(raw, dict):
-            raise
+        # must pass full validation on the next pass. A repair can reveal another
+        # model validator error; handle each known error once per rule, never loop
+        # indefinitely or infer a check or change evidence.
         if normalized is raw:
             normalized = deepcopy(raw)
         for index in sorted(errors):
+            handled.add((index, errors[index]))
             proposal = normalized['rules'][index]
+            if errors[index] == 'workflow_consumption_mismatch':
+                workflows = list(dict.fromkeys(p['workflow'] for p in proposal['placements']))
+                note = ('Needs workflow review: the provider supplied conflicting Consumed by and workflow placements. '
+                        f'Original Consumed by: {", ".join(proposal.get("consumption_points", [])) or "none"}. '
+                        f'This draft uses the assigned placement workflows: {", ".join(workflows)}, including disabled placements. '
+                        'Confirm or correct the workflow assignments before approval. The original provider response is retained.')
+                proposal['consumption_points'] = workflows
+                proposal.setdefault('unresolved_questions', []).append(note)
+                warnings.append(f'Proposal {index + 1}: {note}')
+                continue
             if errors[index] in {'rule_type_subject_mismatch', 'rule_type_category_mismatch'}:
                 # Recover instruction-only proposals, not conflicting executable
                 # checks or malformed fields that happen to share this error.
@@ -71,7 +89,6 @@ def parse_extraction(raw: Any) -> Extraction:
             proposal.update(verification='unresolved', assertion=None)
             proposal.setdefault('unresolved_questions', []).append(note)
             warnings.append(f'Proposal {index + 1}: {note}')
-        extraction = Extraction.model_validate(normalized)
     extraction.warnings.extend(warnings)
     if isinstance(raw, dict) and 'warnings' not in raw:
         extraction.warnings.append('Provider omitted the optional warnings list; no warning assessment was supplied.')

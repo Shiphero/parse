@@ -110,7 +110,9 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(ProviderFailure) as failure:
                     await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], 'context', self.directory, response_path=cached)
                 self.assertIn('rules.0.instruction', str(failure.exception))
+                self.assertFalse(failure.exception.retryable)
         self.assertEqual(client.create.await_count, 1)
+        self.assertIn('resuming alone will reuse the same response', str(failure.exception))
         self.assertEqual(json.loads(cached.read_text())['raw'], raw)
 
     async def test_saved_unmapped_proposals_are_recovered_without_provider_call(self):
@@ -225,6 +227,74 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         raw['rules'][0]['evidence'] = []
         with self.assertRaises(ValidationError):
             parse_extraction(raw)
+
+    async def test_workflow_mismatch_recovers_fresh_and_cached_rules_for_individual_review(self):
+        from test_delivery import mapped
+        from routing_guides.review import individual_review_reasons, exact_key
+        proposal = mapped(placements=[{'workflow': 'mobile_packing', 'area': 'carton_selection',
+                                      'enabled': False, 'behavior': 'display'}]).model_dump(mode='json')
+        for consumers in ([], ['asn_generation']):
+            with self.subTest(consumers=consumers):
+                raw = self.extraction.model_dump(mode='json')
+                # The reported rules.24 error refers to the 25th proposal.
+                raw['rules'] = [deepcopy(raw['rules'][0]) for _ in range(24)] + [deepcopy(proposal)]
+                raw['rules'][24]['consumption_points'] = consumers
+                original = deepcopy(raw)
+                cached = self.directory / f'batch-{len(consumers)}.json'
+                response = SimpleNamespace(stop_reason='tool_use', content=[SimpleNamespace(
+                    type='tool_use', name='submit_extraction', input=raw)], model='original-model',
+                    usage=SimpleNamespace(model_dump=lambda: {'input_tokens': 123}))
+                client = FakeClient(response)
+                with patch('routing_guides.analysis_provider.AsyncAnthropic', return_value=client):
+                    first = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+                    before = cached.read_bytes()
+                    second = await analyze('anthropic', 'test', [{'page': 1, 'text': '50 lb'}], '', self.directory, cached)
+                self.assertEqual(client.create.await_count, 1)
+                self.assertEqual(cached.read_bytes(), before)
+                self.assertEqual(json.loads(before)['raw'], original)
+                self.assertEqual(raw, original)
+                self.assertEqual(first, second)
+                self.assertEqual(first.model, 'original-model')
+                self.assertEqual(first.usage, {'input_tokens': 123})
+                self.assertEqual(len(first.extraction.rules), 25)
+                self.assertEqual(first.extraction.rules[:24], self.extraction.rules * 24)
+                recovered = first.extraction.rules[24]
+                self.assertEqual(recovered.consumption_points, ['mobile_packing'])
+                self.assertFalse(recovered.placements[0].enabled)
+                for field, value in proposal.items():
+                    if field not in {'consumption_points', 'unresolved_questions'}:
+                        self.assertEqual(recovered.model_dump(mode='json')[field], value)
+                self.assertIn('Needs workflow review', recovered.unresolved_questions[-1])
+                self.assertTrue(individual_review_reasons(recovered))
+                self.assertIsNone(exact_key(recovered.model_dump(mode='json')))
+                self.assertIn('Proposal 25:', first.extraction.warnings[-1])
+                with self.assertRaises(ValidationError) as error:
+                    Extraction.model_validate(raw)
+                self.assertEqual(error.exception.errors()[0]['type'], 'workflow_consumption_mismatch')
+
+    async def test_workflow_recovery_keeps_other_validation_strict(self):
+        from test_delivery import mapped
+        raw = self.extraction.model_dump(mode='json')
+        raw['rules'] = [mapped(placements=[{'workflow': 'mobile_packing', 'area': 'carton_selection',
+                                         'behavior': 'display'}]).model_dump(mode='json')]
+        raw['rules'][0]['consumption_points'] = ['asn_generation']
+        for changes in ({'evidence': []}, {'unknown_field': 'not allowed'},
+                        {'verification': 'human'},
+                        {'placements': [{'workflow': 'mobile_packing', 'area': 'invented'}]},
+                        {'obligation': 'recommended', 'placements': [
+                            {'workflow': 'mobile_packing', 'area': 'carton_selection', 'behavior': 'block'}]}):
+            with self.subTest(changes=changes):
+                invalid = deepcopy(raw)
+                invalid['rules'][0].update(changes)
+                with self.assertRaises(ValidationError):
+                    parse_extraction(invalid)
+        # Fixing delivery may reveal an existing, independently recoverable mapping error.
+        raw['rules'][0].update(standard_check=None, verification='human')
+        recovered = parse_extraction(raw)
+        self.assertEqual(recovered.rules[0].verification, 'unresolved')
+        self.assertIsNone(recovered.rules[0].standard_check)
+        self.assertEqual(len(recovered.rules[0].unresolved_questions), 2)
+        self.assertEqual(len(recovered.warnings), 2)
 
     async def test_saved_coverage_quote_note_is_recovered_without_provider_call(self):
         for quote_note in ('', 'Provider commentary, not verified evidence.'):
