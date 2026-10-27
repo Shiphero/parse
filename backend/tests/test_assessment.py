@@ -237,6 +237,14 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException):
             prepare_job(data, body, 'jev-test')
 
+    def test_all_selection_is_not_limited_to_sample_size_or_visible_selection(self):
+        rules = [candidate() for _ in range(40)]
+        data = {'rules': [*rules, candidate(status='approved'), candidate(status='ignored')]}
+        job = prepare_job(data, StartAssessment(version=1, actor='Reviewer', scope='all',
+                                               rule_ids=[rules[0]['id']], sample_size=25), 'jev-test')
+        self.assertEqual(job['total'], 40)
+        self.assertEqual({r['id'] for r in job['pending']}, {r['id'] for r in rules})
+
     def test_sample_includes_different_review_needs_without_selecting_approved_rules(self):
         rules = [candidate() for _ in range(30)]
         flagged = candidate()

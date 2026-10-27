@@ -447,7 +447,7 @@ async def start_analysis(guide_id: UUID, body: StartAnalysis):
         model = model or config['model']
         if not config['key'] or not model:
             raise HTTPException(422, 'Add a provider API key and model in Connections first.')
-    config = {'provider': body.provider, 'model': model, 'batch_pages': body.batch_pages, 'prompt_version': PROMPT_VERSION, 'schema_version': '1.0'}
+    config = {'provider': body.provider, 'model': model, 'batch_pages': body.batch_pages, 'prompt_version': PROMPT_VERSION, 'schema_version': '1.0', 'assess_rules': body.provider != 'manual'}
     manual = body.provider == 'manual'
     payload = RunPayload(pending_batches=[] if manual else [list(range(i, min(i+body.batch_pages, count+1))) for i in range(1, count+1, body.batch_pages)],
         coverage=[PageCoverage(page=i, outcome='needs_review', note='Manual review required.') for i in range(1,count+1)] if manual else [],

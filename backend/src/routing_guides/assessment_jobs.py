@@ -4,14 +4,39 @@ import logging
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from routing_guides.analysis_provider import ProviderFailure
-from routing_guides.assessment import assessment_fingerprint, related_rules, duplicate_index
+from routing_guides.assessment import assessment_fingerprint, related_rules, duplicate_index, new_assessment_job
 from routing_guides.assessment_provider import assess
+from routing_guides.connections import connection
 from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun, AuditEvent, GuidePage
 from routing_guides.storage import guide_directory
+from routing_guides.tasks import assess_guide_rules
 
 logger = logging.getLogger(__name__)
+
+
+async def queue_initial_assessment(session: AsyncSession, run: AnalysisRun, payload: dict) -> None:
+    """Commit extraction completion and its follow-up job atomically, at most once."""
+    if not run.config.get('assess_rules') or payload.get('assessment_job'):
+        return
+    selected = [rule for rule in payload['rules'] if rule['status'] == 'pending']
+    config = await connection('jev') if selected else {'model': '', 'key': ''}
+    job = new_assessment_job(selected, config['model'], 'Initial analysis', 'all')
+    payload['assessment_job'] = job
+    if not selected:
+        return
+    if not config['model'] or not config['key']:
+        job.update(status='failed', reason='configuration_required',
+                   error='Set up automated checks in Connections, then check all rules. Extracted rules are saved.')
+        return
+    # Procrastinate uses the existing psycopg connection without committing it.
+    sql_connection = await session.connection()
+    raw_connection = await sql_connection.get_raw_connection()
+    await assess_guide_rules.configure(connection=raw_connection.driver_connection,
+        lock=f'assessment:{run.id}', queueing_lock=f'assessment:{run.id}').defer_async(
+            run_id=str(run.id), job_id=job['id'])
 
 
 async def run_assessment(run_id: UUID, job_id: str):

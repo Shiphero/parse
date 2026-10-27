@@ -6,6 +6,7 @@ import json
 import math
 import re
 from typing import Literal
+from uuid import uuid4
 
 from pydantic import Field
 from routing_guides.rules import RuleSpec, StrictModel
@@ -59,6 +60,13 @@ class AssessmentResult(StrictModel):
     prompt_version: str = PROMPT_VERSION
     source_pages: list[int]
     usage: dict = Field(default_factory=dict)
+
+
+def new_assessment_job(selected: list[dict], model: str, actor: str, scope: str) -> dict:
+    return {'id': str(uuid4()), 'prompt_version': PROMPT_VERSION, 'provider': 'jev', 'model': model,
+            'actor': actor, 'status': 'queued' if selected else 'complete', 'scope': scope,
+            'pending': [{'id': r['id'], 'revision': r['revision']} for r in selected],
+            'total': len(selected), 'processed': 0, 'assessed': 0, 'skipped': 0, 'error': None}
 
 
 # Retrieval proposes comparisons; only Jev judges semantic equivalence.

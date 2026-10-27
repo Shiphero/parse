@@ -2,12 +2,12 @@
 from copy import deepcopy
 import json
 from typing import Literal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from pydantic import Field
 import psycopg
-from routing_guides.assessment import PROMPT_VERSION, choose_sample
+from routing_guides.assessment import PROMPT_VERSION, choose_sample, new_assessment_job
 from routing_guides.connections import connection
 from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun
@@ -47,10 +47,7 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
             raise HTTPException(409, 'Select only current pending rules from this draft.')
     if not selected:
         raise HTTPException(409, 'No pending rules are selected for assessment.')
-    return {'id': str(uuid4()), 'prompt_version': PROMPT_VERSION, 'provider': 'jev', 'model': model,
-            'actor': body.actor, 'status': 'queued', 'scope': body.scope,
-            'pending': [{'id': r['id'], 'revision': r['revision']} for r in selected],
-            'total': len(selected), 'processed': 0, 'assessed': 0, 'skipped': 0, 'error': None}
+    return new_assessment_job(selected, model, body.actor, body.scope)
 
 
 @router.post('/analysis/{run_id}/assess')

@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from routing_guides.analysis_provider import analyze, ProviderFailure
 from routing_guides.db import sessions
+from routing_guides.assessment_jobs import queue_initial_assessment
 from routing_guides.models import AnalysisRun, GuidePage
 from routing_guides.storage import guide_directory
 
@@ -145,6 +146,7 @@ async def run_analysis(run_id: UUID):
                         payload = deepcopy(run.payload)
                         if not payload['pending_batches'] and not running:
                             payload['warnings'] = list(dict.fromkeys(payload['warnings'] + reconcile_warnings(payload['rules'])))
+                            await queue_initial_assessment(session, run, payload)
                             run.payload, run.status = payload, 'complete'
                             run.version += 1
                             return

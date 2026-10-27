@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import httpx
 from fastapi import FastAPI
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from routing_guides.config import get_settings
 from routing_guides.models import Retailer, ReleaseHead, Guide, GuidePage, AnalysisRun, RuleRelease
@@ -536,6 +537,81 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn('Needs workflow review', candidate['spec']['unresolved_questions'][-1])
             self.assertTrue(saved.payload['warnings'])
             self.assertTrue(individual_review_reasons(RuleSpec.model_validate(candidate['spec'])))
+
+    async def prepare_automatic_check_fixture(self):
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.status = 'queued'
+            run.config = {'provider': 'anthropic', 'model': 'test-model', 'assess_rules': True}
+            run.payload = {**run.payload, 'coverage': [], 'pending_batches': [[1]]}
+        return ProviderOutput(Extraction(
+            rules=[rule().model_copy(update={'title': f'Packaging requirement {i}'}) for i in range(30)],
+            coverage=[{'page': 1, 'outcome': 'rules_found', 'note': 'Synthetic source'}], warnings=[]),
+            'test-model', {})
+
+    async def assessment_queue_count(self):
+        return await self.conn.scalar(text(
+            "SELECT count(*) FROM procrastinate_jobs WHERE args->>'run_id' = :run_id"),
+            {'run_id': str(self.rid)})
+
+    async def test_initial_checks_cover_every_rule_and_commit_with_extraction(self):
+        from routing_guides import assessment_jobs
+        output = await self.prepare_automatic_check_fixture()
+        savepoint = await self.conn.begin_nested()
+        with patch.object(analysis_jobs, 'analyze', AsyncMock(return_value=output)) as extract, \
+                patch.object(assessment_jobs, 'connection', AsyncMock(return_value={'key': 'test-key', 'model': 'jev-test'})):
+            await analysis_jobs.run_analysis(self.rid)
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual(extract.await_count, 1)
+        self.assertEqual(await self.assessment_queue_count(), 1)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.status, 'complete')
+            job = run.payload['assessment_job']
+            self.assertEqual(job['status'], 'queued')
+            self.assertEqual(job['total'], 30)
+            self.assertEqual({r['id'] for r in job['pending']}, {r['id'] for r in run.payload['rules']})
+            self.assertNotIn('test-key', str(run.payload))
+        # Neither the completion nor the queue job escapes the enclosing transaction.
+        await savepoint.rollback()
+        self.assertEqual(await self.assessment_queue_count(), 0)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.status, 'queued')
+            self.assertFalse(run.payload.get('assessment_job'))
+
+    async def test_initial_check_enqueue_failure_preserves_extraction_for_retry(self):
+        from routing_guides import assessment_jobs
+        output = await self.prepare_automatic_check_fixture()
+        with patch.object(analysis_jobs, 'analyze', AsyncMock(return_value=output)) as extract, \
+                patch.object(assessment_jobs, 'connection', AsyncMock(return_value={'key': 'test-key', 'model': 'jev-test'})):
+            with patch.object(assessment_jobs.assess_guide_rules, 'configure', return_value=SimpleNamespace(
+                    defer_async=AsyncMock(side_effect=RuntimeError('Queue unavailable')))):
+                with self.assertRaises(analysis_jobs.AnalysisFailed):
+                    await analysis_jobs.run_analysis(self.rid)
+            async with self.sessions() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                self.assertEqual(run.status, 'failed')
+                self.assertEqual(len(run.payload['rules']), 30)
+                self.assertFalse(run.payload.get('assessment_job'))
+                self.assertEqual(run.payload['pending_batches'], [])
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual(extract.await_count, 1)
+        self.assertEqual(await self.assessment_queue_count(), 1)
+
+    async def test_missing_check_configuration_preserves_rules_and_shows_required_action(self):
+        from routing_guides import assessment_jobs
+        output = await self.prepare_automatic_check_fixture()
+        with patch.object(analysis_jobs, 'analyze', AsyncMock(return_value=output)), \
+                patch.object(assessment_jobs, 'connection', AsyncMock(return_value={'key': '', 'model': ''})):
+            await analysis_jobs.run_analysis(self.rid)
+        self.assertEqual(await self.assessment_queue_count(), 0)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.status, 'complete')
+            self.assertEqual(len(run.payload['rules']), 30)
+            self.assertEqual(run.payload['assessment_job']['reason'], 'configuration_required')
+            self.assertEqual(run.payload['assessment_job']['status'], 'failed')
 
     async def test_assessment_checkpoints_resume_without_changing_rules_or_approvals(self):
         from routing_guides import assessment_jobs
