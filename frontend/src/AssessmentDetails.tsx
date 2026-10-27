@@ -33,11 +33,11 @@ export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated
       </li>)}</ul>
     </div>}
     <details><summary>{stale ? 'Previous check details' : 'What was checked'}</summary>
-      <p>Checked {new Date(assessment.assessed_at).toLocaleString()}.</p>
+      <p>{assessment.check_failed ? 'Last attempted' : 'Checked'} {new Date(assessment.assessed_at).toLocaleString()}.</p>
       <p>Source: PDF pages {assessment.source_pages.join(', ') || 'unavailable'}. Checks cover source text and likely matches with other rules. Images and less obvious duplicates may need your review.</p>
       {assessment.dimensions.length ? <table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>{assessment.dimensions.map(d => <tr key={d.name}>
         <td>{checkLabels[d.name] || 'Additional check'}</td><td>{Math.min(d.confidence, d.probabilities[d.choice]) < assessment.threshold ? 'Needs review' : resultLabels[d.choice] || 'Needs review'}</td>
-      </tr>)}</tbody></table> : <p>The source information needs attention before checks can be completed.</p>}
+      </tr>)}</tbody></table> : <p>{assessment.check_failed ? 'Automated checks did not produce a usable result. This does not establish whether the rule is correct.' : 'The source information needs attention before checks can be completed.'}</p>}
     </details>
   </section>;
 }

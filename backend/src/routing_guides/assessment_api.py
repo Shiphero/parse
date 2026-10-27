@@ -19,7 +19,7 @@ router = APIRouter(prefix='/api', tags=['Rule assessment'])
 
 class StartAssessment(VersionedAction):
     model: str = Field(default='', max_length=150)
-    scope: Literal['sample', 'all', 'selected'] = 'sample'
+    scope: Literal['sample', 'all', 'selected', 'failed'] = 'sample'
     sample_size: int = Field(default=25, ge=1, le=100)
     rule_ids: list[UUID] = Field(default_factory=list, max_length=10000)
     resume: bool = False
@@ -40,6 +40,12 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
         selected = choose_sample(pending, body.sample_size)
     elif body.scope == 'all':
         selected = pending
+    elif body.scope == 'failed':
+        if job.get('pending') and job.get('status') != 'cancelled':
+            raise HTTPException(409, 'Continue or stop the unfinished checks before retrying failed rules.')
+        selected = [r for r in pending if (r.get('assessment') or {}).get('check_failed')]
+        if not selected:
+            raise HTTPException(409, 'No failed checks remain on pending rules.')
     else:
         ids = {str(id) for id in body.rule_ids}
         selected = [r for r in pending if r['id'] in ids]

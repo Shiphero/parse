@@ -999,6 +999,11 @@ export interface components {
             outcome: "ready" | "needs_correction" | "needs_review";
             /** Issues */
             issues: components["schemas"]["AssessmentIssue"][];
+            /**
+             * Check Failed
+             * @default false
+             */
+            check_failed: boolean;
             /** Dimensions */
             dimensions: components["schemas"]["AssessmentDimension"][];
             /** Duplicates */
@@ -2410,7 +2415,7 @@ export interface components {
              * @default sample
              * @enum {string}
              */
-            scope: "sample" | "all" | "selected";
+            scope: "sample" | "all" | "selected" | "failed";
             /**
              * Sample Size
              * @default 25

@@ -46,6 +46,7 @@ class DuplicateAssessment(StrictModel):
 class AssessmentResult(StrictModel):
     outcome: Literal['ready', 'needs_correction', 'needs_review']
     issues: list[AssessmentIssue]
+    check_failed: bool = False
     dimensions: list[AssessmentDimension]
     duplicates: list[DuplicateAssessment] = Field(default_factory=list)
     duplicate_candidates: int = 0
@@ -66,7 +67,7 @@ def new_assessment_job(selected: list[dict], model: str, actor: str, scope: str)
     return {'id': str(uuid4()), 'prompt_version': PROMPT_VERSION, 'provider': 'jev', 'model': model,
             'actor': actor, 'status': 'queued' if selected else 'complete', 'scope': scope,
             'pending': [{'id': r['id'], 'revision': r['revision']} for r in selected],
-            'total': len(selected), 'processed': 0, 'assessed': 0, 'skipped': 0, 'error': None}
+            'total': len(selected), 'processed': 0, 'assessed': 0, 'failed': 0, 'skipped': 0, 'error': None}
 
 
 # Retrieval proposes comparisons; only Jev judges semantic equivalence.

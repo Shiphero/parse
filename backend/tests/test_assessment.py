@@ -186,10 +186,28 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         del payload['answers']['exceptions']
         self.client.post.return_value = httpx.Response(200, json=payload)
         for _ in range(2):
-            with self.assertRaises(ProviderFailure):
+            with self.assertRaises(provider.AssessmentResponseError):
                 await self.assess()
         self.client.post.assert_awaited_once()
         self.assertEqual(json.loads(self.path.read_text())['raw'], payload)
+
+    async def test_non_json_response_is_retained_and_can_be_skipped_without_another_call(self):
+        self.client.post.return_value = httpx.Response(200, text='unusable answer')
+        for _ in range(2):
+            with self.assertRaises(provider.AssessmentResponseError):
+                await self.assess()
+        self.client.post.assert_awaited_once()
+        self.assertEqual(json.loads(self.path.read_text())['invalid_response_text'], 'unusable answer')
+
+    def test_failed_check_keeps_local_issues_but_never_claims_readiness(self):
+        self.rule['spec']['unresolved_questions'] = ['Confirm the destination.']
+        result = provider.failed_assessment(self.rule, [candidate()], self.pages, 'jev-test', 'failed-job')
+        self.assertEqual(result.outcome, 'needs_review')
+        self.assertTrue(result.check_failed)
+        self.assertIsNone(result.confidence)
+        self.assertFalse(result.dimensions)
+        self.assertEqual({issue.code for issue in result.issues},
+                         {'assessment_failed', 'unresolved_question', 'duplicates_unassessed'})
 
     def test_invalid_and_inconsistent_probabilities_fail_closed(self):
         for changes in ({'confidence': float('nan')}, {'confidence': True},
@@ -203,6 +221,7 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         self.client.post.return_value = httpx.Response(403, text='private-test-key source text')
         with self.assertRaises(ProviderFailure) as error:
             await self.assess()
+        self.assertNotIsInstance(error.exception, provider.AssessmentResponseError)
         self.assertNotIn('private-test-key', str(error.exception))
         self.assertFalse(self.path.exists())
 
@@ -234,6 +253,26 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException):
             prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True), 'other-model')
         data['classification_job'] = {'status': 'running'}
+        with self.assertRaises(HTTPException):
+            prepare_job(data, body, 'jev-test')
+
+    def test_failed_retry_selects_only_pending_failed_checks_with_new_response_storage(self):
+        failed = candidate(assessment={'check_failed': True})
+        approved = candidate(status='approved', assessment={'check_failed': True})
+        old = {'id': 'previous-job', 'status': 'complete', 'pending': []}
+        data = {'rules': [self.rule, failed, approved], 'assessment_job': old}
+        before = deepcopy(data)
+        body = StartAssessment(version=1, actor='Reviewer', scope='failed')
+        job = prepare_job(data, body, 'jev-test')
+        self.assertEqual(job['pending'], [{'id': failed['id'], 'revision': failed['revision']}])
+        self.assertNotEqual(job['id'], old['id'])
+        self.assertEqual(data, before)
+        data['assessment_job'].update(status='failed', pending=[{'id': self.rule['id'], 'revision': 1}])
+        with self.assertRaises(HTTPException):
+            prepare_job(data, body, 'jev-test')
+        data['assessment_job']['status'] = 'cancelled'
+        self.assertEqual(prepare_job(data, body, 'jev-test')['total'], 1)
+        data['rules'] = [self.rule, approved]
         with self.assertRaises(HTTPException):
             prepare_job(data, body, 'jev-test')
 

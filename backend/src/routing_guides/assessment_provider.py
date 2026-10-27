@@ -63,9 +63,28 @@ def questions(related: Sequence[dict] = ()) -> dict:
     return result
 
 
+class AssessmentResponseError(ProviderFailure):
+    """A single unusable answer; other rules can still be checked safely."""
+
+
+def failed_assessment(candidate: dict, related: list[dict], pages: dict[int, str | None],
+                      model: str, job_id: str) -> AssessmentResult:
+    issues = local_issues(candidate, related, pages)
+    issues.insert(0, AssessmentIssue(code='assessment_failed', section='evidence', kind='manual',
+        action='Automated checks could not be completed for this rule. Retry failed checks, or review the rule against its source before approval.'))
+    if related:
+        issues.append(AssessmentIssue(code='duplicates_unassessed', section='instruction', kind='manual',
+            action='Similar rules still need comparison. Check their requirements, scope and exceptions before approval.',
+            related_rule_ids=[r['id'] for r in related[:MAX_DUPLICATE_COMPARISONS]]))
+    return AssessmentResult(outcome='needs_review', check_failed=True, issues=issues, dimensions=[],
+        duplicate_candidates=len(related), fingerprint=assessment_fingerprint(candidate, related),
+        revision=candidate['revision'], job_id=job_id, assessed_at=datetime.now(timezone.utc).isoformat(),
+        model=model, source_pages=[p['page'] for p in source_context(candidate, pages)])
+
+
 def validate_choice(answer: dict, choices: set[str]) -> tuple[str, float, dict]:
     if not isinstance(answer, dict) or answer.get('type') != 'choice':
-        raise ProviderFailure('Jev returned an invalid assessment choice. The response is retained for investigation.')
+        raise AssessmentResponseError('Jev returned an invalid assessment choice. The response is retained for investigation.')
     choice, confidence, probabilities = answer.get('choice'), answer.get('confidence'), answer.get('probabilities')
     if (not isinstance(choice, str) or choice not in choices
             or type(confidence) not in (int, float) or not math.isfinite(confidence) or not 0 <= confidence <= 1
@@ -73,14 +92,14 @@ def validate_choice(answer: dict, choices: set[str]) -> tuple[str, float, dict]:
             or any(type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1 for p in probabilities.values())
             or not math.isclose(sum(probabilities.values()), 1, abs_tol=0.02)
             or probabilities[choice] < max(probabilities.values())):
-        raise ProviderFailure('Jev returned invalid assessment probabilities. The response is retained for investigation.')
+        raise AssessmentResponseError('Jev returned invalid assessment probabilities. The response is retained for investigation.')
     return choice, confidence, probabilities
 
 
 def parse_dimensions(raw: dict, related: Sequence[dict] = ()) -> list[AssessmentDimension]:
     answers = raw.get('answers')
     if not isinstance(answers, dict) or set(answers) != set(questions(related)):
-        raise ProviderFailure('Jev returned incomplete assessment answers. The response is retained; a parser or response correction is needed before resuming.')
+        raise AssessmentResponseError('Jev returned incomplete assessment answers. The response is retained for investigation.')
     result = []
     for name in DIMENSIONS:
         choice, confidence, probabilities = validate_choice(answers[name], {'supported', 'correction', 'uncertain'})
@@ -137,7 +156,7 @@ async def assess(candidate: dict, related: list[dict], pages: dict[int, str | No
             except (ValueError, OSError):
                 raise ProviderFailure('The saved Jev assessment response could not be read. Completed assessments are preserved.') from None
             if not isinstance(saved, dict) or saved.get('fingerprint') != fingerprint or 'raw' not in saved:
-                raise ProviderFailure('The saved assessment belongs to different inputs. Start a new preview for this rule.')
+                raise AssessmentResponseError('The saved assessment belongs to different inputs. Retry this rule with fresh inputs.')
             raw = saved['raw']
         else:
             config = await connection('jev')
@@ -165,12 +184,13 @@ async def assess(candidate: dict, related: list[dict], pages: dict[int, str | No
                     try:
                         raw = response.json()
                     except ValueError:
-                        raise ProviderFailure('Jev did not return JSON. Completed assessments are saved.') from None
+                        save_response(response_path, {'fingerprint': fingerprint, 'raw': None, 'invalid_response_text': response.text})
+                        raise AssessmentResponseError('Jev did not return JSON. The response is retained for investigation.') from None
                     # Keep successful responses before local validation to avoid paying again on resume.
                     save_response(response_path, {'fingerprint': fingerprint, 'raw': raw})
                     break
         if not isinstance(raw, dict) or not isinstance(raw.get('model'), str) or not raw['model']:
-            raise ProviderFailure('Jev returned an invalid assessment response. The response is retained for investigation.')
+            raise AssessmentResponseError('Jev returned an invalid assessment response. The response is retained for investigation.')
         dimensions = parse_dimensions(raw, compared)
         duplicates = parse_duplicates(raw, compared)
         actual_model = raw['model']

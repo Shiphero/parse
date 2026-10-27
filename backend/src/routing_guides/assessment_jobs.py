@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from routing_guides.analysis_provider import ProviderFailure
 from routing_guides.assessment import assessment_fingerprint, related_rules, duplicate_index, new_assessment_job
-from routing_guides.assessment_provider import assess
+from routing_guides.assessment_provider import assess, AssessmentResponseError, failed_assessment
 from routing_guides.connections import connection
 from routing_guides.db import sessions
 from routing_guides.models import AnalysisRun, AuditEvent, GuidePage
@@ -77,7 +77,11 @@ async def run_assessment(run_id: UUID, job_id: str):
                 guide_id = run.guide_id
                 run.payload = data
             path = guide_directory(guide_id) / 'assessment' / job_id / f'{rule_id}-{fingerprint}.json'
-            output = await assess(candidate, related, pages, settings['model'], path, job_id)
+            try:
+                output = await assess(candidate, related, pages, settings['model'], path, job_id)
+            except AssessmentResponseError:
+                output = failed_assessment(candidate, related, pages, settings['model'], job_id)
+                logger.warning('Assessment response rejected: run_id=%s job_id=%s rule_id=%s', run_id, job_id, rule_id)
             async with sessions.begin() as session:
                 run = await session.get(AnalysisRun, run_id, with_for_update=True)
                 if not run or run.status != 'complete':
@@ -90,10 +94,11 @@ async def run_assessment(run_id: UUID, job_id: str):
                 fresh = current and assessment_fingerprint(current, related_rules(current, duplicate_index(data['rules']))) == fingerprint
                 if fresh:
                     current['assessment'] = output.model_dump(mode='json')
-                    job['assessed'] += 1
-                    session.add(AuditEvent(id=uuid4(), entity_id=run.id, actor='Jev assessment', action='rule_assessed',
+                    counter = 'failed' if output.check_failed else 'assessed'
+                    job[counter] = job.get(counter, 0) + 1
+                    session.add(AuditEvent(id=uuid4(), entity_id=run.id, actor='Jev assessment', action='rule_assessment_failed' if output.check_failed else 'rule_assessed',
                         payload={'rule_id': rule_id, 'revision': current['revision'], 'job_id': job_id,
-                                 'requested_by': settings['actor'], 'outcome': output.outcome,
+                                 'requested_by': settings['actor'], 'outcome': output.outcome, 'check_failed': output.check_failed,
                                  'model': output.model, 'prompt_version': output.prompt_version, 'fingerprint': fingerprint}))
                 else:
                     job['skipped'] += 1

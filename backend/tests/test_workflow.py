@@ -660,12 +660,87 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual({k: v for k, v in saved.items() if k != 'assessment'}, original)
             self.assertFalse(any(r.assessment_stale for r in workflow_api.RunView.model_validate(run).payload.rules))
 
+    async def test_invalid_assessment_continues_and_retries_only_failed_rule_with_fresh_response(self):
+        from routing_guides import assessment_jobs, assessment_provider
+        from routing_guides.assessment import new_assessment_job
+        from routing_guides.assessment_api import prepare_job, StartAssessment
+        from test_assessment import candidate, response
+        rules = [candidate(source_guide_id=str(self.gid)) for _ in range(3)]
+        for i, current in enumerate(rules):
+            current['spec']['title'] = f'Packaging requirement {i}'
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        calls = []
+        reject = True
+        def answer(*args, **kwargs):
+            state = kwargs['json']['state']
+            title = state['rule']['title']
+            calls.append(title)
+            payload = response(state['similar_rule_candidates'])
+            if title == rules[1]['spec']['title'] and reject:
+                payload['answers']['classification']['probabilities'] = {'supported': 0.5}
+            return httpx.Response(200, json=payload)
+        client.post.side_effect = answer
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(assessment_provider, 'connection', AsyncMock(return_value={'key': 'test-key', 'model': 'jev-test'})), \
+                patch.object(assessment_provider.httpx, 'AsyncClient', return_value=client):
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                saved = deepcopy(run.payload)
+                self.assertEqual(saved['assessment_job']['status'], 'complete')
+                self.assertEqual(saved['assessment_job']['processed'], 3)
+                self.assertEqual(saved['assessment_job']['assessed'], 2)
+                self.assertEqual(saved['assessment_job']['failed'], 1)
+                self.assertTrue(saved['rules'][1]['assessment']['check_failed'])
+                self.assertEqual(saved['rules'][1]['assessment']['outcome'], 'needs_review')
+                for original, current in zip(rules, saved['rules']):
+                    self.assertEqual({k: v for k, v in current.items() if k != 'assessment'}, original)
+                # Emulate an older worker that stopped on the retained invalid answer.
+                checkpoint = deepcopy(saved)
+                checkpoint['rules'][1:] = deepcopy(rules[1:])
+                checkpoint['assessment_job'].update(status='failed', processed=1, assessed=1,
+                    pending=[{'id': r['id'], 'revision': 1} for r in rules[1:]])
+                checkpoint['assessment_job'].pop('failed')
+                run.payload = checkpoint
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+            self.assertEqual(len(calls), 3)  # All saved responses reused, including the rejected one.
+            async with self.sessions.begin() as session:
+                run = await session.get(AnalysisRun, self.rid)
+                saved = deepcopy(run.payload)
+                self.assertEqual(saved['assessment_job']['status'], 'complete')
+                self.assertEqual(saved['assessment_job']['processed'], 3)
+                self.assertEqual(saved['assessment_job']['failed'], 1)
+                retry = prepare_job(saved, StartAssessment(version=run.version, actor='Reviewer', scope='failed'), 'jev-test')
+                self.assertEqual(retry['total'], 1)
+                run.payload = {**saved, 'assessment_job': retry}
+            old_files = {path: path.read_bytes() for path in Path(self.temp.name).rglob('*.json')}
+            self.assertEqual(len(old_files), 3)
+            reject = False
+            await assessment_jobs.run_assessment(self.rid, retry['id'])
+        self.assertEqual(calls, [r['spec']['title'] for r in rules] + [rules[1]['spec']['title']])
+        self.assertEqual({path: path.read_bytes() for path in old_files}, old_files)
+        self.assertEqual(len(list(Path(self.temp.name).rglob('*.json'))), 4)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['status'], 'complete')
+            self.assertEqual(run.payload['assessment_job']['failed'], 0)
+            self.assertEqual(run.payload['assessment_job']['assessed'], 1)
+            self.assertFalse(run.payload['rules'][1]['assessment']['check_failed'])
+            for i in (0, 2):
+                self.assertEqual(run.payload['rules'][i], saved['rules'][i])
+
     async def test_assessment_discards_results_after_edits_or_cancellation(self):
         from routing_guides import assessment_jobs
         from routing_guides.assessment import AssessmentResult, assessment_fingerprint
         from test_assessment import candidate
-        for cancel in (False, True):
-            with self.subTest(cancel=cancel):
+        for cancel, invalid in ((False, False), (True, False), (False, True), (True, True)):
+            with self.subTest(cancel=cancel, invalid=invalid):
                 original = candidate(source_guide_id=str(self.gid))
                 job_id = str(uuid4())
                 async with self.sessions.begin() as session:
@@ -684,6 +759,8 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                             payload['rules'][0]['revision'] = 2
                             payload['rules'][0]['spec']['instruction'] = 'Human correction'
                         run.payload = payload
+                    if invalid:
+                        raise assessment_jobs.AssessmentResponseError('Unusable answer')
                     return AssessmentResult(outcome='ready', issues=[], dimensions=[],
                         fingerprint=assessment_fingerprint(current, related), revision=1,
                         job_id=job_id, assessed_at='2026-10-27T12:00:00+00:00', model=model, source_pages=[1])
