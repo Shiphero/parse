@@ -42,7 +42,21 @@ export default function ConnectionsDialog({onClose}: {onClose: () => void}) {
     {provider==='litellm' && <p className="muted">Gateway: {remote.data?.find(c=>c.id==='litellm')?.base_url || 'Not configured'}</p>}
     <p className="connection-status"><KeyRound size={15}/>{configured ? 'Credential saved · access not yet verified' : 'No credential configured'}</p>
     {managed?<p className="notice">Credentials are managed by the deployment through Secrets Manager. You can update the default model here.</p>:<div className="form-field"><label htmlFor="credential">{provider==='shiphero' ? 'Access token' : 'API key'}</label><input id="credential" type="password" autoComplete="new-password" value={key} disabled={busy||!remote.data} onChange={e=>setKey(e.target.value)} placeholder={configured ? 'Leave blank to keep the saved credential' : 'Paste your credential'}/></div>}
-    {provider!=='shiphero' && <div className="form-field"><label htmlFor="model">Default model ID</label><input id="model" value={model} list={provider==='litellm'?'gateway-models':undefined} onChange={e=>setModel(e.target.value)} placeholder={provider==='jev'?'jev-1.14.0':provider==='litellm'?'Exact model alias from your gateway':'Exact vision-capable model ID from your provider'}/>{provider==='litellm' && <><datalist id="gateway-models">{availableModels.map(id=><option key={id} value={id}/>)}</datalist><button className="secondary" disabled={busy||!configured||!!key} onClick={loadModels}>Load available models</button><p className="form-hint">Save the key before loading models. Model access does not confirm image or structured-output compatibility.</p></>}<p className="form-hint spaced">{provider==='jev'?'Used for automatic readiness and duplicate checks on new analyses, and for rule classification. Rule text and source excerpts are sent to TypeSafe.':'Choose a model that supports images and structured output. You can change it for each analysis; incompatible selections return an error without falling back.'}</p></div>}
+    {provider!=='shiphero' && <div className="form-field connection-model-field">
+      <label htmlFor="model">Default model</label>
+      <div className="connection-model-controls">
+        <input id="model" value={model} aria-describedby="model-help" list={provider==='litellm'?'gateway-models':undefined} onChange={e=>setModel(e.target.value)} placeholder={provider==='jev'?'jev-1.14.0':provider==='litellm'?'Choose or enter a model':'Model ID'}/>
+        {provider==='litellm' && <>
+          <datalist id="gateway-models">{availableModels.map(id=><option key={id} value={id}/>)}</datalist>
+          <button className="secondary" disabled={busy||!configured||!!key} onClick={loadModels}>Load available models</button>
+        </>}
+      </div>
+      <p id="model-help" className="form-hint">{provider==='jev'
+        ? 'Used for automatic readiness, duplicate checks and rule classification.'
+        : provider==='litellm'
+          ? !configured || !!key ? 'Save your key first, then load the models available to you.' : 'Load your available models, then choose one or enter its name above.'
+          : 'Choose a model that supports images and structured output. You can change it for each analysis.'}</p>
+    </div>}
     {provider==='shiphero' && <p className="dialog-description">Read-only wholesale order import using the token’s account permissions. No ShipHero mutations are available.</p>}
     {(error || remote.error) && <div className="error" role="alert">{error || remote.error}</div>}{message && <p className="notice" role="status">{message}</p>}
     <div className="dialog-footer">{!managed&&<button className="secondary" disabled={busy || !configured} onClick={()=>save(true)}>Remove credential</button>}<button className="primary" disabled={busy||!remote.data} onClick={()=>save()}>{busy?'Saving…':managed?'Save model':'Save connection'}</button></div>

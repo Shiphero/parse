@@ -340,6 +340,11 @@ h1 { font-size:29px}
 .evaluation-rule h4 { margin-top:11px}
 .evaluation-rule small { color:var(--text-muted)}
 .connection-status { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted)}
+.connection-model-field { display:grid; gap:10px}
+.connection-model-field label,.connection-model-field .form-hint { margin:0}
+.connection-model-controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+.connection-model-controls input { flex:1 1 230px; min-width:0; width:auto}
+.connection-model-controls button { flex:0 0 auto; min-height:39px}
 .spaced { margin-top:10px!important}
 
 @media(max-width:1250px) {
