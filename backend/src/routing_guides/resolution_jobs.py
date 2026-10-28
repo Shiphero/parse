@@ -1,5 +1,6 @@
 """First pass over all selected rules, before any final duplicate/readiness assessment."""
 from copy import deepcopy
+import asyncio
 import logging
 from uuid import UUID, uuid4
 
@@ -56,7 +57,11 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
         data = deepcopy(run.payload)
         job = data['assessment_job']
         by_id = {r['id']: r for r in data['rules']}
-        for item in list(job['preparing']):
+        for offset, item in enumerate(list(job['preparing'])):
+            if offset % 16 == 0:
+                # Large drafts must not starve the worker heartbeat while their
+                # inexpensive eligibility checks are collected.
+                await asyncio.sleep(0)
             current = by_id.get(item['id'])
             if not current or current['status'] != 'pending' or current['revision'] != item['revision']:
                 job['preparing'].remove(item)
@@ -92,7 +97,7 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
                 rows = (await session.execute(select(GuidePage.page_index, GuidePage.text).where(
                     GuidePage.guide_id == UUID(source_id)))).all()
                 source_cache[source_id] = {row.page_index + 1: row.text for row in rows}
-            work.append({'candidate': candidate, 'pages': select_source_pages(candidate, source_cache[source_id]),
+            work.append({'candidate': candidate,
                          'fingerprint': preparation_fingerprint(candidate), 'source_id': source_id})
         if not job['preparing']:
             if job.get('auto_process'):
@@ -104,7 +109,10 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
         run.payload, run.version = data, run.version + 1
 
     async def prepare(item):
-        candidate, pages, fingerprint = item['candidate'], item['pages'], item['fingerprint']
+        candidate, fingerprint = item['candidate'], item['fingerprint']
+        # Rank pages only when a processing slot opens, outside the row lock and
+        # event loop. Never scan the entire guide for every queued rule up front.
+        pages = await asyncio.to_thread(select_source_pages, candidate, source_cache[item['source_id']])
         root = guide_directory(guide_id) / 'assessment' / job_id / 'resolution'
         path = root / f'{candidate["id"]}-{fingerprint}.json'
         try:

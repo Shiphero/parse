@@ -741,6 +741,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(saved['status'], 'pending')
 
     async def test_review_batches_overlap_and_new_runs_reuse_unchanged_work(self):
+        from threading import Event
         from routing_guides import assessment_jobs
         from routing_guides.assessment import new_assessment_job, AssessmentResult, assessment_fingerprint
         from routing_guides.resolution import ResolutionPlan
@@ -761,8 +762,16 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         assessment_gate=asyncio.Event()
         assessment_active=0
         assessment_peak=0
+        provider_started = Event()
+        page_selections = []
+        def select_pages(current, pages):
+            page_selections.append(current['id'])
+            if len(page_selections) > 4 and not provider_started.is_set():
+                raise AssertionError('Queued rules ranked source pages before a slot opened')
+            return pages
         async def propose(*args):
             nonlocal active,peak
+            provider_started.set()
             active+=1
             peak=max(peak,active)
             if active==4: gate.set()
@@ -786,6 +795,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(assessment_jobs,'sessions',self.sessions), \
                 patch.object(resolution_jobs,'guide_directory',return_value=Path(self.temp.name)), \
                 patch.object(assessment_jobs,'guide_directory',return_value=Path(self.temp.name)), \
+                patch.object(resolution_jobs,'select_source_pages',side_effect=select_pages), \
                 patch.object(resolution_jobs,'propose',side_effect=propose) as proposed, \
                 patch.object(resolution_jobs,'verify_changes',return_value={}), \
                 patch.object(assessment_jobs,'assess',side_effect=assess) as assessed:
@@ -793,6 +803,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(peak,4)
             self.assertEqual(assessment_peak,4)
             self.assertEqual(proposed.await_count,6)
+            self.assertEqual(len(page_selections),6)
             self.assertEqual(assessed.await_count,6)
             async with self.sessions.begin() as session:
                 run=await session.get(AnalysisRun,self.rid)
@@ -812,6 +823,39 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(saved['reused_prepared'],6)
             self.assertEqual(saved['reused_assessments'],6)
             self.assertEqual(saved['processed'],6)
+
+    async def test_source_selection_keeps_the_event_loop_responsive(self):
+        from threading import Event
+        from routing_guides.assessment import new_assessment_job
+        from routing_guides.resolution import ResolutionPlan
+        from test_assessment import candidate
+        rule = candidate(source_guide_id=str(self.gid))
+        rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
+        job = new_assessment_job([rule], 'jev-test', 'Reviewer', 'all')
+        await resolution_jobs.enable_resolution(job, {'provider':'anthropic','model':'test-model'})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules':[rule], 'assessment_job':job}
+        heartbeat = Event()
+        def slow_selection(current, pages):
+            if not heartbeat.wait(2):
+                raise AssertionError('Source selection blocked the event loop')
+            return pages
+        async def beat():
+            await asyncio.sleep(.02)
+            heartbeat.set()
+        pulse = asyncio.create_task(beat())
+        try:
+            with patch.object(resolution_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                    patch.object(resolution_jobs, 'select_source_pages', side_effect=slow_selection), \
+                    patch.object(resolution_jobs, 'propose', return_value=ResolutionPlan(proposed_spec=None)), \
+                    patch.object(resolution_jobs, 'verify_changes', return_value={}):
+                await resolution_jobs.prepare_next(self.sessions, self.rid, job['id'], {})
+        finally:
+            await pulse
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['prepared'], 1)
 
     async def test_preparation_preserves_other_completions_when_a_provider_request_fails(self):
         from routing_guides import assessment_jobs

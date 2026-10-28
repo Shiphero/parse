@@ -37,8 +37,13 @@ def select_source_pages(candidate: dict, pages: dict[int, str | None]) -> dict[i
     selected = {n for page in cited for n in (page-1, page, page+1) if n in pages}
     query = {**candidate, 'spec': {**candidate['spec'], 'instruction': candidate['spec']['instruction'] + ' ' + ' '.join(candidate['spec']['unresolved_questions'])}}
     terms = rule_terms(query)
-    ranked = sorted((n for n in pages if n not in selected),
-                    key=lambda n: (-sum(term in (pages[n] or '').lower() for term in terms), n))
+    # Normalize once per page, rather than once for every search term.
+    scores = {}
+    for n, text in pages.items():
+        if n not in selected:
+            normalized = (text or '').lower()
+            scores[n] = sum(term in normalized for term in terms)
+    ranked = sorted(scores, key=lambda n: (-scores[n], n))
     size = sum(len(pages[n] or '') for n in selected)
     for n in ranked[:6]:
         if size + len(pages[n] or '') <= MAX_SOURCE_CHARACTERS:
