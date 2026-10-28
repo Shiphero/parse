@@ -852,10 +852,10 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             return plan
 
         async def assess(current, related, pages, model, path, job_id):
-            async with self.sessions() as session:
-                run = await session.get(AnalysisRun, self.rid)
-                self.assertEqual(run.payload['assessment_job']['phase'], 'assess')
-                self.assertEqual([r['revision'] for r in run.payload['rules']], [2, 2])
+            # Provider calls are concurrent; inspect their immutable snapshots rather
+            # than sharing this fixture's rollback-only connection between tasks.
+            self.assertEqual(current['revision'], 2)
+            self.assertEqual(len(related), 1)
             self.assertTrue(all(r['revision'] == 2 for r in related))
             return AssessmentResult(outcome='ready', issues=[], dimensions=[],
                 fingerprint=assessment_fingerprint(current, related), revision=current['revision'],
@@ -872,6 +872,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(proposed.await_count, 2)
         async with self.sessions() as session:
             run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['phase'], 'assess')
             self.assertEqual(run.payload['assessment_job']['updated'], 2)
             self.assertEqual(run.payload['assessment_job']['assessed'], 2)
             self.assertFalse(any(r.assessment_stale for r in workflow_api.RunView.model_validate(run).payload.rules))
