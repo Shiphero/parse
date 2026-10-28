@@ -79,6 +79,8 @@ async def run_assessment(run_id: UUID, job_id: str):
                 return
             message = str(exc) if isinstance(exc, ProviderFailure) else 'Assessment stopped unexpectedly. Completed assessments are saved.'
             data['assessment_job'].update(status='failed', error=message, failed_rule_id=rule_id, updated_at=now())
+            if isinstance(exc, ProviderFailure) and exc.code:
+                data['assessment_job']['reason'] = exc.code
             run.payload, run.version = data, run.version + 1
         logger.error('Assessment stopped: run_id=%s job_id=%s rule_id=%s error_type=%s', run_id, job_id, rule_id, type(exc).__name__)
         raise RuntimeError(f'Assessment {job_id} stopped. See its saved error.') from None

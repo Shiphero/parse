@@ -96,7 +96,9 @@ async def proposal_response(state, provider, model, path, feedback=None):
                 async with AsyncAnthropic(api_key=config['key'], timeout=180, max_retries=0) as client:
                     result = await client.messages.create(model=model, max_tokens=16000, system=SYSTEM,
                         messages=[{'role': 'user', 'content': content}],
-                        tool_choice={'type': 'tool', 'name': 'resolution_plan', 'disable_parallel_tool_use': True},
+                        # Opus 5.5 rejects forced tool choices. Validate the returned
+                        # plan below and use the bounded repair if no tool is returned.
+                        tool_choice={'type': 'auto', 'disable_parallel_tool_use': True},
                         tools=[{'name': 'resolution_plan', 'description': 'Source-backed corrections and remaining questions.',
                                 'input_schema': ResolutionPlan.model_json_schema()}])
                 blocks = [b for b in result.content if b.type == 'tool_use' and b.name == 'resolution_plan']

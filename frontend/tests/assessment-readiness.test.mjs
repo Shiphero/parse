@@ -5,7 +5,7 @@ import ts from 'typescript';
 
 const source = await readFile(new URL('../src/assessmentReadiness.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-const {assessmentState,readyForApprovalSelection,reviewProgress} = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const {assessmentState,readyForApprovalSelection,reviewProgress,reviewFailure} = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('an outdated ready recommendation is never counted or filtered as ready', () => {
   assert.equal(assessmentState({assessment:{outcome:'ready'},assessment_stale:true}), 'stale');
@@ -42,4 +42,23 @@ test('checking counts only current results and retries preparation failures too'
   assert.equal(progress.checked,1);
   assert.equal(progress.retryCount,1);
   assert.equal(progress.currentFailures,0);
+});
+
+test('unsupported model requests explain the blocker instead of recommending the same retry', () => {
+  for (const job of [
+    {reason:'provider_configuration', error:'The selected model cannot accept the request.'},
+    {error:'The selected model rejected the extraction tool settings. Smaller batches will not resolve this; the provider adapter needs a compatible request.'},
+  ]) {
+    const failure = reviewFailure(job);
+    assert.equal(failure.canContinue, false);
+    assert.match(failure.message, /application update/);
+    assert.doesNotMatch(failure.message, /tool settings|provider adapter/);
+  }
+});
+test('transient failures show the saved cause and allow continuing', () => {
+  const message = 'Provider temporarily unavailable or rate limited. Retry this run.';
+  assert.deepEqual(reviewFailure({error:message}), {message,canContinue:true});
+  assert.equal(reviewFailure({}).canContinue, true);
+  for (const reason of ['configuration_required','version_changed','repeated_invalid_responses'])
+    assert.equal(reviewFailure({reason}).canContinue, false);
 });

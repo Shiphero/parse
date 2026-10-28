@@ -28,9 +28,10 @@ Map each requirement to an exact rule_type {id,version} from this catalog when j
 
 
 class ProviderFailure(Exception):
-    def __init__(self, message, retryable=False, split=False):
+    def __init__(self, message, retryable=False, split=False, code=None):
         super().__init__(message)
         self.retryable, self.split = retryable, split
+        self.code = code
 
 
 @dataclass
@@ -74,7 +75,7 @@ def provider_failure(exc: Exception) -> ProviderFailure:
         return failure('Provider input limit exceeded. Smaller page batches will be attempted; a single-page failure needs context or image preparation changes.', split=True)
     if code == 400:
         if 'tool_choice' in message:
-            return failure('The selected model rejected the extraction tool settings. Smaller batches will not resolve this; the provider adapter needs a compatible request.')
+            return failure('Automatic processing stopped because the selected model does not support the request settings. An application update is needed before trying again. Completed work is saved.', code='provider_configuration')
         if 'schema' in message:
             return failure('Provider rejected the extraction schema. The provider adapter needs a compatible schema; smaller batches will not resolve this.')
         if 'image' in message:

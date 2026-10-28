@@ -804,6 +804,31 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual([r['id'] for r in saved['preparing']],[rules[0]['id']])
             self.assertFalse(run.payload['rules'][1]['resolution']['failed'])
 
+    async def test_incompatible_provider_request_saves_actionable_failure_without_changing_rules(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import new_assessment_job
+        from test_assessment import candidate
+        rules = [candidate(source_guide_id=str(self.gid))]
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'claude-opus-5-5'})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': rules, 'assessment_job': job}
+        message = 'The selected model cannot accept this request. An application update is needed.'
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(assessment_jobs, 'prepare_next', side_effect=ProviderFailure(
+                    message, code='provider_configuration')):
+            with self.assertRaises(RuntimeError):
+                await assessment_jobs.run_assessment(self.rid, job['id'])
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            saved = run.payload['assessment_job']
+            self.assertEqual(saved['status'], 'failed')
+            self.assertEqual(saved['reason'], 'provider_configuration')
+            self.assertEqual(saved['error'], message)
+            self.assertEqual(saved['assessed'], 0)
+            self.assertEqual(run.payload['rules'], rules)
+
     async def test_repeated_unusable_preparation_stops_with_saved_diagnostics(self):
         from routing_guides import assessment_jobs
         from routing_guides.assessment import new_assessment_job

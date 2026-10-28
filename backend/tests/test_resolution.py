@@ -167,7 +167,8 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
                 await provider.propose(current, {1: 'Different source'}, 'anthropic', 'test', path)
 
 
-    async def test_malformed_proposal_gets_one_forced_tool_repair_and_keeps_both_responses(self):
+    async def test_opus_55_compatible_proposal_and_repair_keep_both_responses(self):
+        from anthropic import BadRequestError
         from types import SimpleNamespace
         current = candidate()
         good = ResolutionPlan(proposed_spec=None).model_dump(mode='json')
@@ -176,16 +177,22 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
                 stop_reason='tool_use', usage=SimpleNamespace(model_dump=lambda: {'input_tokens':10}))
         client = AsyncMock()
         client.__aenter__.return_value=client
-        client.messages.create.side_effect=[result({'proposed_spec':{'instruction':'invalid-secret-input'}}),result(good)]
+        responses = iter([result({'proposed_spec':{'instruction':'invalid-secret-input'}}), result(good)])
+        async def create(**request):
+            if request['tool_choice']['type'] in {'tool', 'any'}:
+                raise BadRequestError('Unsupported tool choice', response=httpx.Response(400,
+                    request=httpx.Request('POST', 'https://api.anthropic.com/v1/messages')),
+                    body={'error': {'message': 'tool_choice: tool and any are not supported for this model'}})
+            return next(responses)
+        client.messages.create.side_effect = create
         with TemporaryDirectory() as directory, patch.object(provider,'AsyncAnthropic',return_value=client), \
                 patch.object(provider,'connection',return_value={'key':'test-private-key','model':'test'}):
             path=Path(directory)/'proposal.json'
-            output=await provider.propose(current,PAGES,'anthropic','test',path)
+            output=await provider.propose(current,PAGES,'anthropic','claude-opus-5-5',path)
             self.assertIsNone(output.proposed_spec)
             self.assertEqual(client.messages.create.await_count,2)
-            self.assertEqual(client.messages.create.call_args.kwargs['tool_choice']['type'],'tool')
             self.assertTrue(path.with_suffix('.repair.json').exists())
-            await provider.propose(current,PAGES,'anthropic','test',path)
+            await provider.propose(current,PAGES,'anthropic','claude-opus-5-5',path)
             self.assertEqual(client.messages.create.await_count,2)
 
     async def test_failed_repair_reports_safe_fields_without_exposing_values(self):

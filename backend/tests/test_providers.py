@@ -382,7 +382,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
 
     def test_only_confirmed_input_limits_split_batches(self):
         for status, message, split, expected in [
-            (400, 'tool_choice: type "tool" and "any" are not supported for this model.', False, 'tool settings'),
+            (400, 'tool_choice: type "tool" and "any" are not supported for this model.', False, 'application update'),
             (400, 'invalid schema', False, 'schema'),
             (400, 'invalid parameter', False, 'configuration'),
             (400, 'prompt is too long', True, 'input limit'),
@@ -401,6 +401,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIn(expected, str(failure))
                 self.assertIn('req_diagnostic', str(failure))
                 self.assertNotIn('synthetic-key', str(failure))
+                self.assertEqual(failure.code, 'provider_configuration' if 'tool_choice' in message else None)
 
     async def test_claude_plain_text_or_truncated_tool_is_not_accepted(self):
         for reason in ('end_turn', 'max_tokens'):

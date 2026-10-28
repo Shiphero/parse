@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { jsonRequest } from './api';
 import type { Connection, Run } from './api';
-import { assessmentLabels, assessmentState, reviewProgress } from './assessmentReadiness';
+import { assessmentLabels, assessmentState, reviewFailure, reviewProgress } from './assessmentReadiness';
 import type { AssessmentFilter } from './assessmentReadiness';
 
 export default function AssessmentPanel({run, actor, connections, selectedIds, locked, reload, filter, onFilter}: {
@@ -20,6 +20,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
   const autoApproved = run.payload.rules.filter(r => r.status === 'approved' && r.review?.mode === 'automatic').length;
   const duplicatesRemoved = run.payload.rules.filter(r => r.status === 'ignored' && r.review?.mode === 'automatic_duplicate').length;
   const progress = reviewProgress(run.payload.rules,job);
+  const failure = reviewFailure(job);
   const failedCount = progress.retryCount;
   const remaining = job?.pending;
   const canRetryFailed = job?.status === 'cancelled' || !Array.isArray(remaining) || remaining.length === 0;
@@ -46,6 +47,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
     <div className="section-heading"><div><h3>Automatic review</h3>
       <p>Let the app fix supported details, handle identical duplicates, and approve clear rules. Review only what remains unresolved.</p></div></div>
     {(autoApproved>0||duplicatesRemoved>0)&&<p role="status"><strong>{autoApproved} auto-approved · {duplicatesRemoved} duplicates set aside</strong> · Originals and decision history are saved.</p>}
+    {!!summary.length && !running && <p className="muted">Saved rule results, including earlier runs:</p>}
     {!!summary.length && !(running&&job?.phase==='resolve') && <div className="assessment-summary">{summary.map(({value, count: total}) =>
       <button key={value} className={`secondary ${filter === value ? 'selected' : ''}`} aria-pressed={filter === value} disabled={locked} onClick={() => onFilter(filter === value ? 'all' : value)}>
         {total} {assessmentLabels[value].toLowerCase()}
@@ -56,18 +58,19 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
         <button className="primary" disabled={busy || locked || classifying || !configured || !pending.length} onClick={() => request()}>{busy ? 'Starting…' : `${autoProcess?'Auto-process':'Check'} all rules (${pending.length})`}</button>
         {!!failedCount && canRetryFailed && <button className="secondary" disabled={busy || locked || classifying || !configured} onClick={() => request(false, false, 'failed')}>Retry failed checks ({failedCount})</button>}
         {!!selectedIds.length && <button className="secondary" disabled={busy || locked || classifying || !configured} onClick={() => request(false, false, 'selected')}>Resolve selected ({selectedIds.length})</button>}
-        {(['failed','cancelled'].includes(String(job?.status)) && Number(job?.processing_version)>=2) && !['configuration_required','version_changed','repeated_invalid_responses'].includes(String(job?.reason)) && <button className="secondary" disabled={busy || locked || classifying || !jev?.credential_configured || !job?.model} onClick={() => request(false, true)}>Continue checking</button>}
+        {(['failed','cancelled'].includes(String(job?.status)) && Number(job?.processing_version)>=2) && failure.canContinue && <button className="secondary" disabled={busy || locked || classifying || !jev?.credential_configured || !job?.model} onClick={() => request(false, true)}>Continue checking</button>}
       </div>
       <p className="muted">{autoProcess?'Applies verified fixes, sets aside identical duplicates and approves rules that pass the required checks. You can undo automatic decisions.':'Applies verified fixes and checks the rules; approvals and duplicate decisions remain yours.'} Completed work is reused when the rule and checks are unchanged. New analyses use automatic processing. Usage charges may apply.</p>
       <details><summary>Processing options</summary><label className="checkbox-label"><input type="checkbox" checked={autoProcess} disabled={busy||locked} onChange={e=>setAutoProcess(e.target.checked)}/>Automatically approve clear rules and set aside identical duplicates</label></details>
       {!configured && <p>Set up automated checks in Connections to get started.</p>}
       {classifying && <p>Classification is in progress. You can check these rules when it finishes.</p>}</>}
-    {hasResults && !progress.preparing && <p role="status">{running?'This run: ': 'Saved results: '}{totalChecked} pending rules checked{progress.currentFailures > 0 && ` · ${progress.currentFailures} checks need retrying`}.</p>}
+    {hasResults && !progress.preparing && <p role="status">{running?'This run: ': 'Saved results across runs: '}{totalChecked} pending rules checked{progress.currentFailures > 0 && ` · ${progress.currentFailures} unfinished checks`}.</p>}
     {!!job?.updated_at&&<p className="muted">Last progress: {new Date(String(job.updated_at)).toLocaleTimeString()}{Number(job.reused_prepared)>0&&` · ${String(job.reused_prepared)} preparation results reused`}{Number(job.reused_assessments)>0&&` · ${String(job.reused_assessments)} checks reused`}.</p>}
     {job?.status==='cancelled'&&<p>Stopped. Completed work is saved. {Number(job.processing_version)>=2?'Continue this run, or start a new run to retry failed rules.':'Start a new run to reuse successful results and retry unfinished work.'}</p>}
     {job?.status === 'complete' && <p className="muted">Last {job.scope === 'failed' ? 'retry' : 'run'}: {String(job.assessed)} checked{Number(job.updated) > 0 && ` · ${String(job.updated)} automatically improved`}{Number(job.failed) > 0 && ` · ${String(job.failed)} could not be checked`}{Number(job.skipped) > 0 && ` · ${String(job.skipped)} changed or reviewed rules skipped`}.</p>}
-    {progress.currentFailures>0 && <p role="status">{progress.currentFailures} {progress.preparing?'preparation attempts':'checks'} could not finish. {running?'Other rules are still being processed. Completed results are saved; failed rules can be retried afterward.':'Retry the failed rules. A failed automatic check does not itself require a manual policy decision.'}</p>}
+    {progress.currentFailures>0 && running && <p role="status">{progress.currentFailures} {progress.preparing?'preparation attempts':'checks'} could not finish. Other rules are still being processed. Completed results are saved; failed rules can be retried afterward.</p>}
 
-    {(error || job?.status === 'failed') && <p className="error" role="alert">{error || (job?.reason === 'configuration_required' ? 'Set up automated checks in Connections, then check all rules.' : job?.reason === 'repeated_invalid_responses' ? 'Automatic preparation stopped after repeated unusable responses. Completed work is saved. Contact your administrator before retrying.' : job?.reason === 'version_changed' ? 'Automatic review has been updated. Start a new run using the button above. Completed work is saved.' : 'Checks could not finish. Completed results are saved. Continue checking to try again; if the problem persists, contact your administrator.')}</p>}
+    {job?.status === 'failed' && <p>This run stopped{job.phase === 'resolve' ? ` during preparation, after ${Number(job.prepared)||0} of ${Number(job.total)||0} rules` : ''}. {Number(job.assessed)||0} rule checks completed in this run.</p>}
+    {(error || job?.status === 'failed') && <p className="error" role="alert">{error || failure.message}</p>}
   </section>;
 }
