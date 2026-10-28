@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     openai_api_key: SecretStr = SecretStr("")
     openai_model: str = ""
+    litellm_api_key: SecretStr = SecretStr("")
+    litellm_model: str = ""
+    litellm_base_url: str = "https://litellm.tools.shiphero.com/v1"
     jev_api_key: SecretStr = SecretStr("")
     jev_model: str = "jev-1.14.0"
 

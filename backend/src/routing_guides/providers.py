@@ -15,7 +15,7 @@ class ProviderStatus(BaseModel):
 
 
 async def provider_statuses() -> list[ProviderStatus]:
-    anthropic, openai = await connection("anthropic"), await connection("openai")
+    anthropic, openai, litellm = await connection("anthropic"), await connection("openai"), await connection("litellm")
     return [
         ProviderStatus(
             id="anthropic", name="Claude",
@@ -27,4 +27,5 @@ async def provider_statuses() -> list[ProviderStatus]:
             credential_configured=bool(openai["key"]),
             model=openai["model"] or None,
         ),
+        ProviderStatus(id="litellm", name="LiteLLM", credential_configured=bool(litellm['key']), model=litellm['model'] or None),
     ]

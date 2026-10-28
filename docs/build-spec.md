@@ -15,7 +15,7 @@ Convert retailer guides into source-backed, reviewed rules that supply human ins
 | Persistence | PostgreSQL 17, SQLAlchemy, Alembic; relational IDs plus versioned JSON rule manifests |
 | Jobs | Procrastinate; PostgreSQL queue and separate worker |
 | Assets | Immutable originals and rendered PNGs in a local Docker volume |
-| AI | Native Anthropic Messages and OpenAI Responses SDK adapters; common validated extraction contract |
+| AI | Anthropic Messages and OpenAI Responses adapters, including selectable LiteLLM gateway access; common validated extraction contract |
 | Execution | Docker Compose; localhost ports 5180 and 8180; database has no host port |
 
 No separate Redis or model orchestration framework is required. Dependency versions are locked. Queue schema migrations remain separate from application migrations. Non-secret models and upload limits live in PostgreSQL. Production credentials are injected by ECS/Secrets Manager; local development supports volume overrides saved atomically with mode 0600. Credentials never enter PostgreSQL or browser responses. Reviewer names are self-declared, not authenticated identity.

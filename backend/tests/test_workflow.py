@@ -1727,7 +1727,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.client.get('/api/settings')).json(), {'max_upload_mb': 512})
 
     async def test_credentials_are_masked_and_cross_origin_write_rejected(self):
-        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(credentials_mode='local',storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='',jev_api_key=SimpleNamespace(get_secret_value=lambda:''),jev_model='jev-1.14.0')):
+        with patch('routing_guides.connections.get_settings',return_value=SimpleNamespace(credentials_mode='local',storage_root=Path(self.temp.name),anthropic_api_key=SimpleNamespace(get_secret_value=lambda:''),anthropic_model='',openai_api_key=SimpleNamespace(get_secret_value=lambda:''),openai_model='',litellm_api_key=SimpleNamespace(get_secret_value=lambda:''),litellm_model='',litellm_base_url='https://gateway.example.test/v1',jev_api_key=SimpleNamespace(get_secret_value=lambda:''),jev_model='jev-1.14.0')):
             response=await self.client.put('/api/connections/anthropic',json={'key':'synthetic-test-secret','model':'test'})
             self.assertEqual(response.status_code,403)
             with patch.object(workflow_api.psycopg.AsyncConnection,'connect',new=AsyncMock()) as connect:

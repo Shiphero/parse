@@ -181,6 +181,7 @@ class ConnectionView(BaseModel):
     credential_configured: bool
     credential_managed: bool = False
     model: str
+    base_url: str | None = None
 
 
 class WorkflowView(BaseModel):
@@ -192,7 +193,7 @@ class WorkflowView(BaseModel):
 
 
 class StartAnalysis(BaseModel):
-    provider: Literal['anthropic', 'openai', 'manual'] = 'anthropic'
+    provider: Literal['anthropic', 'openai', 'litellm', 'manual'] = 'anthropic'
     model: str = Field(default='', max_length=150)
     batch_pages: int = Field(default=12, ge=1, le=50)
     request_id: UUID
@@ -243,7 +244,7 @@ class ClassifyRules(BulkApproval):
 
 
 class StartClassification(VersionedAction):
-    provider: Literal['anthropic', 'openai', 'jev'] = 'anthropic'
+    provider: Literal['anthropic', 'openai', 'litellm', 'jev'] = 'anthropic'
     model: str = Field(default='', max_length=150)
     include_approved: bool = False
 
@@ -390,6 +391,18 @@ async def connections():
     return await statuses()
 
 
+@router.get('/connections/litellm/models', response_model=list[str])
+async def available_gateway_models():
+    from routing_guides.model_gateway import gateway_models
+    from routing_guides.analysis_provider import provider_failure
+    try:
+        return await gateway_models(await connection('litellm'))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    except Exception as exc:
+        raise HTTPException(502, str(provider_failure(exc))) from None
+
+
 @router.get('/settings', response_model=UploadSettings)
 async def application_settings():
     return await upload_settings()
@@ -404,7 +417,7 @@ async def update_settings(body: UploadSettings, request: Request):
 
 
 @router.put('/connections/{provider}', response_model=list[ConnectionView])
-async def update_connection(provider: Literal['anthropic', 'openai', 'jev', 'shiphero'], body: ConnectionAction, request: Request):
+async def update_connection(provider: Literal['anthropic', 'openai', 'litellm', 'jev', 'shiphero'], body: ConnectionAction, request: Request):
     # Custom header disallows browser cross-origin form submissions; no CORS is enabled.
     if request.headers.get('X-Requested-With') != 'routing-guide-parser':
         raise HTTPException(403, 'Use the local application to update connections.')

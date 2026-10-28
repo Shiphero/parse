@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 async def enable_resolution(job: dict, run_config: dict) -> None:
     provider = run_config.get('provider')
-    if provider not in {'anthropic', 'openai'}:
+    if provider not in {'anthropic', 'openai', 'litellm'}:
         provider = 'anthropic'
     config = await connection(provider)
     model = run_config.get('model') if run_config.get('provider') == provider else config['model']

@@ -7,6 +7,7 @@ from pathlib import Path
 import httpx
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
+from routing_guides.model_gateway import compact_gateway_schema, openai_options
 from pydantic import ValidationError
 from routing_guides.analysis_provider import ProviderFailure, provider_failure, strict_schema
 from routing_guides.assessment_provider import AssessmentResponseError, validate_choice
@@ -93,7 +94,7 @@ async def proposal_response(state, provider, model, path, feedback=None):
             raise ResolutionResponseError('saved_response_changed', 'Saved preparation inputs changed. Start a new check.')
         return saved.get('raw')
     config = await connection(provider)
-    if provider not in {'anthropic', 'openai'} or not config['key'] or not model:
+    if provider not in {'anthropic', 'openai', 'litellm'} or not config['key'] or not model:
         raise ProviderFailure('Set up the analysis provider in Connections to resolve rules automatically.')
     content = json.dumps({**state, **({'validation_feedback': feedback} if feedback else {})})
     metadata = {}
@@ -113,10 +114,13 @@ async def proposal_response(state, provider, model, path, feedback=None):
                 usage = result.usage.model_dump()
                 metadata = {'stop_reason': result.stop_reason, 'content_types': [b.type for b in result.content]}
             else:
-                async with AsyncOpenAI(api_key=config['key'], timeout=180, max_retries=0) as client:
+                schema = strict_schema(ResolutionPlan.model_json_schema())
+                if provider == 'litellm':
+                    schema = compact_gateway_schema(schema)
+                async with AsyncOpenAI(**openai_options(provider, config)) as client:
                     result = await client.responses.create(model=model, instructions=SYSTEM, input=content, store=False,
                         max_output_tokens=16000, text={'format': {'type': 'json_schema', 'name': 'resolution_plan',
-                        'strict': True, 'schema': strict_schema(ResolutionPlan.model_json_schema())}})
+                        'strict': True, 'schema': schema}})
                 raw = json.loads(result.output_text) if result.status == 'completed' else None
                 usage = result.usage.model_dump() if result.usage else {}
                 metadata = {'stop_reason': result.status}

@@ -56,7 +56,33 @@ The production image sets `CREDENTIALS_MODE=environment`: provider credentials c
 from injected env values. Connections shows managed status, rejects credential changes, and
 ignores local `connections.json` credentials. Secrets never enter PostgreSQL or browser responses.
 Rotate secrets through the configured secret store and redeploy the task to receive new values. Optional
-future integrations use `OPENAI_API_KEY` and `SHIPHERO_ACCESS_TOKEN`.
+integrations use `OPENAI_API_KEY`, `LITELLM_API_KEY` and `SHIPHERO_ACCESS_TOKEN`.
+
+For LiteLLM, inject `LITELLM_API_KEY` into **both** the API and worker containers from an
+SSM SecureString such as `/parse/dev/LITELLM_API_KEY`. Grant the execution role access to
+that parameter (and its KMS key, if applicable). Set the non-secret `LITELLM_BASE_URL` to
+`https://litellm.tools.shiphero.com/v1` (also the application default). Adding the parameter
+alone does not inject it into an existing task definition; add its ECS secret reference to
+both containers and deploy the updated definition. The optional gateway connection does
+not require a key until selected.
+
+In Connections, choose LiteLLM, load the models available to the key, and save the exact
+Gemini Argon alias exposed by the gateway. No model ID is guessed or substituted. The gateway
+must support `/v1/responses`, image inputs and structured JSON output for the selected model.
+Model listing confirms access to aliases, not full extraction compatibility; verify with a
+small synthetic guide before a large run. LiteLLM routes extraction, classification and
+automatic preparation. Jev verification and duplicate assessment retain their own connection.
+Existing runs retain their selected provider and model; changing the default does not switch
+an in-progress review. For an existing draft, select LiteLLM and its model under Automatic review
+→ Processing options, then start a new review; continuing a stopped run keeps its original model.
+Local credentials can be entered in the password field in Connections;
+environment-managed deployments require the secret-store workflow above.
+
+The ShipHero gateway exposes Argon as `gemini-4-argon` (verified October 28, 2026).
+Gemini rejects the full correction schema's combined length bounds. The gateway adapter
+keeps its structure strict while leaving string and collection bounds to the existing
+local Pydantic validation. Source validation and independent verification remain required
+before corrections are applied.
 
 **No model or upload-limit env vars are required.** These preferences live in PostgreSQL and
 are editable in Connections. Fresh defaults: Anthropic `claude-opus-5-5`, Jev `jev-1.14.0`,

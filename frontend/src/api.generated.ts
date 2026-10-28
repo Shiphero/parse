@@ -230,6 +230,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/connections/litellm/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Available Gateway Models */
+        get: operations["available_gateway_models_api_connections_litellm_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -1310,6 +1327,8 @@ export interface components {
             credential_managed: boolean;
             /** Model */
             model: string;
+            /** Base Url */
+            base_url?: string | null;
         };
         /** ConsumerRulesView */
         ConsumerRulesView: {
@@ -2499,7 +2518,7 @@ export interface components {
              * @default anthropic
              * @enum {string}
              */
-            provider: "anthropic" | "openai" | "manual";
+            provider: "anthropic" | "openai" | "litellm" | "manual";
             /**
              * Model
              * @default
@@ -2555,6 +2574,13 @@ export interface components {
              * @default true
              */
             auto_process: boolean;
+            /** Preparation Provider */
+            preparation_provider?: ("anthropic" | "openai" | "litellm") | null;
+            /**
+             * Preparation Model
+             * @default
+             */
+            preparation_model: string;
         };
         /** StartClassification */
         StartClassification: {
@@ -2572,7 +2598,7 @@ export interface components {
              * @default anthropic
              * @enum {string}
              */
-            provider: "anthropic" | "openai" | "jev";
+            provider: "anthropic" | "openai" | "litellm" | "jev";
             /**
              * Model
              * @default
@@ -3226,6 +3252,26 @@ export interface operations {
             };
         };
     };
+    available_gateway_models_api_connections_litellm_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
     application_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -3284,7 +3330,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                provider: "anthropic" | "openai" | "jev" | "shiphero";
+                provider: "anthropic" | "openai" | "litellm" | "jev" | "shiphero";
             };
             cookie?: never;
         };

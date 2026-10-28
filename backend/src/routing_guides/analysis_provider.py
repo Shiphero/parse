@@ -9,6 +9,7 @@ from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 from routing_guides.connections import connection
+from routing_guides.model_gateway import openai_options
 from routing_guides.rules import Extraction
 from routing_guides.check_catalog import CATALOG
 from routing_guides.rule_catalog import RULE_TYPES
@@ -121,7 +122,8 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
             save_response(response_path, value)
         return parsed_response(value)
 
-    secret = (await connection(provider))['key']
+    config = await connection(provider)
+    secret = config['key']
     if not secret or not model:
         raise ProviderFailure('Configure a provider key and model in Connections before analysis.')
     # The shared document context comes first so providers can reuse it as a cached prefix across batches.
@@ -149,9 +151,9 @@ async def analyze(provider: str, model: str, pages: list[dict], context: str, di
             if len(blocks) != 1 or result.stop_reason != 'tool_use':
                 raise ProviderFailure('The model did not return the extraction tool result. No rules were accepted; retry or select another model.')
             return retain_and_parse(blocks[0].input, result.model, result.usage.model_dump())
-        if provider == 'openai':
+        if provider in {'openai', 'litellm'}:
             content = [{'type': 'input_text', 'text': text} if kind == 'text' else {'type': 'input_image', 'image_url': f'data:image/png;base64,{text}', 'detail': 'high'} for kind, text in text_blocks]
-            async with AsyncOpenAI(api_key=secret, timeout=180, max_retries=0) as client:
+            async with AsyncOpenAI(**openai_options(provider, config)) as client:
                 result = await client.responses.create(model=model, instructions=SYSTEM, input=[{'role': 'user', 'content': content}], store=False,
                     max_output_tokens=MAX_OUTPUT_TOKENS, text={'format': {'type': 'json_schema', 'name': 'submit_extraction', 'strict': True, 'schema': strict_schema(extraction_schema())}})
             if result.status != 'completed':

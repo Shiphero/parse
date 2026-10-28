@@ -20,7 +20,7 @@ def main() -> None:
             path = settings.storage_root / 'connections.json'
             legacy = json.loads(path.read_text()) if path.exists() else {}
             defaults = {'max_upload_mb': settings.max_upload_mb}
-            for provider in ('anthropic', 'openai', 'jev'):
+            for provider in ('anthropic', 'openai', 'litellm', 'jev'):
                 defaults[f'{provider}.model'] = legacy.get(provider, {}).get('model', getattr(settings, f'{provider}_model'))
             for name, value in defaults.items():
                 connection.execute('INSERT INTO application_settings(name,value) VALUES (%s,%s) ON CONFLICT(name) DO NOTHING',

@@ -27,6 +27,8 @@ class StartAssessment(VersionedAction):
     rule_ids: list[UUID] = Field(default_factory=list, max_length=10000)
     resume: bool = False
     auto_process: bool = True
+    preparation_provider: Literal['anthropic', 'openai', 'litellm'] | None = None
+    preparation_model: str = Field(default='', max_length=150)
 
 
 class CancelAssessment(VersionedAction):
@@ -40,6 +42,9 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
     if (data.get('classification_job') or {}).get('status') in {'queued', 'running'}:
         raise HTTPException(409, 'Wait for classification to finish before assessing its results.')
     if body.resume:
+        if ((body.preparation_provider and body.preparation_provider != job.get('resolution_provider'))
+                or (body.preparation_model.strip() and body.preparation_model.strip() != job.get('resolution_model'))):
+            raise HTTPException(409, 'Start a new review to change its model connection. Completed compatible work will be reused.')
         if (job.get('status') not in {'failed', 'cancelled'} or job.get('model') != model
                 or job.get('prompt_version') != PROMPT_VERSION
                 or job.get('resolution_version', RESOLUTION_VERSION) != RESOLUTION_VERSION):
@@ -86,7 +91,14 @@ async def start_assessment(run_id: UUID, body: StartAssessment):
         job = prepare_job(data, body, model)
         if not body.resume:
             try:
-                await enable_resolution(job, run_config)
+                resolution_config = run_config
+                if body.preparation_provider:
+                    selected = await connection(body.preparation_provider)
+                    resolution_config = {'provider': body.preparation_provider,
+                        'model': body.preparation_model.strip() or selected['model']}
+                elif body.preparation_model.strip():
+                    raise ValueError('Choose a model connection when specifying a preparation model.')
+                await enable_resolution(job, resolution_config)
             except ValueError as exc:
                 raise HTTPException(422, str(exc)) from None
         data['assessment_job'] = job

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { jsonRequest } from './api';
 import type { Connection, Run } from './api';
 import { assessmentLabels, assessmentState, reviewFailure, reviewProgress } from './assessmentReadiness';
@@ -24,9 +24,13 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
   const failedCount = progress.retryCount;
   const remaining = job?.pending;
   const canRetryFailed = job?.status === 'cancelled' || !Array.isArray(remaining) || remaining.length === 0;
-  const resolutionProvider = ['anthropic','openai'].includes(String(run.config.provider)) ? String(run.config.provider) : 'anthropic';
+  const originalProvider = ['anthropic','openai','litellm'].includes(String(run.config.provider)) ? String(run.config.provider) : 'anthropic';
+  const [resolutionProvider, setResolutionProvider] = useState(originalProvider);
   const resolver = connections.find(c=>c.id===resolutionProvider);
-  const configured = jev?.credential_configured && model.trim() && resolver?.credential_configured && (run.config.provider===resolutionProvider ? run.config.model : resolver.model);
+  const defaultResolutionModel = String(run.config.provider===resolutionProvider ? run.config.model : resolver?.model || '');
+  const [resolutionModel, setResolutionModel] = useState(defaultResolutionModel);
+  useEffect(() => {setResolutionModel(defaultResolutionModel);}, [resolutionProvider, defaultResolutionModel]);
+  const configured = jev?.credential_configured && model.trim() && resolver?.credential_configured && resolutionModel.trim();
   const totalChecked = progress.checked;
   const hasResults = progress.visible.some(rule => rule.assessment);
   const summary = (['ready', 'needs_correction', 'needs_review', 'stale', 'unassessed'] as const)
@@ -38,6 +42,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
       await jsonRequest(`/api/analysis/${run.id}/${cancel ? 'cancel-assessment' : 'assess'}`, {
         version: run.version, actor: actor.trim() || 'User', ...(cancel?{job_id:job?.id}:{}), ...(!cancel && {
           model: resume ? String(job?.model || model).trim() : model.trim(), scope, sample_size: 25, rule_ids: scope === 'selected' ? selectedIds : [], resume, auto_process: autoProcess,
+          ...(!resume && {preparation_provider: resolutionProvider, preparation_model: resolutionModel.trim()}),
         }),
       });
       reload();
@@ -61,7 +66,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
         {(['failed','cancelled'].includes(String(job?.status)) && Number(job?.processing_version)>=2) && failure.canContinue && <button className="secondary" disabled={busy || locked || classifying || !jev?.credential_configured || !job?.model} onClick={() => request(false, true)}>Continue checking</button>}
       </div>
       <p className="muted">{autoProcess?'Applies verified fixes, sets aside identical duplicates and approves rules that pass the required checks. You can undo automatic decisions.':'Applies verified fixes and checks the rules; approvals and duplicate decisions remain yours.'} Completed work is reused when the rule and checks are unchanged. New analyses use automatic processing. Usage charges may apply.</p>
-      <details><summary>Processing options</summary><label className="checkbox-label"><input type="checkbox" checked={autoProcess} disabled={busy||locked} onChange={e=>setAutoProcess(e.target.checked)}/>Automatically approve clear rules and set aside identical duplicates</label></details>
+      <details><summary>Processing options</summary><label className="checkbox-label"><input type="checkbox" checked={autoProcess} disabled={busy||locked} onChange={e=>setAutoProcess(e.target.checked)}/>Automatically approve clear rules and set aside identical duplicates</label><label>Model connection for corrections<select value={resolutionProvider} disabled={busy||locked} onChange={e=>setResolutionProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option></select></label><label>Model<input value={resolutionModel} disabled={busy||locked} onChange={e=>setResolutionModel(e.target.value)}/></label><p className="muted">Applies when starting a new review. Continuing a stopped run keeps its original model. Independent verification uses the configured review connection.</p></details>
       {!configured && <p>Set up automated checks in Connections to get started.</p>}
       {classifying && <p>Classification is in progress. You can check these rules when it finishes.</p>}</>}
     {hasResults && !progress.preparing && <p role="status">{running?'This run: ': 'Saved results across runs: '}{totalChecked} pending rules checked{progress.currentFailures > 0 && ` · ${progress.currentFailures} unfinished checks`}.</p>}

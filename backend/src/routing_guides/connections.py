@@ -5,7 +5,7 @@ import tempfile
 from routing_guides.config import get_settings
 from routing_guides.app_settings import setting, save_setting
 
-NAMES = {'anthropic', 'openai', 'jev', 'shiphero'}
+NAMES = {'anthropic', 'openai', 'litellm', 'jev', 'shiphero'}
 
 
 async def connection(name: str) -> dict:
@@ -17,8 +17,11 @@ async def connection(name: str) -> dict:
     local = stored.get(name, {}) if settings.credentials_mode == 'local' else {}
     if name == 'shiphero':
         return {'key': local.get('key', os.environ.get('SHIPHERO_ACCESS_TOKEN', '')), 'model': ''}
-    return {'key': local.get('key', getattr(settings, f'{name}_api_key').get_secret_value()),
-            'model': await setting(f'{name}.model', getattr(settings, f'{name}_model'))}
+    config = {'key': local.get('key', getattr(settings, f'{name}_api_key').get_secret_value()),
+              'model': await setting(f'{name}.model', getattr(settings, f'{name}_model'))}
+    if name == 'litellm':
+        config['base_url'] = settings.litellm_base_url
+    return config
 
 
 async def save_connection(name: str, key: str | None, model: str) -> None:
@@ -49,8 +52,9 @@ async def save_connection(name: str, key: str | None, model: str) -> None:
 
 async def statuses() -> list[dict]:
     result = []
-    for name in ('anthropic', 'openai', 'jev', 'shiphero'):
+    for name in ('anthropic', 'openai', 'litellm', 'jev', 'shiphero'):
         config = await connection(name)
         result.append({'id': name, 'credential_configured': bool(config['key']), 'model': config['model'],
-                       'credential_managed': get_settings().credentials_mode == 'environment'})
+                       'credential_managed': get_settings().credentials_mode == 'environment',
+                       'base_url': config.get('base_url')})
     return result

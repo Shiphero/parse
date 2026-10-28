@@ -14,6 +14,9 @@ x-backend: &backend
     ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     OPENAI_MODEL: ${OPENAI_MODEL:-}
+    LITELLM_API_KEY: ${LITELLM_API_KEY:-}
+    LITELLM_MODEL: ${LITELLM_MODEL:-}
+    LITELLM_BASE_URL: ${LITELLM_BASE_URL:-https://litellm.tools.shiphero.com/v1}
     JEV_API_KEY: ${JEV_API_KEY:-}
     JEV_MODEL: ${JEV_MODEL:-jev-1.14.0}
   volumes:

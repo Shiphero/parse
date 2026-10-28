@@ -7,6 +7,7 @@ from uuid import UUID
 
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
+from routing_guides.model_gateway import openai_options
 from pydantic import Field, field_validator
 from routing_guides.analysis_provider import ProviderFailure, provider_failure, strict_schema
 from routing_guides.connections import connection
@@ -96,8 +97,8 @@ async def classify(provider, model, rules, response_path: Path):
             if response.stop_reason != 'tool_use' or len(blocks) != 1:
                 raise ProviderFailure('The model did not return a complete classification batch. Completed batches remain saved.')
             raw, actual_model, usage = blocks[0].input, response.model, response.usage.model_dump()
-        elif provider == 'openai':
-            async with AsyncOpenAI(api_key=config['key'], timeout=180, max_retries=0) as client:
+        elif provider in {'openai', 'litellm'}:
+            async with AsyncOpenAI(**openai_options(provider, config)) as client:
                 response = await client.responses.create(model=model, instructions=system, input=content, store=False,
                     max_output_tokens=12000, text={'format': {'type': 'json_schema', 'name': 'classify_rules',
                     'strict': True, 'schema': strict_schema(Classifications.model_json_schema())}})

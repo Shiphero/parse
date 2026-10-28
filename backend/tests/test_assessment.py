@@ -332,6 +332,19 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException):
             prepare_job(data, body, 'jev-test')
 
+    def test_resume_keeps_gateway_connection_and_rejects_model_changes(self):
+        data = {'rules': [self.rule]}
+        job = prepare_job(data, StartAssessment(version=1, actor='Reviewer', scope='all'), 'jev-test')
+        job.update(status='cancelled', resolution_provider='litellm', resolution_model='argon-team-alias')
+        data['assessment_job'] = job
+        resumed = prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True), 'jev-test')
+        self.assertEqual(resumed['resolution_provider'], 'litellm')
+        self.assertEqual(resumed['resolution_model'], 'argon-team-alias')
+        for changes in [{'preparation_provider': 'anthropic'}, {'preparation_model': 'different-alias'}]:
+            with self.subTest(changes=changes), self.assertRaises(HTTPException) as caught:
+                prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True, **changes), 'jev-test')
+            self.assertEqual(caught.exception.status_code, 409)
+
     def test_all_selection_is_not_limited_to_sample_size_or_visible_selection(self):
         rules = [candidate() for _ in range(40)]
         data = {'rules': [*rules, candidate(status='approved'), candidate(status='ignored')]}
