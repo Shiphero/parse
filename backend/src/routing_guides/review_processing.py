@@ -30,29 +30,52 @@ def reusable_preparation(candidate, job):
             or record.get('provider') != job['resolution_provider'] or record.get('model') != job['resolution_model']):
         return False
     if record.get('output_fingerprint'):
+        compatible = record.get('prompt_version') == job['resolution_version']
+        if job['resolution_version'] == 'rule-resolution-1.3' and record.get('prompt_version') in {'rule-resolution-1.1', 'rule-resolution-1.2'}:
+            # Old unapplied proposals were verified as a whole, not independently.
+            compatible = all(change.get('applied') for change in record.get('changes', []))
         return (record['output_fingerprint'] == preparation_fingerprint(candidate)
                 and record.get('verifier_model') == job['model']
-                and (record.get('prompt_version') == job['resolution_version'] or
+                and (compatible or
                      job['resolution_version'] == 'rule-resolution-1.2' and record.get('prompt_version') == 'rule-resolution-1.1'))
     # Successful pre-upgrade no-change proposals did not call the verifier. Preserve
     # those results on untouched revisions; changed/proposed definitions are rechecked.
-    return (job['resolution_version'] == 'rule-resolution-1.2'
+    return (job['resolution_version'] in {'rule-resolution-1.2', 'rule-resolution-1.3'}
             and record.get('prompt_version') == 'rule-resolution-1.1' and not record.get('changes')
             and not candidate.get('review') and not candidate.get('automation_hold'))
 
 
 @asynccontextmanager
-async def completed_batch(items, operation):
+async def completed_batch(items, operation, *, keep_running=lambda: True):
+    """Refill a bounded pool after each checkpoint, without waiting for slow peers."""
     async def perform(item):
         try:
             return item, await operation(item), None
         except Exception as error:
             return item, None, error
 
-    tasks = [asyncio.create_task(perform(item)) for item in items]
+    remaining = iter(items)
+    tasks = set()
+    failed = False
+    def refill():
+        while len(tasks) < REVIEW_CONCURRENCY and not failed and keep_running():
+            try:
+                item = next(remaining)
+            except StopIteration:
+                break
+            tasks.add(asyncio.create_task(perform(item)))
+    refill()
     async def results():
-        for task in asyncio.as_completed(tasks):
-            yield await task
+        nonlocal failed
+        while tasks:
+            done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            failed = failed or any(task.result()[2] is not None for task in done)
+            for task in done:
+                tasks.remove(task)
+                yield await task
+                # The consumer persists the result and may stop scheduling after
+                # a fatal failure. Already-running results are still drained.
+                refill()
     try:
         yield results()
     finally:

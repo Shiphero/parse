@@ -3,10 +3,10 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, ValidationError
 from routing_guides.rules import EvidenceRef, RuleSpec, StrictModel
 
-RESOLUTION_VERSION = 'rule-resolution-1.2'
+RESOLUTION_VERSION = 'rule-resolution-1.3'
 ChangeField = Literal['title', 'instruction', 'purpose', 'operational_category', 'consumption_points',
     'rule_type', 'placements', 'verification', 'standard_check', 'applicability_text', 'applicability',
     'exceptions', 'unresolved_questions', 'execution_mode', 'evidence', 'subject', 'obligation', 'assertion', 'schema_version']
@@ -57,6 +57,38 @@ class ResolutionRecord(StrictModel):
     validation_fields: list[str] = Field(default_factory=list)
 
 
+def preparation_targets(candidate: dict) -> list[str]:
+    """Repair concrete gaps; final assessment still checks every complete rule."""
+    from routing_guides.check_catalog import needs_check_mapping
+    from routing_guides.taxonomy import needs_classification
+    spec = RuleSpec.model_validate(candidate['spec'])
+    targets = []
+    if needs_classification(candidate['spec']):
+        targets.append('Fill missing purpose, operational category or consuming workflows; preserve known classifications.')
+    if (spec.rule_type is None and spec.execution_mode != 'reference_only') or needs_check_mapping(spec):
+        targets.append('Resolve the missing rule type or check mapping, without inventing a validator or retailer policy.')
+    if spec.unresolved_questions:
+        targets.append('Resolve only the recorded questions that the supplied source answers; retain genuine uncertainty.')
+    if candidate.get('evidence_issues'):
+        targets.append('Resolve the recorded source discrepancies while preserving original evidence: ' + '; '.join(candidate['evidence_issues']))
+    assessment = candidate.get('assessment') or {}
+    # A stale recommendation cannot justify changing a newer definition.
+    if assessment.get('revision') == candidate['revision'] and not assessment.get('check_failed'):
+        targets.extend(issue['action'] for issue in assessment.get('issues', []) if issue.get('kind') == 'correction')
+    return targets
+
+
+def correction_groups(plan: ResolutionPlan) -> list[set[str]]:
+    """Policy, bindings and routing are coupled; question cleanup is separate."""
+    fields = {change.field for change in plan.changes}
+    return [group for group in (fields - {'unresolved_questions'}, fields & {'unresolved_questions'}) if group]
+
+
+def group_spec(original: dict, plan: ResolutionPlan, fields: set[str]) -> dict:
+    proposed = plan.proposed_spec.model_dump(mode='json')
+    return RuleSpec.model_validate({**original, **{key: proposed[key] for key in fields}}).model_dump(mode='json')
+
+
 def validate_plan(original: dict, plan: ResolutionPlan, pages: dict[int, str | None]) -> None:
     from routing_guides.analysis_jobs import normalized_excerpt
     old = RuleSpec.model_validate(original).model_dump(mode='json')
@@ -101,11 +133,21 @@ def resolve_plan(candidate: dict, plan: ResolutionPlan, verdicts: dict[str, bool
     validate_plan(candidate['spec'], plan, pages)
     old = RuleSpec.model_validate(candidate['spec']).model_dump(mode='json')
     new = plan.proposed_spec.model_dump(mode='json') if plan.proposed_spec else old
-    all_verified = bool(plan.changes) and all(verdicts.get(change.field) is True for change in plan.changes)
-    apply = all_verified and automatic_change_allowed(old, new)
-    record = ResolutionRecord(revision=candidate['revision'] + int(apply), input_fingerprint=fingerprint,
+    applied = set()
+    result = old
+    for group in correction_groups(plan):
+        if not all(verdicts.get(field) is True for field in group):
+            continue
+        try:
+            selected = group_spec(result, plan, group)
+        except ValidationError:
+            continue
+        if automatic_change_allowed(old, selected):
+            result = selected
+            applied.update(group)
+    record = ResolutionRecord(revision=candidate['revision'] + int(bool(applied)), input_fingerprint=fingerprint,
         provider=provider, model=model, at=datetime.now(timezone.utc).isoformat(),
         changes=[ResolutionChange(**change.model_dump(), before=old[change.field], after=new[change.field],
-                                  verified=verdicts.get(change.field) is True, applied=apply) for change in plan.changes],
+                                  verified=verdicts.get(change.field) is True, applied=change.field in applied) for change in plan.changes],
         questions=plan.questions, capability_gaps=plan.capability_gaps)
-    return deepcopy(new if apply else old), record
+    return deepcopy(result), record

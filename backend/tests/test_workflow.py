@@ -704,6 +704,42 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                 {'version':1,'actor':'Reviewer','job_id':job['id']})
         self.assertEqual(stopped['payload']['assessment_job']['status'],'cancelled')
 
+    async def test_complete_rules_skip_proposals_but_all_rules_still_get_final_checks(self):
+        from routing_guides import assessment_jobs
+        from routing_guides.assessment import new_assessment_job, AssessmentResult, assessment_fingerprint
+        from routing_guides.resolution import ResolutionPlan
+        from test_assessment import candidate
+        rules = [candidate(source_guide_id=str(self.gid)) for _ in range(4)]
+        rules[-1]['spec']['unresolved_questions'] = ['Which destinations are covered?']
+        job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
+        job['auto_process'] = False
+        await resolution_jobs.enable_resolution(job, {'provider':'anthropic', 'model':'test-model'})
+        async with self.sessions.begin() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            run.payload = {**run.payload, 'rules': deepcopy(rules), 'assessment_job': job}
+        async def assess(current, related, pages, model, path, job_id):
+            return AssessmentResult(outcome='needs_review', issues=[], dimensions=[],
+                fingerprint=assessment_fingerprint(current, related), revision=current['revision'],
+                job_id=job_id, assessed_at='2026-10-28T12:00:00+00:00', model=model, source_pages=[1])
+        with patch.object(assessment_jobs, 'sessions', self.sessions), \
+                patch.object(resolution_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(assessment_jobs, 'guide_directory', return_value=Path(self.temp.name)), \
+                patch.object(resolution_jobs, 'propose', return_value=ResolutionPlan(proposed_spec=None)) as proposed, \
+                patch.object(resolution_jobs, 'verify_changes', return_value={}), \
+                patch.object(assessment_jobs, 'assess', side_effect=assess) as assessed:
+            await assessment_jobs.run_assessment(self.rid, job['id'])
+        proposed.assert_awaited_once()
+        self.assertEqual(proposed.call_args.args[0]['id'], rules[-1]['id'])
+        self.assertEqual(assessed.await_count, 4)
+        async with self.sessions() as session:
+            run = await session.get(AnalysisRun, self.rid)
+            self.assertEqual(run.payload['assessment_job']['prepared_without_model'], 3)
+            self.assertEqual(run.payload['assessment_job']['status'], 'complete')
+            for original, saved in zip(rules, run.payload['rules']):
+                self.assertEqual(saved['spec'], original['spec'])
+                self.assertEqual(saved['revision'], original['revision'])
+                self.assertEqual(saved['status'], 'pending')
+
     async def test_review_batches_overlap_and_new_runs_reuse_unchanged_work(self):
         from routing_guides import assessment_jobs
         from routing_guides.assessment import new_assessment_job, AssessmentResult, assessment_fingerprint
@@ -712,6 +748,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         rules = [candidate(source_guide_id=str(self.gid)) for _ in range(6)]
         for i, rule in enumerate(rules):
             rule['spec']['title'] = f'Carton requirement {i}'
+            rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
         job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
         job['auto_process'] = False
         await resolution_jobs.enable_resolution(job, {'provider':'anthropic', 'model':'test-model'})
@@ -782,6 +819,8 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         from routing_guides.resolution import ResolutionPlan
         from test_assessment import candidate
         rules=[candidate(source_guide_id=str(self.gid)) for _ in range(2)]
+        for rule in rules:
+            rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
         job=new_assessment_job(rules,'jev-test','Reviewer','all')
         await resolution_jobs.enable_resolution(job,{'provider':'anthropic','model':'test-model'})
         async with self.sessions.begin() as session:
@@ -835,6 +874,8 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         from routing_guides.resolution_provider import ResolutionResponseError
         from test_assessment import candidate
         rules=[candidate(source_guide_id=str(self.gid)) for _ in range(20)]
+        for rule in rules:
+            rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
         job=new_assessment_job(rules,'jev-test','Reviewer','all')
         await resolution_jobs.enable_resolution(job,{'provider':'anthropic','model':'test-model'})
         async with self.sessions.begin() as session:
@@ -846,15 +887,16 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                     'invalid_structure','The correction contains incompatible fields.',['placements'])) as proposed:
             with self.assertRaises(RuntimeError):
                 await assessment_jobs.run_assessment(self.rid,job['id'])
-        self.assertEqual(proposed.await_count,12)
+        self.assertGreaterEqual(proposed.await_count,10)
+        self.assertLessEqual(proposed.await_count,13)
         async with self.sessions() as session:
             run=await session.get(AnalysisRun,self.rid)
             saved=run.payload['assessment_job']
             self.assertEqual(saved['status'],'failed')
             self.assertEqual(saved['reason'],'repeated_invalid_responses')
-            self.assertEqual(saved['prepared'],12)
-            self.assertEqual(saved['preparation_failures'],{'invalid_structure':12})
-            self.assertEqual(len(saved['preparing']),8)
+            self.assertEqual(saved['prepared'],proposed.await_count)
+            self.assertEqual(saved['preparation_failures'],{'invalid_structure':proposed.await_count})
+            self.assertEqual(len(saved['preparing']),20-proposed.await_count)
             self.assertEqual(run.payload['rules'][0]['resolution']['validation_fields'],['placements'])
             self.assertNotIn('resolution',run.payload['rules'][-1])
 
@@ -864,6 +906,8 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         from test_assessment import candidate
         from test_resolution import proposal
         rules = [candidate(source_guide_id=str(self.gid)) for _ in range(2)]
+        for rule in rules:
+            rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
         rules[1]['spec']['title'] = 'Alternative carton weight instruction'
         job = new_assessment_job(rules, 'jev-test', 'Reviewer', 'all')
         await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
@@ -914,6 +958,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         from test_resolution import proposal
         for cancel in (False, True):
             original = candidate(source_guide_id=str(self.gid))
+            original['spec']['unresolved_questions'] = ['Which destinations are covered?']
             job = new_assessment_job([original], 'jev-test', 'Reviewer', 'all')
             await resolution_jobs.enable_resolution(job, {'provider': 'anthropic', 'model': 'test-model'})
             async with self.sessions.begin() as session:

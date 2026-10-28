@@ -20,6 +20,8 @@ Convert retailer guides into source-backed, reviewed rules that supply human ins
 
 No separate Redis or model orchestration framework is required. Dependency versions are locked. Queue schema migrations remain separate from application migrations. Non-secret models and upload limits live in PostgreSQL. Production credentials are injected by ECS/Secrets Manager; local development supports volume overrides saved atomically with mode 0600. Credentials never enter PostgreSQL or browser responses. Reviewer names are self-declared, not authenticated identity.
 
+Automatic review prepares only definitions with concrete classification, mapping, source, question or previously identified correction gaps. Complete definitions proceed directly to final accuracy and duplicate assessment; this shortcut never grants approval. Preparation uses four continuously refilled slots, with serialized checkpoints, bounded failure handling and cancellation. Related definition changes remain atomic. Question cleanup is verified against both the original and proposed definition so it can be applied independently of other corrections. Old completed preparation results remain reusable; older unapplied bundles are reconsidered under the new verification contract.
+
 ## Delivered workflow
 
 1. **Upload and prepare.** Stream/save immutable PDF, hash/deduplicate per retailer, enqueue atomically with the record, render each page and extract available text. Every page gets a coverage record. Image-only pages are informational; real preparation failures need attention. No page truncation.

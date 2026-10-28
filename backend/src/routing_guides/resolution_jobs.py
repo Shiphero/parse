@@ -8,7 +8,7 @@ from routing_guides.analysis_provider import ProviderFailure
 from routing_guides.assessment_provider import AssessmentResponseError
 from routing_guides.connections import connection
 from routing_guides.models import AnalysisRun, AuditEvent, GuidePage
-from routing_guides.resolution import ResolutionRecord, RESOLUTION_VERSION, resolve_plan
+from routing_guides.resolution import ResolutionRecord, ResolutionPlan, RESOLUTION_VERSION, resolve_plan, preparation_targets
 from routing_guides.resolution_provider import propose, verify_changes, select_source_pages
 from routing_guides.storage import guide_directory
 from routing_guides.review_processing import (REVIEW_CONCURRENCY, completed_batch, now,
@@ -30,7 +30,7 @@ async def enable_resolution(job: dict, run_config: dict) -> None:
                preparing=deepcopy(job['pending']), prepared=0, updated=0, resolution_failed=0)
     job.setdefault('auto_process', True)
     job['selected_revisions'] = deepcopy(job['pending'])
-    job.update(reused_prepared=0, preparation_failures={}, recent_preparation_failures=[],
+    job.update(reused_prepared=0, prepared_without_model=0, preparation_failures={}, recent_preparation_failures=[],
                concurrency=REVIEW_CONCURRENCY, processing_version=2)
 
 
@@ -45,7 +45,7 @@ def preserve_assessment_context(candidate, before):
 
 
 async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> bool:
-    """Load a bounded batch, prepare concurrently, and checkpoint each completed rule."""
+    """Snapshot pending preparation, refill bounded slots, and checkpoint each result."""
     work = []
     async with sessions.begin() as session:
         run = await session.get(AnalysisRun, run_id, with_for_update=True)
@@ -71,6 +71,21 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
                 job['prepared'] += 1
                 job['reused_prepared'] = job.get('reused_prepared', 0) + 1
                 continue
+            if not preparation_targets(current):
+                before = deepcopy(current)
+                fingerprint = preparation_fingerprint(current)
+                _, record = resolve_plan(current, ResolutionPlan(proposed_spec=None), {}, {},
+                    job['resolution_provider'], job['resolution_model'], fingerprint)
+                record.job_id, record.verifier_model, record.output_fingerprint = job_id, job['model'], fingerprint
+                current['resolution'] = record.model_dump(mode='json')
+                preserve_assessment_context(current, before)
+                job['preparing'].remove(item)
+                job['prepared'] += 1
+                job['prepared_without_model'] = job.get('prepared_without_model', 0) + 1
+                session.add(AuditEvent(id=uuid4(), entity_id=run.id, actor='Automatic review',
+                    action='rule_preparation_not_needed', payload={'rule_id': current['id'],
+                        'revision': current['revision'], 'job_id': job_id}))
+                continue
             candidate = deepcopy(current)
             source_id = candidate.get('source_guide_id') or str(run.guide_id)
             if source_id not in source_cache:
@@ -79,8 +94,6 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
                 source_cache[source_id] = {row.page_index + 1: row.text for row in rows}
             work.append({'candidate': candidate, 'pages': select_source_pages(candidate, source_cache[source_id]),
                          'fingerprint': preparation_fingerprint(candidate), 'source_id': source_id})
-            if len(work) == REVIEW_CONCURRENCY:
-                break
         if not job['preparing']:
             if job.get('auto_process'):
                 from routing_guides.automatic_review import remove_exact_duplicates
@@ -113,7 +126,7 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
         return spec, record
 
     fatal = None
-    async with completed_batch(work, prepare) as results:
+    async with completed_batch(work, prepare, keep_running=lambda: fatal is None) as results:
         async for item, output, error in results:
             if error:
                 fatal = fatal or error

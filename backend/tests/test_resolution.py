@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 from pydantic import ValidationError
 from routing_guides import resolution_provider as provider
-from routing_guides.resolution import ResolutionPlan, resolve_plan, validate_plan
+from routing_guides.resolution import ResolutionPlan, resolve_plan, validate_plan, preparation_targets
 from routing_guides.rules import RuleSpec
 from routing_guides.evaluator import evaluate_rule
 from routing_guides.review import individual_review_reasons
@@ -64,6 +64,42 @@ class ResolutionTests(unittest.TestCase):
         self.assertEqual(record.revision, 1)
         self.assertTrue(record.changes[0].verified)
         self.assertFalse(any(c.applied for c in record.changes))
+
+    def test_verified_correction_is_not_blocked_by_unverified_question_cleanup(self):
+        self.rule['spec']['unresolved_questions'] = ['Which shipments are covered?']
+        plan = proposal(self.rule, instruction='Cartons must not exceed 50 lb.', unresolved_questions=[])
+        spec, record = self.resolve(plan, {'instruction': True, 'unresolved_questions': False})
+        self.assertEqual(spec['instruction'], 'Cartons must not exceed 50 lb.')
+        self.assertEqual(spec['unresolved_questions'], self.rule['spec']['unresolved_questions'])
+        self.assertEqual(record.revision, 2)
+        self.assertEqual([change.field for change in record.changes if change.applied], ['instruction'])
+
+    def test_independently_answered_question_can_clear_without_an_unverified_rewrite(self):
+        self.rule['spec']['unresolved_questions'] = ['What is the carton weight limit?']
+        plan = proposal(self.rule, instruction='Cartons must not exceed 50 lb.', unresolved_questions=[])
+        spec, record = self.resolve(plan, {'instruction': False, 'unresolved_questions': True})
+        self.assertEqual(spec['instruction'], self.rule['spec']['instruction'])
+        self.assertEqual(spec['unresolved_questions'], [])
+        self.assertEqual([change.field for change in record.changes if change.applied], ['unresolved_questions'])
+
+    def test_complete_definitions_need_no_proposal_but_concrete_gaps_do(self):
+        self.assertEqual(preparation_targets(self.rule), [])
+        self.rule['spec']['unresolved_questions'] = ['Which destinations are covered?']
+        self.assertEqual(len(preparation_targets(self.rule)), 1)
+        self.rule['spec']['unresolved_questions'] = []
+        self.rule['assessment'] = {'revision': 0, 'issues': [{'kind': 'correction', 'action': 'Old correction'}]}
+        self.assertEqual(preparation_targets(self.rule), [])
+        self.rule['assessment']['revision'] = 1
+        self.assertEqual(preparation_targets(self.rule), ['Old correction'])
+
+    def test_related_mapping_changes_remain_atomic(self):
+        complete = deepcopy(self.rule['spec'])
+        self.rule['spec'] = RuleSpec.model_validate({**complete, 'rule_type': None, 'placements': [],
+            'standard_check': None, 'verification': 'unresolved'}).model_dump(mode='json')
+        plan = proposal(self.rule, **{key: complete[key] for key in ('rule_type', 'placements', 'standard_check', 'verification')})
+        spec, record = self.resolve(plan, {key: key != 'verification' for key in ('rule_type', 'placements', 'standard_check', 'verification')})
+        self.assertEqual(spec, self.rule['spec'])
+        self.assertFalse(any(change.applied for change in record.changes))
 
     def test_verified_existing_check_parameters_can_be_corrected_without_enforcement(self):
         binding = deepcopy(self.rule['spec']['standard_check'])
@@ -124,6 +160,26 @@ class ResolutionTests(unittest.TestCase):
 
 
 class VerificationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_verifier_sees_independent_candidates_and_skips_protected_changes(self):
+        current = candidate()
+        current['spec']['unresolved_questions'] = ['What is the weight limit?']
+        plan = proposal(current, instruction='Cartons must not exceed 50 lb.', unresolved_questions=[])
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        client.post.return_value = httpx.Response(200, json={'answers': {field: {
+            'type': 'choice', 'choice': 'supported', 'confidence': .99, 'probabilities': {'supported': .99, 'unsupported': .01}}
+            for field in ('instruction', 'unresolved_questions')}})
+        with TemporaryDirectory() as directory, patch.object(provider.httpx, 'AsyncClient', return_value=client), \
+                patch.object(provider, 'connection', return_value={'key': 'test-key', 'model': 'test'}):
+            await provider.verify_changes(current, plan, PAGES, 'test', Path(directory) / 'check.json')
+            groups = client.post.call_args.kwargs['json']['state']['independent_proposals']
+            self.assertEqual(groups['definition']['unresolved_questions'], current['spec']['unresolved_questions'])
+            self.assertEqual(groups['questions']['instruction'], current['spec']['instruction'])
+            client.post.reset_mock()
+            protected = proposal(current, obligation='recommended')
+            self.assertEqual(await provider.verify_changes(current, protected, PAGES, 'test', Path(directory) / 'protected.json'), {'obligation': False})
+            client.post.assert_not_called()
+
     async def test_independent_verification_is_cached_and_never_applies_unverified_changes(self):
         current = candidate()
         plan = proposal(current, instruction='Cartons must not exceed 50 lb.')

@@ -2075,7 +2075,7 @@ export interface components {
             input_fingerprint: string;
             /**
              * Prompt Version
-             * @default rule-resolution-1.2
+             * @default rule-resolution-1.3
              */
             prompt_version: string;
             /** Provider */
