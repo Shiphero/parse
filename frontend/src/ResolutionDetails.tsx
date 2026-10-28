@@ -19,7 +19,12 @@ export default function ResolutionDetails({candidate, dirty, disabled, onUse, na
 }) {
   const record = candidate.resolution;
   const changes = record?.changes || [];
-  if (!record || !changes.length) return null;
+  if (!record) return null;
+  if (record.failed && record.revision===candidate.revision) return <section className="resolution-details" aria-label="Preparation needs retry"><h3>Automatic preparation needs retry</h3>
+    <p>{record.failure_message||'Automatic preparation could not finish. The original rule is preserved; retry the failed checks.'}</p>
+    {!!record.validation_fields?.length&&<p>Fields involved: {record.validation_fields.map(words).join(', ')}.</p>}
+    <p>This is a processing problem, not a request for you to invent missing policy.</p></section>;
+  if (!changes.length) return null;
   const stale = dirty || record.revision !== candidate.revision;
   const proposed = changes.filter(change=>!change.applied);
   const useChanges = () => onUse({...candidate.spec, ...Object.fromEntries(proposed.map(c=>[c.field,c.after]))} as RuleSpec);

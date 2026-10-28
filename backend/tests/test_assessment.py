@@ -298,6 +298,20 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         resumed = prepare_job(data, StartAssessment(version=1, actor='Reviewer', resume=True, auto_process=True), 'jev-test')
         self.assertFalse(resumed['auto_process'])
 
+    def test_cancelled_run_can_resume_without_resetting_work_or_enabling_automation(self):
+        from routing_guides.resolution import RESOLUTION_VERSION
+        data={'rules':[self.rule]}
+        job=prepare_job(data,StartAssessment(version=1,actor='Reviewer',scope='all',auto_process=False),'jev-test')
+        job.update(status='cancelled',processed=1,prepared=4,resolution_version=RESOLUTION_VERSION)
+        data['assessment_job']=job
+        resumed=prepare_job(data,StartAssessment(version=1,actor='Reviewer',resume=True),'jev-test')
+        self.assertEqual(resumed['id'],job['id'])
+        self.assertEqual(resumed['prepared'],4)
+        self.assertFalse(resumed['auto_process'])
+        job['resolution_version']='rule-resolution-1.1'
+        with self.assertRaises(HTTPException):
+            prepare_job(data,StartAssessment(version=1,actor='Reviewer',resume=True),'jev-test')
+
     def test_failed_retry_selects_only_pending_failed_checks_with_new_response_storage(self):
         failed = candidate(assessment={'check_failed': True})
         approved = candidate(status='approved', assessment={'check_failed': True})

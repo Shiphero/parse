@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import Field
 from routing_guides.rules import EvidenceRef, RuleSpec, StrictModel
 
-RESOLUTION_VERSION = 'rule-resolution-1.1'
+RESOLUTION_VERSION = 'rule-resolution-1.2'
 ChangeField = Literal['title', 'instruction', 'purpose', 'operational_category', 'consumption_points',
     'rule_type', 'placements', 'verification', 'standard_check', 'applicability_text', 'applicability',
     'exceptions', 'unresolved_questions', 'execution_mode', 'evidence', 'subject', 'obligation', 'assertion', 'schema_version']
@@ -49,6 +49,12 @@ class ResolutionRecord(StrictModel):
     questions: list[RemainingQuestion] = Field(default_factory=list)
     capability_gaps: list[str] = Field(default_factory=list)
     failed: bool = False
+    job_id: str | None = None
+    verifier_model: str | None = None
+    output_fingerprint: str | None = None
+    failure_code: str | None = None
+    failure_message: str | None = None
+    validation_fields: list[str] = Field(default_factory=list)
 
 
 def validate_plan(original: dict, plan: ResolutionPlan, pages: dict[int, str | None]) -> None:

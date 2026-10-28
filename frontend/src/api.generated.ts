@@ -1009,6 +1009,8 @@ export interface components {
              * @default false
              */
             auto_approval_supported: boolean;
+            /** Resolution Fingerprint */
+            resolution_fingerprint?: string | null;
             /** Execution Gaps */
             execution_gaps?: string[];
             /** Dimensions */
@@ -1114,6 +1116,20 @@ export interface components {
              * @enum {string}
              */
             action: "ignore" | "reject";
+        };
+        /** CancelAssessment */
+        CancelAssessment: {
+            /** Version */
+            version: number;
+            /** Actor */
+            actor: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Job Id */
+            job_id?: string | null;
         };
         /** Candidate */
         Candidate: {
@@ -2059,7 +2075,7 @@ export interface components {
             input_fingerprint: string;
             /**
              * Prompt Version
-             * @default rule-resolution-1.1
+             * @default rule-resolution-1.2
              */
             prompt_version: string;
             /** Provider */
@@ -2079,6 +2095,18 @@ export interface components {
              * @default false
              */
             failed: boolean;
+            /** Job Id */
+            job_id?: string | null;
+            /** Verifier Model */
+            verifier_model?: string | null;
+            /** Output Fingerprint */
+            output_fingerprint?: string | null;
+            /** Failure Code */
+            failure_code?: string | null;
+            /** Failure Message */
+            failure_message?: string | null;
+            /** Validation Fields */
+            validation_fields?: string[];
         };
         /** RestoreAction */
         RestoreAction: {
@@ -4376,7 +4404,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionedAction"];
+                "application/json": components["schemas"]["CancelAssessment"];
             };
         };
         responses: {

@@ -165,3 +165,42 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn('test-private-key', path.read_text())
             with self.assertRaises(provider.AssessmentResponseError):
                 await provider.propose(current, {1: 'Different source'}, 'anthropic', 'test', path)
+
+
+    async def test_malformed_proposal_gets_one_forced_tool_repair_and_keeps_both_responses(self):
+        from types import SimpleNamespace
+        current = candidate()
+        good = ResolutionPlan(proposed_spec=None).model_dump(mode='json')
+        def result(raw):
+            return SimpleNamespace(content=[SimpleNamespace(type='tool_use', name='resolution_plan', input=raw)],
+                stop_reason='tool_use', usage=SimpleNamespace(model_dump=lambda: {'input_tokens':10}))
+        client = AsyncMock()
+        client.__aenter__.return_value=client
+        client.messages.create.side_effect=[result({'proposed_spec':{'instruction':'invalid-secret-input'}}),result(good)]
+        with TemporaryDirectory() as directory, patch.object(provider,'AsyncAnthropic',return_value=client), \
+                patch.object(provider,'connection',return_value={'key':'test-private-key','model':'test'}):
+            path=Path(directory)/'proposal.json'
+            output=await provider.propose(current,PAGES,'anthropic','test',path)
+            self.assertIsNone(output.proposed_spec)
+            self.assertEqual(client.messages.create.await_count,2)
+            self.assertEqual(client.messages.create.call_args.kwargs['tool_choice']['type'],'tool')
+            self.assertTrue(path.with_suffix('.repair.json').exists())
+            await provider.propose(current,PAGES,'anthropic','test',path)
+            self.assertEqual(client.messages.create.await_count,2)
+
+    async def test_failed_repair_reports_safe_fields_without_exposing_values(self):
+        from types import SimpleNamespace
+        result=SimpleNamespace(content=[SimpleNamespace(type='tool_use',name='resolution_plan',input={
+            'proposed_spec':{'instruction':'private-source-sentinel'}})],stop_reason='tool_use',
+            usage=SimpleNamespace(model_dump=lambda:{}))
+        client=AsyncMock()
+        client.__aenter__.return_value=client
+        client.messages.create.return_value=result
+        with TemporaryDirectory() as directory, patch.object(provider,'AsyncAnthropic',return_value=client), \
+                patch.object(provider,'connection',return_value={'key':'secret-key','model':'test'}):
+            with self.assertRaises(provider.ResolutionResponseError) as caught:
+                await provider.propose(candidate(),PAGES,'anthropic','test',Path(directory)/'proposal.json')
+            self.assertEqual(caught.exception.code,'invalid_structure')
+            self.assertNotIn('private-source-sentinel',str(caught.exception))
+            self.assertNotIn('secret-key',str(caught.exception))
+            self.assertEqual(client.messages.create.await_count,2)

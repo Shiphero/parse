@@ -11,6 +11,8 @@ from routing_guides.assessment import PROMPT_VERSION, choose_sample, new_assessm
 from routing_guides.connections import connection
 from routing_guides.db import sessions
 from routing_guides.resolution_jobs import enable_resolution
+from routing_guides.resolution import RESOLUTION_VERSION
+from routing_guides.review_processing import now
 from routing_guides.models import AnalysisRun
 from routing_guides.tasks import assess_guide_rules, dsn
 from routing_guides.workflow_api import VersionedAction, RunView, required, guard, audit
@@ -27,6 +29,10 @@ class StartAssessment(VersionedAction):
     auto_process: bool = True
 
 
+class CancelAssessment(VersionedAction):
+    job_id: UUID | None = None
+
+
 def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
     job = data.get('assessment_job') or {}
     if job.get('status') in {'queued', 'running'}:
@@ -34,9 +40,12 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
     if (data.get('classification_job') or {}).get('status') in {'queued', 'running'}:
         raise HTTPException(409, 'Wait for classification to finish before assessing its results.')
     if body.resume:
-        if job.get('status') != 'failed' or job.get('model') != model or job.get('prompt_version') != PROMPT_VERSION:
+        if (job.get('status') not in {'failed', 'cancelled'} or job.get('model') != model
+                or job.get('prompt_version') != PROMPT_VERSION
+                or job.get('resolution_version', RESOLUTION_VERSION) != RESOLUTION_VERSION):
             raise HTTPException(409, 'Only a stopped assessment with the same model and assessment version can resume.')
-        return {**job, 'status': 'queued', 'error': None, 'failed_rule_id': None, 'actor': body.actor}
+        return {**job, 'status': 'queued', 'error': None, 'reason': None, 'failed_rule_id': None,
+                'recent_preparation_failures': [], 'actor': body.actor, 'updated_at': now()}
     pending = [r for r in data['rules'] if r['status'] == 'pending']
     if body.scope == 'sample':
         selected = choose_sample(pending, body.sample_size)
@@ -45,7 +54,8 @@ def prepare_job(data: dict, body: StartAssessment, model: str) -> dict:
     elif body.scope == 'failed':
         if job.get('pending') and job.get('status') != 'cancelled':
             raise HTTPException(409, 'Continue or stop the unfinished checks before retrying failed rules.')
-        selected = [r for r in pending if (r.get('assessment') or {}).get('check_failed')]
+        selected = [r for r in pending if (r.get('assessment') or {}).get('check_failed') or
+                    ((r.get('resolution') or {}).get('failed') and r['resolution'].get('revision') == r['revision'])]
         if not selected:
             raise HTTPException(409, 'No failed checks remain on pending rules.')
     else:
@@ -86,15 +96,22 @@ async def start_assessment(run_id: UUID, body: StartAssessment):
 
 
 @router.post('/analysis/{run_id}/cancel-assessment', response_model=RunView)
-async def cancel_assessment(run_id: UUID, body: VersionedAction):
+async def cancel_assessment(run_id: UUID, body: CancelAssessment):
     async with sessions.begin() as session:
         run = await required(session, AnalysisRun, run_id, True)
-        guard(run, body.version)
         data = deepcopy(run.payload)
         job = data.get('assessment_job') or {}
+        if body.job_id is not None:
+            if str(body.job_id) != job.get('id'):
+                raise HTTPException(409, 'A different review run has started. Refresh before stopping it.')
+            # Saving another rule must not make the Stop button race against progress.
+            guard(run, run.version)
+        else:
+            guard(run, body.version)
         if job.get('status') not in {'queued', 'running', 'failed'}:
             raise HTTPException(409, 'No active assessment to stop.')
         job['status'] = 'cancelled'
+        job['updated_at'] = now()
         run.payload, run.version = data, run.version + 1
         audit(session, run.id, body.actor, 'assessment_cancelled', {'job_id': job['id']})
         return RunView.model_validate(run)

@@ -48,6 +48,7 @@ class AssessmentResult(StrictModel):
     issues: list[AssessmentIssue]
     check_failed: bool = False
     auto_approval_supported: bool = False
+    resolution_fingerprint: str | None = None
     execution_gaps: list[str] = Field(default_factory=list)
     dimensions: list[AssessmentDimension]
     duplicates: list[DuplicateAssessment] = Field(default_factory=list)
@@ -66,10 +67,12 @@ class AssessmentResult(StrictModel):
 
 
 def new_assessment_job(selected: list[dict], model: str, actor: str, scope: str) -> dict:
+    from routing_guides.review_processing import now
     return {'id': str(uuid4()), 'prompt_version': PROMPT_VERSION, 'provider': 'jev', 'model': model,
             'actor': actor, 'status': 'queued' if selected else 'complete', 'scope': scope,
             'pending': [{'id': r['id'], 'revision': r['revision']} for r in selected],
-            'total': len(selected), 'processed': 0, 'assessed': 0, 'failed': 0, 'skipped': 0, 'error': None}
+            'total': len(selected), 'processed': 0, 'assessed': 0, 'failed': 0, 'skipped': 0, 'error': None,
+            'started_at': now(), 'updated_at': now(), 'reused_assessments': 0}
 
 
 # Retrieval proposes comparisons; only Jev judges semantic equivalence.
