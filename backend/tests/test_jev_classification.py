@@ -50,6 +50,15 @@ class JevClassificationTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(response=response), self.assertRaises(ProviderFailure):
                 jev.normalize(self.candidate(), response, questions)
 
+    def test_weak_type_choice_is_not_converted_into_a_catalog_assignment(self):
+        questions = jev.questions()
+        raw = response_for(questions)
+        answer = raw['answers']['rule_type']
+        answer['confidence'] = .6
+        answer['probabilities'].update({'carton.measurement': .6, 'unmapped': .4})
+        result = jev.normalize(self.candidate(), raw, questions)
+        self.assertIsNone(result['rule_type'])
+
     async def test_adapter_saves_typed_answers_and_preserves_verification(self):
         candidate = self.candidate()
         client = AsyncMock()

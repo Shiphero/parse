@@ -19,6 +19,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
   const pending = run.payload.rules.filter(r => r.status === 'pending');
   const autoApproved = run.payload.rules.filter(r => r.status === 'approved' && r.review?.mode === 'automatic').length;
   const duplicatesRemoved = run.payload.rules.filter(r => r.status === 'ignored' && r.review?.mode === 'automatic_duplicate').length;
+  const nonRulesRemoved = run.payload.rules.filter(r => r.status==='ignored' && r.review?.mode==='automatic_non_rule').length;
   const progress = reviewProgress(run.payload.rules,job);
   const failure = reviewFailure(job);
   const failedCount = progress.retryCount;
@@ -50,8 +51,8 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
   };
   return <section className="assessment-panel" aria-label="Review readiness">
     <div className="section-heading"><div><h3>Automatic review</h3>
-      <p>Let the app fix supported details, handle identical duplicates, and approve clear rules. Review only what remains unresolved.</p></div></div>
-    {(autoApproved>0||duplicatesRemoved>0)&&<p role="status"><strong>{autoApproved} auto-approved · {duplicatesRemoved} duplicates set aside</strong> · Originals and decision history are saved.</p>}
+      <p>Automatically classify rules, fix supported details, set aside non-rule text and identical duplicates, and approve clear requirements. Review only unresolved questions.</p></div></div>
+    {(autoApproved>0||duplicatesRemoved>0||nonRulesRemoved>0)&&<p role="status"><strong>{autoApproved} auto-approved · {duplicatesRemoved} duplicates set aside · {nonRulesRemoved} non-rules set aside</strong> · Originals and decision history are saved.</p>}
     {!!summary.length && !running && <p className="muted">Saved rule results, including earlier runs:</p>}
     {!!summary.length && !(running&&job?.phase==='resolve') && <div className="assessment-summary">{summary.map(({value, count: total}) =>
       <button key={value} className={`secondary ${filter === value ? 'selected' : ''}`} aria-pressed={filter === value} disabled={locked} onClick={() => onFilter(filter === value ? 'all' : value)}>
@@ -65,7 +66,7 @@ export default function AssessmentPanel({run, actor, connections, selectedIds, l
         {!!selectedIds.length && <button className="secondary" disabled={busy || locked || classifying || !configured} onClick={() => request(false, false, 'selected')}>Resolve selected ({selectedIds.length})</button>}
         {(['failed','cancelled'].includes(String(job?.status)) && Number(job?.processing_version)>=2) && failure.canContinue && <button className="secondary" disabled={busy || locked || classifying || !jev?.credential_configured || !job?.model} onClick={() => request(false, true)}>Continue checking</button>}
       </div>
-      <p className="muted">{autoProcess?'Applies verified fixes, sets aside identical duplicates and approves rules that pass the required checks. You can undo automatic decisions.':'Applies verified fixes and checks the rules; approvals and duplicate decisions remain yours.'} Completed work is reused when the rule and checks are unchanged. New analyses use automatic processing. Usage charges may apply.</p>
+      <p className="muted">{autoProcess?'Classifies rules, applies verified fixes, sets aside clear non-rule text and identical duplicates, and approves rules that pass the checks. You can undo automatic decisions.':'Applies verified fixes and checks the rules; approvals and duplicate decisions remain yours.'} Completed work is reused when the rule and checks are unchanged. New analyses use automatic processing. Usage charges may apply.</p>
       <details><summary>Processing options</summary><label className="checkbox-label"><input type="checkbox" checked={autoProcess} disabled={busy||locked} onChange={e=>setAutoProcess(e.target.checked)}/>Automatically approve clear rules and set aside identical duplicates</label><label>Model connection for corrections<select value={resolutionProvider} disabled={busy||locked} onChange={e=>setResolutionProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option></select></label><label>Model<input value={resolutionModel} disabled={busy||locked} onChange={e=>setResolutionModel(e.target.value)}/></label><p className="muted">Applies when starting a new review. Continuing a stopped run keeps its original model. Independent verification uses the configured review connection.</p></details>
       {!configured && <p>Set up automated checks in Connections to get started.</p>}
       {classifying && <p>Classification is in progress. You can check these rules when it finishes.</p>}</>}

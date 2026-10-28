@@ -139,13 +139,25 @@ async def proposal_response(state, provider, model, path, feedback=None):
     return raw
 
 
-async def propose(candidate: dict, pages: dict, provider: str, model: str, path: Path) -> ResolutionPlan:
+async def propose(candidate: dict, pages: dict, provider: str, model: str, path: Path,
+                  classification_model: str | None = None) -> ResolutionPlan:
+    if sum(len(text or '') for text in pages.values()) > MAX_SOURCE_CHARACTERS:
+        raise ResolutionResponseError('source_context_limit', 'The source is too large for automatic preparation. Review the cited pages or narrow the rule.')
+    classification_plan = None
+    if classification_model:
+        classification_plan = await propose_classification(candidate, pages, classification_model,
+                                                           path.with_suffix('.classification.json'))
+        if classification_plan and not preparation_targets({**candidate, 'spec': classification_plan.proposed_spec.model_dump(mode='json')}):
+            # Complete typed classification needs no generative repair. The caller
+            # still independently verifies every proposed change before applying it.
+            return classification_plan
     state = {'rule': candidate['spec'], 'preparation_targets': preparation_targets(candidate),
              'source_pages': [{'page': n, 'text': text} for n, text in pages.items()],
              'rule_types': [t.model_dump(mode='json') for t in RULE_TYPES.values()],
              'checks': [c.model_dump(mode='json') for c in CATALOG.values()]}
-    if sum(len(text or '') for text in pages.values()) > MAX_SOURCE_CHARACTERS:
-        raise ResolutionResponseError('source_context_limit', 'The source is too large for automatic preparation. Review the cited pages or narrow the rule.')
+    if classification_plan:
+        state['classification_proposal'] = classification_plan.model_dump(mode='json')
+        state['classification_instructions'] = 'Use these typed classification suggestions where supported by the source. Resolve the remaining preparation targets and return a complete plan relative to the original rule.'
     raw = await proposal_response(state, provider, model, path)
     try:
         return parse_plan(raw, candidate, pages)
@@ -158,6 +170,38 @@ async def propose(candidate: dict, pages: dict, provider: str, model: str, path:
         repaired = await proposal_response({**state, 'previous_proposal': raw}, provider, model,
                                           path.with_suffix('.repair.json'), feedback)
         return parse_plan(repaired, candidate, pages)
+
+
+async def propose_classification(candidate, pages, model, path):
+    from routing_guides.classification_mapping import apply_classification, needs_auto_classification
+    from routing_guides.classification_provider import classify
+    from routing_guides.resolution import SupportedChange
+    from routing_guides.analysis_jobs import evidence_issues
+    spec = RuleSpec.model_validate(candidate['spec'])
+    if (not needs_auto_classification(candidate['spec']) or candidate.get('evidence_issues')
+            or evidence_issues(spec, pages) or any(e.kind != 'text' or e.region is not None for e in spec.evidence)):
+        return None
+    try:
+        output = await classify('jev', model, [candidate], path)
+    except ProviderFailure as error:
+        if str(error).startswith('Jev returned'):
+            # Unusable classification is not a human policy question. Continue
+            # with source-backed generative repair for this rule.
+            return None
+        raise
+    try:
+        proposed, reason = apply_classification(candidate['spec'], output.rules[0])
+    except ValidationError:
+        # Mixed/unsupported assignments go through the normal repair path.
+        return None
+    original = spec.model_dump(mode='json')
+    if proposed == original or not automatic_change_allowed(original, proposed):
+        return None
+    plan = ResolutionPlan(proposed_spec=RuleSpec.model_validate(proposed), changes=[
+        SupportedChange(field=field, explanation=reason, sources=spec.evidence[:12])
+        for field in original if original[field] != proposed[field]])
+    validate_plan(original, plan, pages)
+    return plan
 
 
 async def verify_changes(candidate: dict, plan: ResolutionPlan, pages: dict, model: str, path: Path) -> dict[str, bool]:

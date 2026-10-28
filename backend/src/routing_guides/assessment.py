@@ -13,7 +13,7 @@ from routing_guides.rules import RuleSpec, StrictModel
 from routing_guides.check_catalog import needs_check_mapping
 from routing_guides.taxonomy import needs_classification
 
-PROMPT_VERSION = 'rule-review-assessment-3.0'
+PROMPT_VERSION = 'rule-review-assessment-3.1'
 MAX_DUPLICATE_COMPARISONS = 8
 CONFIDENCE_THRESHOLD = 0.95
 Section = Literal['instruction', 'classification', 'conditions', 'verification', 'evidence', 'advanced']
@@ -48,6 +48,8 @@ class AssessmentResult(StrictModel):
     issues: list[AssessmentIssue]
     check_failed: bool = False
     auto_approval_supported: bool = False
+    inclusion: Literal['requirement', 'guidance', 'not_a_rule', 'uncertain'] | None = None
+    inclusion_confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
     resolution_fingerprint: str | None = None
     execution_gaps: list[str] = Field(default_factory=list)
     dimensions: list[AssessmentDimension]

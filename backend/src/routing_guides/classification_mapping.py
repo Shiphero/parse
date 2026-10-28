@@ -9,7 +9,7 @@ from routing_guides.taxonomy import needs_classification
 
 
 def needs_auto_classification(spec):
-    return needs_classification(spec) or not spec.get('rule_type')
+    return needs_classification(spec) or (not spec.get('rule_type') and spec.get('execution_mode') != 'reference_only')
 
 
 def apply_classification(original, classified):

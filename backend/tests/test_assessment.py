@@ -30,6 +30,8 @@ def response(related=(), duplicate_choice='distinct'):
                         for name in provider.DIMENSIONS}}
     payload['answers']['automatic_approval'] = {'type': 'choice', 'choice': 'supported', 'confidence': 0.99,
                                                'probabilities': {'supported': 0.99, 'unsupported': 0.01}}
+    payload['answers']['inclusion'] = {'type': 'choice', 'choice': 'requirement', 'confidence': 0.99,
+        'probabilities': {'requirement': 0.99, 'guidance': 0.005, 'not_a_rule': 0.002, 'uncertain': 0.003}}
     for rule in related:
         payload['answers'][f'duplicate:{rule["id"]}'] = {
             'type': 'choice', 'choice': duplicate_choice, 'confidence': 0.99,
@@ -75,6 +77,17 @@ class AssessmentTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(request['state']['source_pages'][1]['page'], 2)
         self.assertNotIn('private-test-key', saved.decode())
         self.assertEqual(first.usage, {'input_tokens': 100, 'output_tokens': 20})
+
+    async def test_inclusion_keeps_guidance_and_never_approves_non_rules(self):
+        for choice in ('guidance', 'not_a_rule', 'uncertain'):
+            self.path.unlink(missing_ok=True)
+            raw = response()
+            raw['answers']['inclusion'] = {'type': 'choice', 'choice': choice, 'confidence': 1.0,
+                'probabilities': {key: float(key == choice) for key in provider.INCLUSION_CHOICES}}
+            self.client.post.return_value = httpx.Response(200, json=raw)
+            output = await self.assess()
+            self.assertEqual(output.inclusion, choice)
+            self.assertEqual(output.auto_approval_supported, choice == 'guidance')
 
     async def test_high_confidence_cannot_override_source_or_duplicate_issues(self):
         peer = candidate(spec=deepcopy(self.rule['spec']))

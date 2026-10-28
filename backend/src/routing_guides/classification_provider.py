@@ -18,7 +18,7 @@ from routing_guides.rule_catalog import RULE_TYPES, RuleTypeBinding
 from routing_guides.jev_classification import classify_jev
 from routing_guides.taxonomy import OperationalCategory, ConsumptionPoint, TAXONOMY_GUIDANCE, canonical_consumption_points
 
-PROMPT_VERSION = 'rule-use-classification-1.5'
+PROMPT_VERSION = 'rule-use-classification-1.6'
 
 
 class Classification(StrictModel):

@@ -116,7 +116,8 @@ async def prepare_next(sessions, run_id, job_id: str, source_cache: dict) -> boo
         root = guide_directory(guide_id) / 'assessment' / job_id / 'resolution'
         path = root / f'{candidate["id"]}-{fingerprint}.json'
         try:
-            plan = await propose(candidate, pages, settings['resolution_provider'], settings['resolution_model'], path)
+            plan = await propose(candidate, pages, settings['resolution_provider'], settings['resolution_model'], path,
+                                 settings['model'])
             verdicts = await verify_changes(candidate, plan, pages, settings['model'], path.with_suffix('.verification.json'))
             spec, record = resolve_plan(candidate, plan, verdicts, pages, settings['resolution_provider'],
                                         settings['resolution_model'], fingerprint)

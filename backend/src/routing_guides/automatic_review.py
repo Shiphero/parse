@@ -135,3 +135,63 @@ async def approve_completed_rules(session, run, data, cache):
             session.add(AuditEvent(id=uuid4(), entity_id=run.id, actor=ACTOR, action='rule_auto_approved',
                 payload={'before': before, 'after': deepcopy(rule), 'job_id': job['id']}))
     job['auto_approved'] = job.get('auto_approved', 0) + len(approved)
+
+
+def can_set_aside_non_rule(rule, job, related, pages):
+    from routing_guides.analysis_jobs import evidence_issues
+    from routing_guides.review_processing import resolution_context
+    assessment = rule.get('assessment') or {}
+    selected = {item['id']: item['revision'] for item in job.get('selected_revisions', [])}
+    if (not job.get('auto_process') or rule['status'] != 'pending' or rule.get('review')
+            or rule.get('automation_hold') or selected.get(rule['id']) != rule['revision']
+            or assessment.get('job_id') != job['id'] or assessment.get('prompt_version') != PROMPT_VERSION
+            or assessment.get('fingerprint') != assessment_fingerprint(rule, related)
+            or assessment.get('resolution_fingerprint') != resolution_context(rule)
+            or assessment.get('inclusion') != 'not_a_rule'
+            or (assessment.get('inclusion_confidence') or 0) < 0.98):
+        return False
+    source = next((d for d in assessment.get('dimensions', []) if d['name'] == 'source_accuracy'), {})
+    if (source.get('choice') != 'supported' or source.get('confidence', 0) < 0.95
+            or source.get('probabilities', {}).get('supported', 0) < 0.95):
+        return False
+    spec = RuleSpec.model_validate(rule['spec'])
+    return bool(spec.evidence) and not (rule.get('evidence_issues') or spec.unresolved_questions
+        or evidence_issues(spec, pages)
+        or any(e.kind != 'text' or e.region is not None or not pages.get(e.page) for e in spec.evidence)
+        or any(not p.enabled or p.behavior != 'display' for p in spec.placements))
+
+
+async def set_aside_non_rules(session, run, data, cache):
+    job = data['assessment_job']
+    if not job.get('auto_process'):
+        return
+    candidates = [rule for rule in data['rules'] if rule['status'] == 'pending'
+                  and (rule.get('assessment') or {}).get('inclusion') == 'not_a_rule']
+    if not candidates:
+        return
+    index = duplicate_index(data['rules'])
+    fresh, excluded = set(), []
+    for rule in candidates:
+        related = related_rules(rule, index)
+        if can_set_aside_non_rule(rule, job, related, await source_pages(session, rule, cache)):
+            excluded.append((rule, deepcopy(rule)))
+    if not excluded:
+        return
+    for rule in data['rules']:
+        assessment = rule.get('assessment') or {}
+        if assessment.get('fingerprint') == assessment_fingerprint(rule, related_rules(rule, index)):
+            fresh.add(rule['id'])
+    for rule, before in excluded:
+        rule.update(status='ignored', review={'actor': ACTOR, 'mode': 'automatic_non_rule',
+            'revision': rule['revision'], 'at': datetime.now(timezone.utc).isoformat(),
+            'note': 'Source checks identified document context with no actionable requirement or useful operational guidance. Original text and evidence are retained; restore this item to review if needed.',
+            'job_id': job['id'], 'requested_by': job['actor']})
+        session.add(AuditEvent(id=uuid4(), entity_id=run.id, actor=ACTOR, action='rule_non_requirement_set_aside',
+            payload={'before': before, 'after': deepcopy(rule), 'job_id': job['id']}))
+    if excluded:
+        # Only decisions changed, so remaining rules keep their completed checks.
+        index = duplicate_index(data['rules'])
+        for rule in data['rules']:
+            if rule['id'] in fresh:
+                rule['assessment']['fingerprint'] = assessment_fingerprint(rule, related_rules(rule, index))
+    job['non_rules_removed'] = job.get('non_rules_removed', 0) + len(excluded)

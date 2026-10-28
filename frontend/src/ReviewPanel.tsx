@@ -62,7 +62,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const editable = run.status === 'complete' && !resolving;
   const current = run.payload.rules.find(r => r.id === selected);
   const classificationJob = run.payload.classification_job;
-  const [classificationProvider,setClassificationProvider] = useState(String(classificationJob?.provider || (run.config.provider==='openai'?'openai':'anthropic')));
+  const [classificationProvider,setClassificationProvider] = useState(String(classificationJob?.provider || 'jev'));
   const classificationConnection = connections.find(c=>c.id===classificationProvider);
   const defaultClassificationModel = classificationJob?.provider===classificationProvider
     ? String(classificationJob.model||'') : classificationConnection?.model || (run.config.provider===classificationProvider?String(run.config.model||''):'');
@@ -71,9 +71,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
   const classificationConfigured = !!classificationConnection?.credential_configured && !!classificationModel.trim();
   const resumingClassification = classificationJob?.status==='failed' && classificationJob.provider===classificationProvider && classificationJob.model===classificationModel.trim();
   const classifying = !!classificationJob && ['queued', 'running'].includes(String(classificationJob.status));
-  const unclassified = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && (needsClassification(r.spec)||!r.spec.rule_type)).length;
-  const untyped = run.payload.rules.filter(r => ['pending','approved'].includes(r.status) && !r.spec.rule_type).length;
-  const autoClassify = () => action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:classificationProvider,model:classificationModel.trim(),include_approved:true});
+  const unclassified = run.payload.rules.filter(r => r.status==='pending' && (needsClassification(r.spec)||(!r.spec.rule_type&&r.spec.execution_mode!=='reference_only'))).length;
+  const missingClassification = run.payload.rules.filter(r => r.status==='pending' && needsClassification(r.spec)).length;
+  const untyped = run.payload.rules.filter(r => r.status==='pending' && !r.spec.rule_type && r.spec.execution_mode!=='reference_only').length;
+  const autoClassify = () => action(`/api/analysis/${run.id}/auto-classify`,{version:run.version,actor:actor.trim()||'User',provider:classificationProvider,model:classificationModel.trim(),include_approved:false});
   const pending = run.payload.rules.filter(r => r.status === 'pending').length;
   const carryCount = run.payload.rules.filter(r => r.status === 'pending' && comparison.data?.unchanged?.[r.id]).length;
 
@@ -197,23 +198,23 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
         <button className="secondary" disabled={busy||!scopeConfirmed||!actor.trim()} onClick={async()=>{if(await action(`/api/analysis/${run.id}/carry-approvals`,{version:run.version,actor,base_release_id:comparison.data!.base_release_id,scope_confirmed:scopeConfirmed})){setMessage(`${carryCount} unchanged approvals carried forward. Review the remaining proposals and missing rules.`);}}}>Carry forward {carryCount} unchanged approvals</button></>}
       <p className="muted">Decide whether to retain or retire missing rules in Releases.</p>
     </div>}
-    {editable&&(unclassified>0||classificationJob)&&<section className="auto-classification"><div className="section-heading"><div><h3>Automatically classify rules</h3><p>Assign rule types and workflow placements. Unmatched requirements stay unmapped.</p></div></div>
+    {editable&&(unclassified>0||classificationJob)&&<section className="auto-classification"><div className="section-heading"><div><h3>Automatically classify rules</h3><p>Automatic review includes classification. Use this separate tool only to classify without running the full review.</p></div></div>
       {classifying?<><p role="status">Classifying {String(classificationJob!.processed)} of {String(classificationJob!.total)} rules… Completed batches are saved.</p><button className="secondary" disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/cancel-classification`,{version:run.version,actor:actor.trim()||'User'})}>Stop classification</button></>:<>
         {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}
         {classificationJob?.status==='complete'&&<p className="muted">{String(classificationJob.applied)} rules classified · {String(classificationJob.skipped)} edited or decided rules left untouched.</p>}
         {(unclassified>0||classificationJob?.status==='failed')&&<button className="primary" disabled={busy||editing||!classificationConfigured} onClick={autoClassify}>{resumingClassification?'Resume automatic classification':`Auto-classify ${unclassified} remaining rules`}</button>}
       </>}
-      <p className="muted">Sends rule text and excerpts to the selected provider; API charges apply. Changes to approved rules require review.</p>
+      <p className="muted">Sends pending rule text and excerpts to the selected provider; API charges apply. Approved rules stay unchanged.</p>
     </section>}
+    {editable&&!adding&&(unclassified>0||classifying||classificationJob?.status==='failed')&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${missingClassification} pending rules have incomplete classifications · ${untyped} have no catalog match`}</span>
+      <label>Classification provider<select value={classificationProvider} disabled={busy||editing||classifying} onChange={e=>setClassificationProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option><option value="jev">Jev / TypeSafe</option></select></label>
+      <label>Model<input value={classificationModel} disabled={busy||editing||classifying} onChange={e=>setClassificationModel(e.target.value)} placeholder="Model ID"/></label>
+      <button className="secondary" disabled={busy||editing||classifying||!classificationConfigured} onClick={autoClassify}>{classifying?'Classification running…':resumingClassification?'Resume classification':'Auto-classify rules'}</button><small>Automatic review handles these details. A missing catalog match does not mean you must decide manually.</small>
+      {!classificationConfigured&&<p className="muted">Add an API key and model in Connections to use this provider.</p>}
+      {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
     <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
     {run.payload.warnings.length>0&&<details className="coverage"><summary>Analysis notes · {run.payload.warnings.length}</summary><ul>{run.payload.warnings.map((w,i)=><li key={i}>{w}</li>)}</ul></details>}
     </details>
-    {editable&&!adding&&(unclassified>0||classifying||classificationJob?.status==='failed')&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${unclassified} rules need classification · ${untyped} need a standard type`}</span>
-      <label>Classification provider<select value={classificationProvider} disabled={busy||editing||classifying} onChange={e=>setClassificationProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option><option value="jev">Jev / TypeSafe</option></select></label>
-      <label>Model<input value={classificationModel} disabled={busy||editing||classifying} onChange={e=>setClassificationModel(e.target.value)} placeholder="Model ID"/></label>
-      <button className="secondary" disabled={busy||editing||classifying||!classificationConfigured} onClick={autoClassify}>{classifying?'Classification running…':resumingClassification?'Resume classification':'Auto-classify rules'}</button><small>Changed approved rules return to review. Sends rule text and excerpts to the selected provider.</small>
-      {!classificationConfigured&&<p className="muted">Add an API key and model in Connections to use this provider.</p>}
-      {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
     {adding ? <>{initialRule&&<p className="notice">This is a separate draft copied from an existing rule. Adjust its conditions, instruction and image. The original remains unchanged. Check that variant ranges do not overlap and explicitly decide how boundaries such as exactly 7 inches should be handled.</p>}{reviewerInput}{error && <div className="error" role="alert">{error}</div>}<RuleEditor initial={initialRule} guideId={run.guide_id} onSave={save} onCancel={() => setAdding(false)} busy={busy}/></> : <>
       <fieldset className="review-filter-controls" disabled={editing || busy}>
         <legend className="visually-hidden">Filter rules</legend>

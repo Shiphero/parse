@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import Field, ValidationError
 from routing_guides.rules import EvidenceRef, RuleSpec, StrictModel
 
-RESOLUTION_VERSION = 'rule-resolution-1.3'
+RESOLUTION_VERSION = 'rule-resolution-1.4'
 ChangeField = Literal['title', 'instruction', 'purpose', 'operational_category', 'consumption_points',
     'rule_type', 'placements', 'verification', 'standard_check', 'applicability_text', 'applicability',
     'exceptions', 'unresolved_questions', 'execution_mode', 'evidence', 'subject', 'obligation', 'assertion', 'schema_version']

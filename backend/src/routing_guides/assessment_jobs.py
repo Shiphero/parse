@@ -138,7 +138,8 @@ async def check_next(run_id, job_id, source_cache):
             if len(work) == REVIEW_CONCURRENCY:
                 break
         if not job['pending']:
-            from routing_guides.automatic_review import approve_completed_rules
+            from routing_guides.automatic_review import approve_completed_rules, set_aside_non_rules
+            await set_aside_non_rules(session, run, data, source_cache)
             await approve_completed_rules(session, run, data, source_cache)
             job.update(status='complete', updated_at=now(), completed_at=now())
             run.payload, run.version = data, run.version + 1
@@ -150,16 +151,13 @@ async def check_next(run_id, job_id, source_cache):
     async def evaluate(item):
         candidate, related, pages = item['candidate'], item['related'], item['pages']
         path = guide_directory(guide_id) / 'assessment' / job_id / f'{candidate["id"]}-{item["fingerprint"]}.json'
-        if (candidate.get('resolution') or {}).get('failed'):
+        # A failed repair must not hide a successful inclusion assessment. A pure
+        # heading can be set aside without inventing a catalog mapping for it.
+        try:
+            output = await assess(candidate, related, pages, settings['model'], path, job_id)
+        except AssessmentResponseError:
             output = failed_assessment(candidate, related, pages, settings['model'], job_id)
-            output.issues[0].action = (candidate['resolution'].get('failure_message')
-                or 'Automatic preparation could not finish. Retry this rule; no manual decision is required yet.')
-        else:
-            try:
-                output = await assess(candidate, related, pages, settings['model'], path, job_id)
-            except AssessmentResponseError:
-                output = failed_assessment(candidate, related, pages, settings['model'], job_id)
-                logger.warning('Assessment response rejected: run_id=%s job_id=%s rule_id=%s', run_id, job_id, candidate['id'])
+            logger.warning('Assessment response rejected: run_id=%s job_id=%s rule_id=%s', run_id, job_id, candidate['id'])
         output.resolution_fingerprint = resolution_context(candidate)
         return output
 

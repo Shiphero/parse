@@ -1026,6 +1026,10 @@ export interface components {
              * @default false
              */
             auto_approval_supported: boolean;
+            /** Inclusion */
+            inclusion?: ("requirement" | "guidance" | "not_a_rule" | "uncertain") | null;
+            /** Inclusion Confidence */
+            inclusion_confidence?: number | null;
             /** Resolution Fingerprint */
             resolution_fingerprint?: string | null;
             /** Execution Gaps */
@@ -1064,7 +1068,7 @@ export interface components {
             model: string;
             /**
              * Prompt Version
-             * @default rule-review-assessment-3.0
+             * @default rule-review-assessment-3.1
              */
             prompt_version: string;
             /** Source Pages */
@@ -2094,7 +2098,7 @@ export interface components {
             input_fingerprint: string;
             /**
              * Prompt Version
-             * @default rule-resolution-1.3
+             * @default rule-resolution-1.4
              */
             prompt_version: string;
             /** Provider */

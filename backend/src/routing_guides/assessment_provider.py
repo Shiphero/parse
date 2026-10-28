@@ -41,6 +41,13 @@ DUPLICATE_CHOICES = {
     'uncertain': 'The supplied rule definitions or evidence do not establish whether they are equivalent, separate or conflicting.',
 }
 
+INCLUSION_CHOICES = {
+    'requirement': 'An actionable obligation, prohibition, recommendation, condition or exception that must remain available.',
+    'guidance': 'Useful operational or supplier guidance that belongs in the rule set, even without an automated shipment check.',
+    'not_a_rule': 'Pure navigation, a heading, decorative text, a repeated document title or descriptive background with no actionable requirement or useful operational guidance.',
+    'uncertain': 'The available source does not establish whether this item belongs; retain it for review.',
+}
+
 
 def questions(related: Sequence[dict] = ()) -> dict:
     result = {name: {'type': 'choice', 'instructions': instructions,
@@ -48,6 +55,13 @@ def questions(related: Sequence[dict] = ()) -> dict:
                                  'correction': 'A concrete mismatch or omission needs correction before approval.',
                                  'uncertain': 'The supplied evidence is insufficient or ambiguous; human review is needed.'}}
               for name, (_, instructions, _) in DIMENSIONS.items()}
+    result['inclusion'] = {'type': 'choice', 'instructions':
+        'Decide whether this item belongs in the retained retailer rule set using the source, scope and exceptions. '
+        'Keep supplier onboarding, business procedures, conditional obligations, recommendations and useful reference guidance. '
+        'Lack of a catalog type, an executable check, available shipment data or automation support is NEVER a reason to exclude it. '
+        'Do not mark duplicates as not_a_rule; duplicate checks handle them separately. '
+        'Select not_a_rule only when the cited source clearly establishes non-actionable document content. '
+        'If source context is missing, visual or ambiguous, select uncertain.', 'criteria': INCLUSION_CHOICES}
     for rule in related:
         result[f'duplicate:{rule["id"]}'] = {
             'type': 'choice',
@@ -208,6 +222,7 @@ async def assess(candidate: dict, related: list[dict], pages: dict[int, str | No
     serialized = json.dumps(state, sort_keys=True)
     dimensions, duplicates, usage, actual_model = [], [], {}, model
     approval_supported = False
+    inclusion, inclusion_confidence = None, None
     if len(serialized) > MAX_CONTEXT_CHARACTERS:
         issues.append(AssessmentIssue(code='context_limit', section='evidence', kind='manual',
             action='Review the source manually: the required page context exceeds this assessment limit. No text was truncated or sent to Jev.'))
@@ -218,6 +233,14 @@ async def assess(candidate: dict, related: list[dict], pages: dict[int, str | No
         raw = await request_assessment(state, questions(compared), model, response_path)
         dimensions = parse_dimensions(raw, compared)
         duplicates = parse_duplicates(raw, compared)
+        inclusion, certainty, scores = validate_choice(raw['answers']['inclusion'], set(INCLUSION_CHOICES))
+        inclusion_confidence = min(certainty, scores[inclusion])
+        if inclusion == 'not_a_rule':
+            issues.append(AssessmentIssue(code='not_a_rule', section='instruction', kind='manual',
+                action='The source appears to contain document context rather than a requirement. Automatic processing can set aside clear non-rule text; otherwise compare this item with the source before keeping or ignoring it.'))
+        elif inclusion == 'uncertain' or inclusion_confidence < CONFIDENCE_THRESHOLD:
+            issues.append(AssessmentIssue(code='inclusion_uncertain', section='instruction', kind='manual',
+                action='Check whether the cited passage gives an instruction or useful operational guidance. Its role in the rule set could not be established automatically.'))
         choice, _, probabilities = validate_choice(raw['answers']['automatic_approval'], {'supported', 'unsupported'})
         approval_supported = choice == 'supported' and probabilities[choice] >= CONFIDENCE_THRESHOLD
         responses = [raw]
@@ -290,6 +313,7 @@ async def assess(candidate: dict, related: list[dict], pages: dict[int, str | No
     confidence = min((min(d.confidence, d.probabilities[d.choice]) for d in [*dimensions, *duplicates]), default=None)
     outcome = 'needs_correction' if any(i.kind == 'correction' for i in issues) else 'needs_review' if issues or not dimensions else 'ready'
     return AssessmentResult(outcome=outcome, issues=issues, dimensions=dimensions,
+        inclusion=inclusion, inclusion_confidence=inclusion_confidence,
         auto_approval_supported=approval_supported and outcome == 'ready',
         check_failed=bool(resolution.get('failed')), execution_gaps=execution_gaps(candidate), duplicates=duplicates, duplicate_candidates=len(related), confidence=confidence,
         fingerprint=assessment_fingerprint(candidate, related), revision=candidate['revision'], job_id=job_id,

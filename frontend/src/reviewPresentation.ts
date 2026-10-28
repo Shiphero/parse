@@ -6,6 +6,7 @@ export function reviewPresentation(candidate:Candidate, tasks:ReviewTask[], edit
   const fields = tasks.filter(task=>task.section!=='reviewer');
   const running = !!job && ['queued','running'].includes(String(job.status));
   const currentResult = candidate.assessment && !candidate.assessment_stale && candidate.assessment.job_id===job?.id;
+  if (candidate.status==='ignored' && candidate.review?.mode==='automatic_non_rule') return {kind:'ignored',label:'Non-rule set aside',title:'Document context set aside automatically',detail:'The source was identified as background or navigation, with no actionable requirement or useful operational guidance. Original text and evidence are saved. Restore it to review if needed.'};
   if (candidate.status==='ignored') return candidate.review?.mode==='automatic_duplicate'
     ? {kind:'ignored',label:'Duplicate set aside',title:'Duplicate handled automatically',detail:'An identical requirement is already retained. The original text and evidence are saved here, and you can restore this rule.'}
     : {kind:'ignored',label:'Ignored',title:'Excluded from this draft',detail:'Restore this rule if you want to include it again.'};

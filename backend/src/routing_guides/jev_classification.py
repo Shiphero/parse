@@ -56,15 +56,22 @@ def normalize(candidate, response, requested):
         if (not isinstance(probabilities, dict) or set(probabilities) != set(question['criteria'])
                 or any(type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1 for p in probabilities.values())
                 or not math.isclose(sum(probabilities.values()), 1, abs_tol=0.02)
-                or type(confidence) not in (int, float) or not math.isfinite(confidence) or not 0 <= confidence <= 1):
+                or type(confidence) not in (int, float) or not math.isfinite(confidence) or not 0 <= confidence <= 1
+                or probabilities[answer['choice']] < max(probabilities.values())):
             raise ProviderFailure('Jev returned invalid classification probabilities. No rules from this batch were accepted.')
     chosen = {name: answer['choice'] for name, answer in answers.items()}
+    # A typed answer is not automatically a confident assignment. Leave uncertainty
+    # for preparation rather than converting a weak guess into known metadata.
+    for name, answer in answers.items():
+        if min(answer['confidence'], answer['probabilities'][answer['choice']]) < 0.95:
+            chosen[name] = ('unmapped' if name == 'rule_type' else
+                            'uncertain' if name.startswith('workflow:') else 'unclassified')
     type_id = chosen['rule_type']
     binding = None if type_id == 'unmapped' else {'id': type_id, 'version': RULE_TYPES[type_id].version}
     workflows = [key for key in get_args(ConsumptionPoint) if chosen[f'workflow:{key}'] == 'yes']
     # This is a factual decision summary, not a model-generated explanation.
     reason = f"Jev selected {chosen['purpose']} / {chosen['category']}. "
-    reason += f"Catalog type: {type_id}." if binding else 'No compatible catalog type selected; review the mapping.'
+    reason += f"Catalog type: {type_id}." if binding else 'No compatible catalog type selected; retain the requirement for reference or further automatic preparation.'
     if any(value == 'uncertain' for name, value in chosen.items() if name.startswith('workflow:')):
         reason += ' Uncertain workflows were not assigned.'
     return {'id': candidate['id'], 'purpose': chosen['purpose'], 'operational_category': chosen['category'],
