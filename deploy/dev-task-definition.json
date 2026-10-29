@@ -57,6 +57,10 @@
         {
           "name": "JEV_API_KEY",
           "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/JEV_API_KEY"
+        },
+        {
+          "name": "LITELLM_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/LITELLM_API_KEY"
         }
       ],
       "mountPoints": [
@@ -132,6 +136,10 @@
         {
           "name": "JEV_API_KEY",
           "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/JEV_API_KEY"
+        },
+        {
+          "name": "LITELLM_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/LITELLM_API_KEY"
         }
       ],
       "mountPoints": [

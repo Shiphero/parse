@@ -74,7 +74,10 @@ class DeploymentTests(unittest.TestCase):
             self.assertEqual(container['image'], IMAGE)
             self.assertEqual(container['mountPoints'][0]['containerPath'], '/data')
             self.assertEqual({secret['name'] for secret in container['secrets']},
-                             {'DATABASE_URL', 'ANTHROPIC_API_KEY', 'JEV_API_KEY'})
+                             {'DATABASE_URL', 'ANTHROPIC_API_KEY', 'JEV_API_KEY', 'LITELLM_API_KEY'})
+            self.assertEqual(next(secret['valueFrom'] for secret in container['secrets']
+                                  if secret['name'] == 'LITELLM_API_KEY'),
+                             'arn:aws:ssm:us-east-1:789248412670:parameter/parse/dev/LITELLM_API_KEY')
             self.assertTrue(all(secret['valueFrom'].startswith('arn:aws:ssm:')
                                 for secret in container['secrets']))
 
