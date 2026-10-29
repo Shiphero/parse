@@ -3,7 +3,7 @@ import type { Candidate } from './api';
 export type AssessmentFilter = 'all' | 'ready' | 'needs_correction' | 'needs_review' | 'stale' | 'unassessed';
 export const assessmentLabels: Record<AssessmentFilter, string> = {
   all: 'All results', ready: 'Ready for approval', needs_correction: 'Needs correction',
-  needs_review: 'Needs review', stale: 'Check again', unassessed: 'Not checked',
+  needs_review: 'Needs attention', stale: 'Check again', unassessed: 'Not checked',
 };
 export function assessmentState(candidate: Candidate): Exclude<AssessmentFilter, 'all'> {
   if (!candidate.assessment) return 'unassessed';
@@ -19,16 +19,16 @@ export function readyForApprovalSelection(candidate: Candidate): boolean {
 
 export function reviewFailure(job: Record<string, unknown> | null | undefined) {
   const reason = String(job?.reason || '');
-  const saved = typeof job?.error === 'string' ? job.error : '';
+  const saved = typeof job?.error === 'string' ? job.error.replaceAll('Continue checking', 'Resume review') : '';
   // Older jobs saved the provider rejection without a reason code.
   const incompatible = reason === 'provider_configuration' || saved.includes('rejected the extraction tool settings');
   const canContinue = !incompatible && !['configuration_required', 'version_changed', 'repeated_invalid_responses'].includes(reason);
   const message = incompatible
     ? 'Automatic review stopped because the selected model could not accept the request. This needs an application update; retrying the same run will not fix it. Your completed work is saved.'
-    : reason === 'configuration_required' ? 'Set up automated checks in Connections, then check all rules.'
-    : reason === 'repeated_invalid_responses' ? 'Automatic preparation stopped after repeated unusable responses. Completed work is saved. Contact your administrator before retrying.'
-    : reason === 'version_changed' ? 'Automatic review has been updated. Start a new run using the button above. Completed work is saved.'
-    : saved || 'Checks could not finish. Completed results are saved. Continue checking to try again; if the problem persists, contact your administrator.';
+    : reason === 'configuration_required' ? 'Open Connections and configure automated review, then start a new review.'
+    : reason === 'repeated_invalid_responses' ? 'The AI service repeatedly returned unusable results. Finished work is saved. Contact your administrator before retrying.'
+    : reason === 'version_changed' ? 'The review process has been updated. Use the main review button above to start again. Finished work is saved.'
+    : saved || 'The review stopped before finishing. Choose Resume review to continue. Finished work is saved; contact your administrator if it stops again.';
   return {message, canContinue};
 }
 

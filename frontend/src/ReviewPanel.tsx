@@ -151,7 +151,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
     const index = filtered.findIndex(r => r.id === candidate.id);
     const next = [...filtered.slice(index + 1), ...filtered.slice(0, index)].find(r => r.status === 'pending');
     if (await action(`/api/analysis/${run.id}/rules/${candidate.id}`, { version: run.version, actor, note:decisionNote, action: kind }, 'PUT')) {
-      setMessage(`“${candidate.spec.title}” ${{approve:'approved',reject:'rejected',ignore:'ignored. Excluded from publication; restore it using Status → Ignored',restore:'restored to review'}[kind]}.`);
+      setMessage(`“${candidate.spec.title}” ${{approve:'approved',reject:'rejected',ignore:'set aside. Excluded from publication; restore it using Status → Set aside',restore:'restored to review'}[kind]}.`);
       setChecked(previous => { const updated = { ...previous }; delete updated[candidate.id]; return updated; });
       openRule(next?.id || '', true, run.version+1);
     }
@@ -172,7 +172,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       version: run.version, actor, action: kind, note: kind === 'reject' ? rejectionReason : bulkNote, revisions: checked,
     })) {
       setMessage(kind === 'ignore'
-        ? `${selectedCount} rules ignored. Excluded from publication; restore them individually using Status → Ignored.`
+        ? `${selectedCount} rules set aside. Excluded from publication; restore them individually using Status → Set aside.`
         : `${selectedCount} rules rejected.`);
       setChecked({}); setSelected(''); setBulkNote(''); setBulkOptions(false); setBulkRejecting(false); setRejectionReason('');
     }
@@ -184,7 +184,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       <div className="review-heading-actions"><button className="secondary" aria-pressed={detailedColumns} onClick={() => setDetailedColumns(v => !v)}>{detailedColumns ? 'Fewer columns' : 'More columns'}</button>{editable && <button className="secondary" disabled={busy || editing || adding} onClick={() => { setInitialRule(undefined); setAdding(true); }}><Plus size={16}/> Add rule</button>}</div></div>
     {(editable || run.payload.assessment_job) && <AssessmentPanel run={run} actor={actor} connections={connections} selectedIds={selectedRules.map(r => r.id)} locked={busy || editing || adding} reload={reload}
       filter={assessmentFilter} onFilter={value => {resetFilters(); setFilter('pending'); setAssessmentFilter(value);}}/>}
-    {resolving && <p className="notice">Rules are being prepared automatically. You can browse the source and changes now; editing resumes when preparation finishes or you stop checking.</p>}
+    {resolving && <p className="notice">The app is filling in rule details. You can browse the guide and saved changes. Editing is available when this step finishes or you stop the review.</p>}
     {editable && !!run.config.source_release_id && <p className="notice">Draft of {String(run.config.source_release_name)}.</p>}
     {message && <p className="notice" role="status">{message}</p>}
     {error && !current && !selectedCount && <div className="error" role="alert">{error}</div>}
@@ -206,10 +206,10 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
       </>}
       <p className="muted">Sends pending rule text and excerpts to the selected provider; API charges apply. Approved rules stay unchanged.</p>
     </section>}
-    {editable&&!adding&&(unclassified>0||classifying||classificationJob?.status==='failed')&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${missingClassification} pending rules have incomplete classifications · ${untyped} have no catalog match`}</span>
+    {editable&&!adding&&(unclassified>0||classifying||classificationJob?.status==='failed')&&<div className="rule-type-classification-bar"><span role="status">{classifying?`Classifying ${String(classificationJob!.processed)} of ${String(classificationJob!.total)} rules…`:`${missingClassification} pending rules need a type or workflow · ${untyped} have no matching standard rule type`}</span>
       <label>Classification provider<select value={classificationProvider} disabled={busy||editing||classifying} onChange={e=>setClassificationProvider(e.target.value)}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option><option value="jev">Jev / TypeSafe</option></select></label>
       <label>Model<input value={classificationModel} disabled={busy||editing||classifying} onChange={e=>setClassificationModel(e.target.value)} placeholder="Model ID"/></label>
-      <button className="secondary" disabled={busy||editing||classifying||!classificationConfigured} onClick={autoClassify}>{classifying?'Classification running…':resumingClassification?'Resume classification':'Auto-classify rules'}</button><small>Automatic review handles these details. A missing catalog match does not mean you must decide manually.</small>
+      <button className="secondary" disabled={busy||editing||classifying||!classificationConfigured} onClick={autoClassify}>{classifying?'Classification running…':resumingClassification?'Resume classification':'Auto-classify rules'}</button><small>Automatic review fills in these details where the guide supports them. Rules without a matching type can still be kept as instructions.</small>
       {!classificationConfigured&&<p className="muted">Add an API key and model in Connections to use this provider.</p>}
       {classificationJob?.status==='failed'&&<p className="error" role="alert">{String(classificationJob.error)}</p>}</div>}
     <details className="coverage"><summary>Page coverage · {run.payload.coverage.length} pages examined · {run.payload.coverage.filter(p=>p.outcome==='needs_review').length} unresolved</summary><p className="muted">Covers and indexes can be marked “No rules” after inspection. Every page remains accounted for.</p><label>Coverage review note<input value={coverageNote} onChange={e=>setCoverageNote(e.target.value)} placeholder="Explain your source inspection"/></label><div className="coverage-list">{run.payload.coverage.map(p=><div key={p.page}><a href={`/api/guides/${run.guide_id}/pages/${p.page-1}/image`} target="_blank" rel="noreferrer">PDF page {p.page}</a><span>{p.outcome.replaceAll('_',' ')} — {p.note}</span>{editable&&<><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'no_rules'},'PUT')}>No rules</button><button disabled={busy} onClick={()=>action(`/api/analysis/${run.id}/coverage`,{version:run.version,actor,note:coverageNote,page:p.page,outcome:'rules_found'},'PUT')}>Rules reviewed</button></>}</div>)}</div></details>
@@ -222,7 +222,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           <label className="review-search"><span>Search rules</span><div><Search size={16} aria-hidden="true"/><input type="search" value={search} onChange={e => { resetView(); setSearch(e.target.value); }} placeholder="Search instructions or source text"/></div></label>
           <label>Verification<select value={checkMode} onChange={e => { resetView(); setCheckMode(e.target.value); }}><option value="all">All methods</option><option value="automatic">Automatic verification</option><option value="manual">Manual verification</option><option value="external">External confirmation</option><option value="unresolved">Not configured / classified</option><option value="guidance">Guidance only</option></select></label>
           <label>Where it’s used<select value={consumptionPoint} onChange={e => { resetView(); setConsumptionPoint(e.target.value); }}><option value="all">All workflows</option><option value="unassigned">No active workflow</option>{consumptionPointOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs your attention</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Ignored</option><option value="all">All statuses</option></select></label>
+          <label>Status<select value={filter} onChange={e => { resetView(); setFilter(e.target.value); }}><option value="pending">Awaiting review</option><option value="individual">Needs your attention</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="ignored">Set aside</option><option value="all">All statuses</option></select></label>
           <button className="secondary" aria-expanded={moreFilters} aria-controls="review-extra-filters" onClick={() => setMoreFilters(!moreFilters)}><SlidersHorizontal size={15}/> Filters{extraFilterCount ? ` (${extraFilterCount})` : ''}</button>
         </div>
         {moreFilters && <div className="review-extra-filters" id="review-extra-filters">
@@ -288,7 +288,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           {!bulkRejecting && <><button className="secondary" disabled={busy || editing} onClick={() => setCategorizing({ rules: selectedRules, version: run.version })}>Categorize</button>
           <button className="secondary" disabled={busy || editing} aria-expanded={bulkOptions} onClick={() => setBulkOptions(!bulkOptions)}>Review details <ChevronDown size={14}/></button>
           <div className="review-selection-decisions" role="group" aria-label="Bulk decisions">
-            <button className="secondary" disabled={busy || editing || !actor.trim()} title="Exclude selected rules from publication; restore them later" onClick={() => bulkDecision('ignore')}><EyeOff size={15}/>Ignore {selectedCount}</button>
+            <button className="secondary" disabled={busy || editing || !actor.trim()} title="Exclude selected rules from publication; restore them later" onClick={() => bulkDecision('ignore')}><EyeOff size={15}/>Set aside {selectedCount}</button>
             <button className="secondary danger-button" disabled={busy || editing} onClick={() => { setBulkRejecting(true); setBulkOptions(false); }}><X size={15}/>Reject…</button>
             <button className="primary" disabled={busy || editing || !actor.trim()} onClick={bulkApprove}><Check size={15}/>{busy ? 'Saving…' : `Approve ${selectedCount}`}</button>
           </div></>}
@@ -300,7 +300,7 @@ export default function ReviewPanel({ run, actor, onActorChange, reload, connect
           <p>This reason is recorded on each selected rule.</p>
           <div className="review-action-primary"><button className="secondary" disabled={busy} onClick={() => { setBulkRejecting(false); setRejectionReason(''); }}>Cancel</button><button className="secondary danger-button" disabled={busy || editing || !actor.trim() || !rejectionReason.trim()} onClick={() => bulkDecision('reject')}><X size={15}/>{busy ? 'Saving…' : `Reject ${selectedCount} rules`}</button></div>
         </div> : <>
-          {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule has' : 'rules have'} review warnings. Missing configuration or invalid evidence blocks approval, but you can still ignore or reject these proposals.</p>}
+          {selectedFlagged > 0 && <p className="review-selection-help">{selectedFlagged} selected {selectedFlagged === 1 ? 'rule has' : 'rules have'} unresolved findings. Open a rule to see what needs attention, or run automatic review first.</p>}
           {bulkOptions && <div className="review-selection-options">{actor.trim() && reviewerInput}<label>Batch note (optional)<input value={bulkNote} onChange={e => setBulkNote(e.target.value)} disabled={busy}/></label></div>}
         </>}
         {error && <p className="error" role="alert">{error}</p>}

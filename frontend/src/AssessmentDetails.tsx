@@ -3,8 +3,8 @@ import type { ReviewSection } from './reviewReadiness';
 import { assessmentLabels } from './assessmentReadiness';
 
 const duplicateLabels = {duplicate: 'Likely duplicate', distinct: 'Separate requirement', conflict: 'Conflicting requirement', uncertain: 'Needs comparison'};
-const sections: Record<string, string> = {instruction: 'Review instruction', classification: 'Review classification',
-  conditions: 'Review conditions', verification: 'Review verification', evidence: 'Review source', advanced: 'Resolve questions'};
+const sections: Record<string, string> = {instruction: 'Open instruction', classification: 'Open rule type and workflows',
+  conditions: 'Open when it applies', verification: 'Open check settings', evidence: 'Open source evidence', advanced: 'Open unresolved questions'};
 const checkLabels: Record<string, string> = {
   source_accuracy: 'Matches the source', applicability: 'When the rule applies', exceptions: 'Exceptions',
   classification: 'Rule classification', verification: 'How the rule is verified',
@@ -16,7 +16,7 @@ export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated
   const assessment = candidate.assessment;
   if (!assessment) return null;
   const stale = dirty || candidate.assessment_stale;
-  return <section className={`assessment-detail ${stale ? 'stale' : assessment.outcome}`} aria-label="Rule assessment">
+  return <section className={`assessment-detail ${stale ? 'stale' : assessment.outcome}`} aria-label="Rule review results">
     {showSummary&&<h3>{stale ? 'Check this rule again' : assessmentLabels[assessment.outcome]}</h3>}
     {stale ? showSummary&&<p>This rule or a similar rule has changed. Save your edits and check it again to update the recommendation.</p> : <>
       {assessment.outcome === 'ready' ? showSummary&&<p>No outstanding issues were found in the checks performed. Review the source and approve when ready.</p>
@@ -32,7 +32,7 @@ export default function AssessmentDetails({candidate, dirty, goTo, onOpenRelated
         {!stale && onOpenRelated && <button className="text-button" onClick={() => onOpenRelated(match.rule_id)}>Open compared rule →</button>}
       </li>)}</ul>
     </div>}
-    {!!assessment.execution_gaps?.length && <div className="assessment-execution"><strong>Automatic verification</strong><ul>{assessment.execution_gaps.map((gap,i)=><li key={i}>{gap}</li>)}</ul><p>These are system capabilities, separate from the accuracy of the requirement.</p></div>}
+    {!!assessment.execution_gaps?.length && <div className="assessment-execution"><strong>Automatic verification</strong><ul>{assessment.execution_gaps.map((gap,i)=><li key={i}>{gap}</li>)}</ul><p>The rule can still be kept as instructions. These limits describe what the app can check automatically; they do not by themselves require a manual approval decision.</p></div>}
     <details><summary>{stale ? 'Previous check details' : 'What was checked'}</summary>
       <p>{assessment.check_failed ? 'Last attempted' : 'Checked'} {new Date(assessment.assessed_at).toLocaleString()}.</p>
       <p>Source: PDF pages {assessment.source_pages.join(', ') || 'unavailable'}. Checks cover source text and likely matches with other rules. Images and less obvious duplicates may need your review.</p>

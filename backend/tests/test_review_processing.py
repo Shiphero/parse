@@ -111,3 +111,20 @@ class ProcessingTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(reusable_preparation(rule, job))
         rule['resolution']['changes'].append({'applied':False})
         self.assertFalse(reusable_preparation(rule, job))
+
+    def test_upgrade_rechecks_missing_classification_but_reuses_complete_rules(self):
+        job = {'resolution_provider':'anthropic','resolution_model':'test','model':'jev','resolution_version':RESOLUTION_VERSION}
+        for version in ('rule-resolution-1.1', 'rule-resolution-1.2', 'rule-resolution-1.3'):
+            for missing in (None, 'rule_type', 'purpose'):
+                with self.subTest(version=version, missing=missing):
+                    rule = candidate()
+                    if missing:
+                        rule['spec'][missing] = 'unclassified' if missing == 'purpose' else None
+                    if missing == 'rule_type':
+                        rule['spec'].update(placements=[], standard_check=None, verification='unresolved', assertion=None)
+                    rule['resolution'] = {'revision':1,'provider':'anthropic','model':'test','verifier_model':'jev',
+                        'prompt_version':version,'output_fingerprint':preparation_fingerprint(rule),'changes':[]}
+                    self.assertEqual(reusable_preparation(rule, job), missing is None)
+                    if version == 'rule-resolution-1.1':
+                        del rule['resolution']['output_fingerprint']
+                        self.assertEqual(reusable_preparation(rule, job), missing is None)

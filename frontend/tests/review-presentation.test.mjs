@@ -12,13 +12,13 @@ const identity=[{section:'reviewer',label:'Enter your reviewer name'}];
 test('preparation explains the lock without asking for disabled fields or identity',()=>{
   const result=reviewPresentation({...rule,resolution:{revision:1,failed:false}},[...identity,{section:'classification',label:'Choose a category'}],false,{id:'job',status:'running',phase:'resolve'});
   assert.equal(result.kind,'working');
-  assert.match(result.title,/Rule details prepared/);
+  assert.match(result.title,/Rule details filled in/);
   assert.match(result.detail,/No action needed/);
 });
 test('reviewer identity and same-title cautions do not become missing rule fields',()=>{
   const result=reviewPresentation(rule,identity,true);
   assert.equal(result.kind,'unchecked');
-  assert.equal(result.title,'No missing fields identified');
+  assert.equal(result.title,'Not reviewed yet');
 });
 test('only a fresh result from this run is actionable during checking',()=>{
   const assessed={...rule,assessment:{outcome:'ready',job_id:'job'},assessment_stale:false};

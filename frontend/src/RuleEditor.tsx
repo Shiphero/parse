@@ -208,7 +208,7 @@ export default function RuleEditor({candidate,initial,guideId,onSave,onCancel,bu
       </div>:<div className="review-action-buttons">
         <div hidden={!review.editable||working} className="review-action-secondary" role="group" aria-label="Other rule actions">
         {candidate.status==='ignored'?<button className="secondary" disabled={busy||!review.editable} onClick={()=>review.actor.trim()?review.onDecision('restore',''):goTo('reviewer')}>Restore to review</button>:<>
-          <button className="secondary" disabled={busy||dirty||advanced!==null||!review.editable} title={dirty?'Save or discard changes first':'Exclude from publication; you can restore it later'} onClick={()=>review.actor.trim()?review.onDecision('ignore',''):goTo('reviewer')}><EyeOff size={15}/>Ignore</button>
+          <button className="secondary" disabled={busy||dirty||advanced!==null||!review.editable} title={dirty?'Save or discard changes first':'Exclude from publication; you can restore it later'} onClick={()=>review.actor.trim()?review.onDecision('ignore',''):goTo('reviewer')}><EyeOff size={15}/>Set aside</button>
           <button className="secondary danger-button" disabled={busy||dirty||advanced!==null||!review.editable} onClick={()=>setRejecting(true)}><X size={15}/>Reject…</button>
         </>}
         {candidate.status==='approved'&&candidate.review?.mode==='automatic'&&<button className="secondary" disabled={busy||dirty||!review.editable} onClick={()=>review.actor.trim()?review.onDecision('restore','Returned automatic approval to review.'):goTo('reviewer')}>Return to review</button>}

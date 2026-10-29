@@ -25,13 +25,18 @@ def resolution_context(candidate):
 
 
 def reusable_preparation(candidate, job):
+    from routing_guides.classification_mapping import needs_auto_classification
     record = candidate.get('resolution') or {}
     if (record.get('failed') or record.get('revision') != candidate['revision']
             or record.get('provider') != job['resolution_provider'] or record.get('model') != job['resolution_model']):
         return False
+    upgraded = (job['resolution_version'] == 'rule-resolution-1.4'
+                and record.get('prompt_version') in {'rule-resolution-1.1', 'rule-resolution-1.2', 'rule-resolution-1.3'})
+    if upgraded and needs_auto_classification(candidate['spec']):
+        return False
     if record.get('output_fingerprint'):
         compatible = record.get('prompt_version') == job['resolution_version']
-        if job['resolution_version'] == 'rule-resolution-1.3' and record.get('prompt_version') in {'rule-resolution-1.1', 'rule-resolution-1.2'}:
+        if upgraded or (job['resolution_version'] == 'rule-resolution-1.3' and record.get('prompt_version') in {'rule-resolution-1.1', 'rule-resolution-1.2'}):
             # Old unapplied proposals were verified as a whole, not independently.
             compatible = all(change.get('applied') for change in record.get('changes', []))
         return (record['output_fingerprint'] == preparation_fingerprint(candidate)
@@ -40,7 +45,7 @@ def reusable_preparation(candidate, job):
                      job['resolution_version'] == 'rule-resolution-1.2' and record.get('prompt_version') == 'rule-resolution-1.1'))
     # Successful pre-upgrade no-change proposals did not call the verifier. Preserve
     # those results on untouched revisions; changed/proposed definitions are rechecked.
-    return (job['resolution_version'] in {'rule-resolution-1.2', 'rule-resolution-1.3'}
+    return (job['resolution_version'] in {'rule-resolution-1.2', 'rule-resolution-1.3', 'rule-resolution-1.4'}
             and record.get('prompt_version') == 'rule-resolution-1.1' and not record.get('changes')
             and not candidate.get('review') and not candidate.get('automation_hold'))
 

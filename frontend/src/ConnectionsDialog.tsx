@@ -24,24 +24,24 @@ export default function ConnectionsDialog({onClose}: {onClose: () => void}) {
     try {
       const models = await request<string[]>('/api/connections/litellm/models');
       setAvailableModels(models);
-      setMessage(models.length ? `${models.length} models available. Choose the exact alias for Gemini Argon or another model.` : 'This key has no available models. Ask the gateway administrator to grant access.');
+      setMessage(models.length ? `${models.length} models available. Choose one in Default model.` : 'This key has no available models. Ask the gateway administrator to grant access.');
     } catch(e) {setError((e as Error).message);} finally {setBusy(false);}
   };
   const save = async (clear = false) => {
     setBusy(true); setError(''); setMessage('');
     try {
       await jsonRequest('/api/connections/'+provider, {key: clear ? '' : key || null, model}, 'PUT');
-      setKey(''); remote.reload(); setMessage(clear ? 'Credential removed from this connection.' : 'Settings saved. Access is checked when you run analysis, classification or import.');
+      setKey(''); remote.reload(); setMessage(clear ? 'Credential removed from this connection.' : 'Settings saved. The connection will be used the next time you run an analysis, review or import.');
     } catch(e) {setError((e as Error).message);} finally {setBusy(false);}
   };
   const configured = remote.data?.find(c=>c.id===provider)?.credential_configured;
   const managed = remote.data?.find(c=>c.id===provider)?.credential_managed;
   return <dialog ref={ref} className="upload-dialog" onCancel={onClose}><div className="dialog-heading"><div><span className="eyebrow">CONNECTIONS & SETTINGS</span><h2>Connect your tools</h2></div><button className="icon-button" onClick={onClose} aria-label="Close connections"><X/></button></div>
-    <p className="dialog-description">Credentials stay on the server. Model preferences are saved in the database. Analysis sends guide text and images to the provider you select; classification sends rule text and source excerpts. Order data isn’t sent to AI.</p>
+    <p className="dialog-description">Keys stay on the server. Analysis sends guide text and images to the provider you select; classification sends rule text and source excerpts. Order data isn’t sent to AI.</p>
     <div className="form-field"><label htmlFor="provider">Connection</label><select id="provider" value={provider} disabled={busy} onChange={e=>{setProvider(e.target.value);setError('');}}><option value="anthropic">Claude / Anthropic</option><option value="openai">OpenAI</option><option value="litellm">LiteLLM</option><option value="jev">Jev / TypeSafe</option><option value="shiphero">ShipHero</option></select></div>
     {provider==='litellm' && <p className="muted">Gateway: {remote.data?.find(c=>c.id==='litellm')?.base_url || 'Not configured'}</p>}
-    <p className="connection-status"><KeyRound size={15}/>{configured ? 'Credential saved · access not yet verified' : 'No credential configured'}</p>
-    {managed?<p className="notice">Credentials are managed by the deployment through Secrets Manager. You can update the default model here.</p>:<div className="form-field"><label htmlFor="credential">{provider==='shiphero' ? 'Access token' : 'API key'}</label><input id="credential" type="password" autoComplete="new-password" value={key} disabled={busy||!remote.data} onChange={e=>setKey(e.target.value)} placeholder={configured ? 'Leave blank to keep the saved credential' : 'Paste your credential'}/></div>}
+    <p className="connection-status"><KeyRound size={15}/>{configured ? 'Key configured' : 'No key configured'}</p>
+    {managed?<p className="notice">Your administrator manages this key. You can change the default model here.</p>:<div className="form-field"><label htmlFor="credential">{provider==='shiphero' ? 'Access token' : 'API key'}</label><input id="credential" type="password" autoComplete="new-password" value={key} disabled={busy||!remote.data} onChange={e=>setKey(e.target.value)} placeholder={configured ? 'Leave blank to keep the saved credential' : 'Paste your credential'}/></div>}
     {provider!=='shiphero' && <div className="form-field connection-model-field">
       <label htmlFor="model">Default model</label>
       <div className="connection-model-controls">
