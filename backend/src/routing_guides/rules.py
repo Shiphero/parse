@@ -106,7 +106,7 @@ class RuleSpec(StrictModel):
         if self.execution_mode == 'reference_only':
             if (self.purpose != 'shipment_validation' or self.standard_check is not None or self.assertion is not None
                     or self.verification != 'unresolved' or any(p.behavior != 'display' for p in self.placements)):
-                raise ValueError('Reference-only requirements must preserve shipment scope with unresolved verification, no executable check and display-only placements.')
+                raise PydanticCustomError('reference_only_mismatch', 'Reference-only requirements must preserve shipment scope with unresolved verification, no executable check and display-only placements.')
         if self.standard_check is not None:
             definition = check_definition(self.standard_check)
             if self.schema_version != '1.2':

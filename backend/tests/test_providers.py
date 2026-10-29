@@ -296,6 +296,71 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(recovered.rules[0].unresolved_questions), 2)
         self.assertEqual(len(recovered.warnings), 2)
 
+    async def test_reference_metadata_recovers_fresh_and_cached_gateway_responses(self):
+        from routing_guides.evaluator import evaluate_rule
+        raw = self.extraction.model_dump(mode='json')
+        guidance = deepcopy(raw['rules'][0])
+        guidance.update(purpose='general_guidance', execution_mode='reference_only', verification='human')
+        reference = deepcopy(raw['rules'][0])
+        reference.update(execution_mode='reference_only', verification='external_evidence',
+                         exceptions=[{'description':'Only where required by the purchase order', 'condition':None}])
+        raw['rules'] = [raw['rules'][0], guidance, reference]
+        original = deepcopy(raw)
+        response = SimpleNamespace(status='completed', output_text=json.dumps(raw), model='gemini-4-argon', usage=None)
+        client = FakeClient(response)
+        cached = self.directory / 'reference-batch.json'
+        config = {'key':'synthetic-key', 'model':'gemini-4-argon', 'base_url':'https://gateway.example/v1'}
+        with patch('routing_guides.analysis_provider.connection', return_value=config), \
+             patch('routing_guides.analysis_provider.AsyncOpenAI', return_value=client):
+            first = await analyze('litellm', 'gemini-4-argon', [{'page':1, 'text':'50 lb'}], '', self.directory, cached)
+            before = cached.read_bytes()
+            second = await analyze('litellm', 'gemini-4-argon', [{'page':1, 'text':'50 lb'}], '', self.directory, cached)
+        self.assertEqual(client.create.await_count, 1)
+        self.assertEqual(cached.read_bytes(), before)
+        self.assertEqual(json.loads(before)['raw'], original)
+        self.assertEqual(raw, original)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first.extraction.rules), 3)
+        self.assertEqual(first.extraction.rules[0], self.extraction.rules[0])
+        for index, changed_field, expected in ((1, 'execution_mode', 'standard'), (2, 'verification', 'unresolved')):
+            recovered = first.extraction.rules[index].model_dump(mode='json')
+            self.assertEqual(recovered[changed_field], expected)
+            self.assertEqual({k:v for k,v in recovered.items() if k != changed_field},
+                             {k:v for k,v in original['rules'][index].items() if k != changed_field})
+        self.assertEqual(first.extraction.coverage, self.extraction.coverage)
+        self.assertEqual(len(first.extraction.warnings), 2)
+        self.assertEqual(evaluate_rule('reference', first.extraction.rules[2],
+                                      {'cartons':[{'weight':{'value':40,'unit':'lb'}}]})['outcome'], 'cannot_determine')
+        with self.assertRaises(ValidationError) as error:
+            Extraction.model_validate(original)
+        self.assertEqual(error.exception.errors()[0]['type'], 'reference_only_mismatch')
+
+    def test_reference_recovery_keeps_conflicting_checks_actions_and_invalid_fields_strict(self):
+        from test_delivery import mapped
+        raw = self.extraction.model_dump(mode='json')
+        raw['rules'][0].update(execution_mode='reference_only', verification='human')
+        for changes in ({'purpose':'unclassified'}, {'evidence':[]}, {'unknown_field':'invalid'},
+                        {'verification':'invented'}, {'assertion':{'op':'eq','path':'x','value':1}}):
+            with self.subTest(changes=changes):
+                invalid = deepcopy(raw)
+                invalid['rules'][0].update(changes)
+                with self.assertRaises(ValidationError):
+                    parse_extraction(invalid)
+        for behavior in ('display', 'confirm', 'warn', 'block'):
+            with self.subTest(behavior=behavior):
+                invalid = deepcopy(raw)
+                invalid['rules'][0] = mapped().model_dump(mode='json')
+                invalid['rules'][0]['execution_mode'] = 'reference_only'
+                invalid['rules'][0]['placements'][0]['behavior'] = behavior
+                with self.assertRaises(ValidationError):
+                    parse_extraction(invalid)
+        invalid = deepcopy(raw)
+        invalid['rules'][0] = mapped(standard_check=None, verification='unresolved',
+            placements=[{'workflow':'mobile_packing','area':'carton_selection','behavior':'confirm'}]).model_dump(mode='json')
+        invalid['rules'][0]['execution_mode'] = 'reference_only'
+        with self.assertRaises(ValidationError):
+            parse_extraction(invalid)
+
     async def test_saved_coverage_quote_note_is_recovered_without_provider_call(self):
         for quote_note in ('', 'Provider commentary, not verified evidence.'):
             with self.subTest(quote_note=quote_note):

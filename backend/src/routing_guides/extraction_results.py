@@ -39,7 +39,8 @@ def parse_extraction(raw: Any) -> Extraction:
         except ValidationError as exc:
             errors = {e['loc'][1]: e['type'] for e in exc.errors(include_input=False, include_context=False)
                       if e['type'] in {'unmapped_catalog_rule', 'rule_type_subject_mismatch',
-                                       'rule_type_category_mismatch', 'workflow_consumption_mismatch'}
+                                       'rule_type_category_mismatch', 'workflow_consumption_mismatch',
+                                       'reference_only_mismatch'}
                       and len(e['loc']) == 2 and e['loc'][0] == 'rules'
                       and isinstance(e['loc'][1], int) and (e['loc'][1], e['type']) not in handled}
             if not errors or not isinstance(raw, dict):
@@ -54,6 +55,22 @@ def parse_extraction(raw: Any) -> Extraction:
         for index in sorted(errors):
             handled.add((index, errors[index]))
             proposal = normalized['rules'][index]
+            if errors[index] == 'reference_only_mismatch':
+                # Normalize only redundant instruction metadata. Never remove a
+                # proposed executable check or turn a reference into enforcement.
+                if (proposal.get('assertion') is not None or proposal.get('standard_check') is not None
+                        or any(p.get('behavior') != 'display' for p in proposal.get('placements', []))):
+                    continue
+                if proposal.get('purpose') == 'general_guidance':
+                    proposal['execution_mode'] = 'standard'
+                    note = 'General guidance kept as instructions; reference-only mode applies only to shipment requirements.'
+                elif proposal.get('purpose') == 'shipment_validation':
+                    proposal['verification'] = 'unresolved'
+                    note = 'Reference requirement kept as instructions, without a shipment check or confirmation request.'
+                else:
+                    continue
+                warnings.append(f'Proposal {index + 1}: {note} Original provider response retained.')
+                continue
             if errors[index] == 'workflow_consumption_mismatch':
                 workflows = list(dict.fromkeys(p['workflow'] for p in proposal['placements']))
                 note = ('Needs workflow review: the provider supplied conflicting Consumed by and workflow placements. '
